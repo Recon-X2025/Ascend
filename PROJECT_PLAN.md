@@ -161,7 +161,7 @@ All AI features from Phase 2A onwards use the job queue (never synchronous in HT
 
 Build: `tsc --noEmit` passes. M-12 (Mentorship Circles) delivered; migration applied. If `npm run build` fails with `/_document` error, run `npm run rebuild`. M-14 (Platform Fee & Revenue Layer): live-tier fee at release, TrancheFeeRecord, MentorshipRevenueSnapshot, Revenue tab in admin, MentorFeeInfoCard. Phase 12 Pricing Restructure, M-17, M-6 Edit complete. See PHASE_M14_BUILD.md, PHASE_12_PRICING_RESTRUCTURE_BUILD.md.
 
-**If build fails** with webpack/prerender errors (e.g. "Cannot read properties of undefined (reading 'call')"), run `npm run rebuild` to clear stale `.next` cache and rebuild.
+**If build fails** with webpack/prerender errors (e.g. "Cannot read properties of undefined (reading 'call')", or "Cannot find module for page: /_document"), run `npm run rebuild` to clear stale `.next` cache and rebuild.
 
 **Warnings (non-blocking):** `@next/next/no-img-element` and `react-hooks/exhaustive-deps` in several components (company, dashboard, profile sections).
 
@@ -198,7 +198,7 @@ M-8          Session Rhythm & Milestone Framework            ✅ Done
 M-9          Dispute Resolution Engine                       ✅ Done
 M-10         Outcome Verification & Attribution              ✅ Done
 M-11         Mentor Reputation & Tier System                 ✅ Done
-M-12         Mentorship Circles                              ⬜ Pending
+M-12         Mentorship Circles                              ✅ Done
 M-13         Mentor Monetisation Unlock                      ✅ Done
 M-14         Platform Fee & Revenue Layer                    ✅ Done
 M-15         Legal Framework & Compliance                    ✅ Done
