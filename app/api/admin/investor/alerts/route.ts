@@ -14,7 +14,7 @@ const createAlertSchema = z.object({
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const alerts = await prisma.metricAlert.findMany({
@@ -39,14 +39,14 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   let body: z.infer<typeof createAlertSchema>;
   try {
     body = createAlertSchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const alert = await prisma.metricAlert.create({

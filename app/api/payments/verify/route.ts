@@ -18,10 +18,10 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, type, metadata } = parsed.data;
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     paymentId: razorpay_payment_id,
     signature: razorpay_signature,
   })) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 });
   }
 
   const existing = await prisma.paymentEvent.findUnique({ where: { gatewayEventId: razorpay_payment_id } });
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const companyId = meta.companyId;
     const boostType = meta.boostType ?? "standard";
     const weeks = meta.weeks ? parseInt(meta.weeks, 10) : 1;
-    if (!jobPostId || !companyId) return NextResponse.json({ error: "Missing boost metadata" }, { status: 400 });
+    if (!jobPostId || !companyId) return NextResponse.json({ success: false, error: "Missing boost metadata" }, { status: 400 });
 
     const base = BOOST_PRICE_PAISE[boostType as keyof typeof BOOST_PRICE_PAISE] ?? BOOST_PRICE_PAISE.standard;
     const amountPaid = base * weeks;
@@ -185,7 +185,7 @@ export async function POST(req: Request) {
     const seekerId = meta.seekerId;
     const recruiterId = userId;
     const companyId = meta.companyId;
-    if (!seekerId || !companyId) return NextResponse.json({ error: "Missing unlock metadata" }, { status: 400 });
+    if (!seekerId || !companyId) return NextResponse.json({ success: false, error: "Missing unlock metadata" }, { status: 400 });
 
     const amountPaid = 99900;
 
@@ -238,7 +238,7 @@ export async function POST(req: Request) {
 
   if (type === "marketplace_resume_review" || type === "marketplace_mock_interview" || type === "marketplace_coaching") {
     const orderId = meta.orderId as string | undefined;
-    if (!orderId) return NextResponse.json({ error: "Missing orderId in metadata" }, { status: 400 });
+    if (!orderId) return NextResponse.json({ success: false, error: "Missing orderId in metadata" }, { status: 400 });
 
     const { completeMarketplacePayment } = await import("@/lib/marketplace/payment-complete");
     const result = await completeMarketplacePayment({
@@ -248,7 +248,7 @@ export async function POST(req: Request) {
       gatewayEventId: razorpay_payment_id,
       gatewayOrderId: razorpay_order_id ?? undefined,
     });
-    if (!result.success) return NextResponse.json({ error: result.error }, { status: 400 });
+    if (!result.success) return NextResponse.json({ success: false, error: result.error }, { status: 400 });
 
     if (result.invoicePayload) {
       try {
@@ -261,5 +261,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, type, orderId });
   }
 
-  return NextResponse.json({ error: "Unknown type" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown type" }, { status: 400 });
 }

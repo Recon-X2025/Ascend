@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { circleId } = await params;
@@ -36,13 +36,13 @@ export async function GET(
   });
 
   if (!circle) {
-    return NextResponse.json({ error: "Circle not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Circle not found" }, { status: 404 });
   }
 
   const isMentor = circle.mentorId === session.user.id;
   const isMember = circle.members.some((m) => m.menteeId === session.user.id);
   if (!isMentor && !isMember && circle.status === "DRAFT") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   return NextResponse.json({

@@ -14,14 +14,14 @@ export async function POST(req: NextRequest) {
   const secret =
     process.env.RAZORPAY_MENTOR_WEBHOOK_SECRET ?? process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) {
-    return NextResponse.json({ error: "Not configured" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Not configured" }, { status: 500 });
   }
 
   const sig = req.headers.get("x-razorpay-signature") ?? "";
   const body = await req.text();
   const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
   if (expected !== sig) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 });
   }
 
   const data = JSON.parse(body) as {
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     // TODO: createInvoice for mentor subscription
   } catch (e) {
     console.error("[webhooks/razorpay/mentor-subscription] Failed:", e);
-    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

@@ -9,12 +9,12 @@ export async function DELETE(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { endorsementId } = await params;
   if (!endorsementId) {
-    return NextResponse.json({ error: "endorsementId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "endorsementId required" }, { status: 400 });
   }
 
   const endorsement = await prisma.profileEndorsement.findUnique({
@@ -23,11 +23,11 @@ export async function DELETE(
   });
 
   if (!endorsement) {
-    return NextResponse.json({ error: "Endorsement not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Endorsement not found" }, { status: 404 });
   }
 
   if (endorsement.endorserId !== session.user.id) {
-    return NextResponse.json({ error: "You can only retract your own endorsement" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "You can only retract your own endorsement" }, { status: 403 });
   }
 
   await prisma.profileEndorsement.delete({

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const admin = await prisma.companyAdmin.findFirst({
@@ -14,7 +14,7 @@ export async function GET() {
     include: { company: { include: { careersPageConfig: true } } },
   });
   if (!admin) {
-    return NextResponse.json({ error: "Not a company admin" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Not a company admin" }, { status: 403 });
   }
 
   const config = admin.company.careersPageConfig;
@@ -32,7 +32,7 @@ export async function GET() {
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const admin = await prisma.companyAdmin.findFirst({
@@ -40,14 +40,14 @@ export async function PATCH(req: Request) {
     include: { company: true },
   });
   if (!admin) {
-    return NextResponse.json({ error: "Not a company admin" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Not a company admin" }, { status: 403 });
   }
 
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const updates: Record<string, unknown> = {};

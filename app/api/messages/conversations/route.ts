@@ -16,17 +16,17 @@ const startSchema = z.object({
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const parsed = startSchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { recipientId, body, jobPostId, companyId } = parsed.data;
 
   if (recipientId === session.user.id) {
-    return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Cannot message yourself" }, { status: 400 });
   }
 
   const [sender, connection] = await Promise.all([
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
   const cleanBody = body.replace(/<[^>]*>/g, "").trim();
   if (!cleanBody) {
-    return NextResponse.json({ error: "Message body required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Message body required" }, { status: 400 });
   }
 
   if (!conversation) {
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);

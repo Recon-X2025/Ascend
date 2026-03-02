@@ -14,7 +14,7 @@ export async function GET(
     });
 
     if (!job) {
-      return NextResponse.json({ error: "Import job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Import job not found" }, { status: 404 });
     }
 
     return NextResponse.json({

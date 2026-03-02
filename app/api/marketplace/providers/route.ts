@@ -19,11 +19,11 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
   }
 
   const existing = await prisma.marketplaceProvider.findUnique({

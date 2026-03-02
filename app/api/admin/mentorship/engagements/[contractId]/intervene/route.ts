@@ -16,7 +16,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { contractId } = await params;
@@ -36,7 +36,7 @@ export async function POST(
       mentee: { select: { id: true, name: true, email: true } },
     },
   });
-  if (!contract) return NextResponse.json({ error: "Contract not found" }, { status: 404 });
+  if (!contract) return NextResponse.json({ success: false, error: "Contract not found" }, { status: 404 });
   if (contract.status !== "ACTIVE" && contract.status !== "PAUSED") {
     return NextResponse.json(
       { error: "Intervention only allowed on ACTIVE or PAUSED contracts" },
@@ -124,5 +124,5 @@ export async function POST(
     metadata: { action, contractId, adminId: session.user.id },
   });
 
-  return NextResponse.json({ ok: true, action });
+  return NextResponse.json({ success: true, action });
 }

@@ -29,7 +29,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId, sessionId } = await params;
@@ -38,7 +38,7 @@ export async function PATCH(
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const contract = await prisma.mentorshipContract.findUnique({
@@ -52,12 +52,12 @@ export async function PATCH(
   });
 
   if (!contract || contract.mentorUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const engagementSession = contract.sessions.find((s) => s.id === sessionId);
   if (!engagementSession) {
-    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "";
@@ -71,7 +71,7 @@ export async function PATCH(
       );
     }
     if (scheduledAt <= new Date()) {
-      return NextResponse.json({ error: "Scheduled time must be in the future" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Scheduled time must be in the future" }, { status: 400 });
     }
 
     await prisma.engagementSession.update({

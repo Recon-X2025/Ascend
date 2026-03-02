@@ -25,7 +25,7 @@ const bodySchema = z.object({
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: z.infer<typeof bodySchema>;
@@ -49,6 +49,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ disputeId });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to file dispute";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ success: false, error: msg }, { status: 400 });
   }
 }

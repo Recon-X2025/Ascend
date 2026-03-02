@@ -14,28 +14,28 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { action } = parsed.data;
 
   const connection = await prisma.connection.findUnique({ where: { id } });
   if (!connection) {
-    return NextResponse.json({ error: "Connection not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Connection not found" }, { status: 404 });
   }
 
   if (connection.status !== "PENDING") {
-    return NextResponse.json({ error: "Request already responded" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Request already responded" }, { status: 400 });
   }
 
   if (action === "withdraw") {
     if (connection.requesterId !== session.user.id) {
-      return NextResponse.json({ error: "Only requester can withdraw" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only requester can withdraw" }, { status: 403 });
     }
     await prisma.connection.update({
       where: { id },
@@ -46,7 +46,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if (action === "accept" || action === "decline") {
     if (connection.recipientId !== session.user.id) {
-      return NextResponse.json({ error: "Only recipient can accept or decline" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only recipient can accept or decline" }, { status: 403 });
     }
 
     const status = action === "accept" ? "ACCEPTED" : "DECLINED";
@@ -112,5 +112,5 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ success: true, data: updated });
   }
 
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
 }

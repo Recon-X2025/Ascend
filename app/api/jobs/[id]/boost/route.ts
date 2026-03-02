@@ -17,23 +17,23 @@ const bodySchema = z.object({
 
 export async function POST(req: Request, { params }: Params) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id: idParam } = await params;
   const jobId = parseInt(idParam, 10);
-  if (Number.isNaN(jobId)) return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+  if (Number.isNaN(jobId)) return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
 
   const job = await prisma.jobPost.findUnique({
     where: { id: jobId },
     select: { companyId: true },
   });
-  if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-  if (!(await canManageJob(userId, jobId))) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!job) return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
+  if (!(await canManageJob(userId, jobId))) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   const companyId = job.companyId;
-  if (!companyId) return NextResponse.json({ error: "Job must be linked to a company" }, { status: 400 });
+  if (!companyId) return NextResponse.json({ success: false, error: "Job must be linked to a company" }, { status: 400 });
 
   const parsed = bodySchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
 
   const { boostType, weeks, currency = "INR" } = parsed.data;
   const amount = (BOOST_PRICE_PAISE[boostType] ?? BOOST_PRICE_PAISE.standard) * weeks;

@@ -9,14 +9,14 @@ import type { SessionFormat } from "@prisma/client";
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const o = body as Record<string, unknown>;
@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
   const scheduledAt = o.scheduledAt ? new Date(o.scheduledAt as string) : null;
 
   if (!mentorProfileId) {
-    return NextResponse.json({ error: "mentorProfileId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "mentorProfileId required" }, { status: 400 });
   }
   if (sessionGoal.length < 50 || sessionGoal.length > 500) {
-    return NextResponse.json({ error: "sessionGoal must be 50–500 characters" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "sessionGoal must be 50–500 characters" }, { status: 400 });
   }
 
   const mentorProfile = await prisma.mentorProfile.findFirst({
@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
   });
 
   if (!mentorProfile) {
-    return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Mentor not found" }, { status: 404 });
   }
   if (mentorProfile.userId === session.user.id) {
-    return NextResponse.json({ error: "Cannot request a session with yourself" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Cannot request a session with yourself" }, { status: 400 });
   }
 
   const mentorSession = await prisma.mentorSession.create({
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);

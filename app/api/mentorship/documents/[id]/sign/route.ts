@@ -17,7 +17,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const documentId = (await params).id;
@@ -26,11 +26,11 @@ export async function POST(
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   if (body.action !== "sign") {
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   }
 
   const document = await prisma.engagementDocument.findUnique({
@@ -46,19 +46,19 @@ export async function POST(
   });
 
   if (!document) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Document not found" }, { status: 404 });
   }
 
   const isMentor = document.contract.mentorUserId === session.user.id;
   const isMentee = document.contract.menteeUserId === session.user.id;
   if (!isMentor && !isMentee) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const now = new Date();
   if (isMentor) {
     if (document.mentorSigned) {
-      return NextResponse.json({ error: "Already signed" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Already signed" }, { status: 400 });
     }
     await prisma.engagementDocument.update({
       where: { id: documentId },
@@ -66,7 +66,7 @@ export async function POST(
     });
   } else {
     if (document.menteeSigned) {
-      return NextResponse.json({ error: "Already signed" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Already signed" }, { status: 400 });
     }
     await prisma.engagementDocument.update({
       where: { id: documentId },

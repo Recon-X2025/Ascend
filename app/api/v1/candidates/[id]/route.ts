@@ -17,7 +17,7 @@ export async function GET(
     });
 
     if (applicationCount === 0) {
-      return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Candidate not found" }, { status: 404 });
     }
 
     const user = await prisma.user.findUnique({
@@ -43,7 +43,7 @@ export async function GET(
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Candidate not found" }, { status: 404 });
     }
 
     const profile = user.jobSeekerProfile;

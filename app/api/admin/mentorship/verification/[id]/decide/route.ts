@@ -17,7 +17,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id: mentorVerificationId } = await params;
@@ -25,7 +25,7 @@ export async function POST(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const decision = body.decision as VerificationDecision | undefined;

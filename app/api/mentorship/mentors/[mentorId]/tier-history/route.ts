@@ -12,7 +12,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { mentorId } = await params;
@@ -22,12 +22,12 @@ export async function GET(
     select: { userId: true },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Mentor not found" }, { status: 404 });
   }
 
   const isAdmin = (session.user as { role?: string }).role === "PLATFORM_ADMIN";
   if (profile.userId !== session.user.id && !isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const history = await prisma.mentorTierHistory.findMany({

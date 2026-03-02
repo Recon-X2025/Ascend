@@ -11,7 +11,7 @@ function parseId(id: string): number | null {
 export async function POST(req: Request, { params }: Params) {
   const { id: idParam } = await params;
   const id = parseId(idParam);
-  if (id == null) return NextResponse.json({ success: false }, { status: 400 });
+  if (id == null) return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   prisma.jobPost.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }

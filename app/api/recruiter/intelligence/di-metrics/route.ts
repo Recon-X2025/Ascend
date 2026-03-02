@@ -19,15 +19,15 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const jobPostIdParam = url.searchParams.get("jobPostId");
   if (!jobPostIdParam) {
-    return NextResponse.json({ error: "jobPostId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "jobPostId is required" }, { status: 400 });
   }
   const jobPostId = parseInt(jobPostIdParam, 10);
   if (Number.isNaN(jobPostId)) {
-    return NextResponse.json({ error: "Invalid jobPostId" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid jobPostId" }, { status: 400 });
   }
   const canManage = await canManageJob(auth.userId, jobPostId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const job = await prisma.jobPost.findUnique({
@@ -103,22 +103,22 @@ export async function PATCH(req: Request) {
   const auth = await requireRecruiterSession();
   if ("error" in auth) return auth.error;
   if (auth.role !== "COMPANY_ADMIN") {
-    return NextResponse.json({ error: "Only company admins can enable D&I metrics" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Only company admins can enable D&I metrics" }, { status: 403 });
   }
 
   let body: { companyId?: string; enabled?: boolean };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const { companyId, enabled } = body;
   if (!companyId || typeof enabled !== "boolean") {
-    return NextResponse.json({ error: "companyId and enabled (boolean) required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "companyId and enabled (boolean) required" }, { status: 400 });
   }
   const isAdmin = await isCompanyOwnerOrAdmin(auth.userId, companyId);
   if (!isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   await prisma.company.update({

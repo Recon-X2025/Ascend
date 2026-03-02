@@ -16,7 +16,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { applicationId } = await params;
@@ -30,11 +30,11 @@ export async function POST(
   });
 
   if (!application) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   if (application.mentorProfile.userId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   if (application.status !== "PENDING" && application.status !== "QUESTION_ASKED") {
@@ -48,7 +48,7 @@ export async function POST(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = MentorRespondSchema.safeParse(body);
@@ -170,5 +170,5 @@ export async function POST(
     return NextResponse.json({ success: true });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

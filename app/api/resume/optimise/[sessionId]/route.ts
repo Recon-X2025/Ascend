@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { sessionId } = await context.params;
@@ -29,7 +29,7 @@ export async function GET(
   });
 
   if (!optSession) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   return NextResponse.json({

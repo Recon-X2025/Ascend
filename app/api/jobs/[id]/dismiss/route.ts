@@ -16,13 +16,13 @@ function parseId(id: string): number | null {
 export async function POST(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
   const jobId = parseId(id);
   if (jobId == null) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   }
 
   const job = await prisma.jobPost.findUnique({
@@ -30,7 +30,7 @@ export async function POST(_req: Request, { params }: Params) {
     select: { id: true },
   });
   if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
   }
 
   await prisma.jobDismissal.upsert({

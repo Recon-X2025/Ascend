@@ -9,11 +9,11 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const applicationId = url.searchParams.get("applicationId");
   if (!applicationId) {
-    return NextResponse.json({ error: "applicationId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "applicationId is required" }, { status: 400 });
   }
   const hasAccess = await assertApplicationAccess(auth.userId, applicationId);
   if (!hasAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const application = await prisma.jobApplication.findUnique({
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     },
   });
   if (!application) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
 
   const fitScore = await prisma.fitScore.findUnique({

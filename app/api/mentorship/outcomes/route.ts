@@ -20,14 +20,14 @@ const bodySchema = z.object({
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: z.infer<typeof bodySchema>;
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   try {
@@ -42,15 +42,15 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed";
     if (message === "Forbidden" || message === "Contract not found") {
-      return NextResponse.json({ error: message }, { status: 403 });
+      return NextResponse.json({ success: false, error: message }, { status: 403 });
     }
     if (message === "Outcome already submitted for this contract") {
-      return NextResponse.json({ error: message }, { status: 409 });
+      return NextResponse.json({ success: false, error: message }, { status: 409 });
     }
     if (message.includes("Engagement end") || message.includes("must be ACTIVE")) {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }
 
@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const contractId = searchParams.get("contractId");
   if (!contractId) {
-    return NextResponse.json({ error: "contractId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "contractId required" }, { status: 400 });
   }
 
   const contract = await prisma.mentorshipContract.findUnique({
@@ -74,11 +74,11 @@ export async function GET(req: NextRequest) {
     include: { outcome: true },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   if (contract.mentorUserId !== session.user.id && contract.menteeUserId !== session.user.id) {
     const isAdmin = (session.user as { role?: string }).role === "PLATFORM_ADMIN";
-    if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!isAdmin) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   if (!contract.outcome) {

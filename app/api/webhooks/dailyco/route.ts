@@ -26,14 +26,14 @@ export async function POST(request: Request) {
   const secret = process.env.DAILYCO_WEBHOOK_SECRET;
 
   if (secret && !verifyDailySignature(rawBody, signature, secret)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 401 });
   }
 
   let payload: unknown;
   try {
     payload = JSON.parse(rawBody);
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const eventType = typeof payload === "object" && payload && "type" in payload

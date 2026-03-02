@@ -24,7 +24,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const contractId = (await params).id;
@@ -33,7 +33,7 @@ export async function POST(
   try {
     body = outcomeBodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const contract = await prisma.mentorshipContract.findUnique({
@@ -45,12 +45,12 @@ export async function POST(
   });
 
   if (!contract || contract.mentorUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const existing = contract.documents.find((d) => d.type === "OUTCOME_DOCUMENT");
   if (existing) {
-    return NextResponse.json({ error: "Outcome document already exists" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Outcome document already exists" }, { status: 400 });
   }
 
   const content = {

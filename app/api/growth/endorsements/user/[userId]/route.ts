@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { userId } = await params;
   if (!userId) {
-    return NextResponse.json({ error: "userId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "userId required" }, { status: 400 });
   }
 
   const endorsements = await prisma.profileEndorsement.findMany({

@@ -15,10 +15,10 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
 
   const { providerId, topic, durationMinutes, currency } = parsed.data;
 
@@ -26,9 +26,9 @@ export async function POST(req: Request) {
     where: { id: providerId },
   });
   if (!provider || provider.status !== "ACTIVE" || provider.type !== "CAREER_COACH") {
-    return NextResponse.json({ error: "Provider not found or not available" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Provider not found or not available" }, { status: 404 });
   }
-  if (!provider.isAvailable) return NextResponse.json({ error: "Provider is not available" }, { status: 400 });
+  if (!provider.isAvailable) return NextResponse.json({ success: false, error: "Provider is not available" }, { status: 400 });
 
   const amount = provider.pricePerSession;
   const { platformFee, providerPayout } = computeFees(amount);
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
 
 export async function GET() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const orders = await prisma.coachingSession.findMany({
     where: { seekerId: userId },

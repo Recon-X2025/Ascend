@@ -17,10 +17,10 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   if (!(await isEnabled("resume_optimiser_enabled"))) {
-    return NextResponse.json({ error: "Feature not available" }, { status: 503 });
+    return NextResponse.json({ success: false, error: "Feature not available" }, { status: 503 });
   }
 
   if (!isPilotFreeOverride()) {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
   }
 
   const { jobPostId, baseVersionId } = parsed.data;
@@ -84,14 +84,14 @@ export async function POST(req: NextRequest) {
     where: { id: baseVersionId, userId },
   });
   if (!baseVersion) {
-    return NextResponse.json({ error: "Resume version not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Resume version not found" }, { status: 404 });
   }
 
   const jobPost = await prisma.jobPost.findFirst({
     where: { id: jobPostId, status: "ACTIVE" },
   });
   if (!jobPost) {
-    return NextResponse.json({ error: "Job post not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Job post not found" }, { status: 404 });
   }
 
   const existing = await prisma.optimisationSession.findFirst({

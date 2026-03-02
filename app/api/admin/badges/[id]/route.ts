@@ -9,20 +9,20 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   if (body.status !== "REVOKED") {
-    return NextResponse.json({ error: "Only status REVOKED is allowed" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Only status REVOKED is allowed" }, { status: 400 });
   }
 
   const badge = await prisma.profileBadge.findUnique({
     where: { id },
     include: { user: { select: { email: true } } },
   });
-  if (!badge) return NextResponse.json({ error: "Badge not found" }, { status: 404 });
+  if (!badge) return NextResponse.json({ success: false, error: "Badge not found" }, { status: 404 });
 
   await prisma.profileBadge.update({
     where: { id },

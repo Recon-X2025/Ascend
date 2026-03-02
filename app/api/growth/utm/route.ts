@@ -17,11 +17,11 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid input" }, { status: 400 });
   }
 
   const session = await getServerSession(authOptions);
@@ -31,5 +31,5 @@ export async function POST(req: Request) {
     { source: source ?? null, medium: medium ?? null, campaign: campaign ?? null, entityId: entityId ?? null },
     { userId: session?.user?.id }
   );
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }

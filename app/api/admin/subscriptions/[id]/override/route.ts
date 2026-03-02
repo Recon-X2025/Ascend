@@ -15,23 +15,23 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { role: true },
   });
   if (user?.role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const parsed = bodySchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
 
   const sub = await prisma.userSubscription.findFirst({
     where: { OR: [{ id }, { userId: id }] },
   });
-  if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
+  if (!sub) return NextResponse.json({ success: false, error: "Subscription not found" }, { status: 404 });
 
   const update: { planKey: string; plan?: PlanType; expiresAt?: Date } = {
     planKey: parsed.data.planKey,

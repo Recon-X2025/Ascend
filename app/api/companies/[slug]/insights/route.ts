@@ -18,7 +18,7 @@ export async function GET(
   });
 
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const insight =

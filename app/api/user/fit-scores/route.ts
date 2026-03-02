@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const role = (session.user as { role?: string }).role;
     if (role !== "JOB_SEEKER") {
@@ -63,6 +63,6 @@ export async function GET() {
 
     return NextResponse.json({ scores });
   } catch {
-    return NextResponse.json({ error: "Failed to fetch fit scores" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch fit scores" }, { status: 500 });
   }
 }

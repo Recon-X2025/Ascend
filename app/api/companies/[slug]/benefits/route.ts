@@ -11,15 +11,15 @@ const schema = z.object({
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   if (!(await isCompanyOwnerOrAdmin(userId, company.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "label required" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "label required" }, { status: 400 });
   const maxOrder = await prisma.companyBenefit
     .findFirst({
       where: { companyId: company.id },
@@ -36,9 +36,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     },
   });
   return NextResponse.json({
-    id: benefit.id,
-    label: benefit.label,
-    emoji: benefit.icon,
-    order: benefit.order,
+    success: true,
+    data: {
+      id: benefit.id,
+      label: benefit.label,
+      emoji: benefit.icon,
+      order: benefit.order,
+    },
   });
 }

@@ -7,7 +7,7 @@ import { startOfWeek, subWeeks } from "date-fns";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if ((session?.user as { role?: string })?.role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const now = new Date();

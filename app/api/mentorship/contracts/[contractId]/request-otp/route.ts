@@ -13,7 +13,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId } = await params;
@@ -22,10 +22,10 @@ export async function POST(
     where: { id: contractId },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   if (contract.mentorUserId !== session.user.id && contract.menteeUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const role = contract.mentorUserId === session.user.id ? "MENTOR" : "MENTEE";
@@ -63,6 +63,6 @@ export async function POST(
         { status: 429 }
       );
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }

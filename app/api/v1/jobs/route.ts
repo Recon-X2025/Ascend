@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       department: searchParams.get("department") ?? undefined,
     });
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
     const { status, page, limit, search, location, department } = parsed.data;
 
@@ -111,11 +111,11 @@ export async function POST(request: Request) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
     }
     const parsed = createBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
     const input = parsed.data;
 
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       select: { userId: true },
     });
     if (!admin) {
-      return NextResponse.json({ error: "No company admin found" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No company admin found" }, { status: 400 });
     }
 
     const company = await prisma.company.findUnique({

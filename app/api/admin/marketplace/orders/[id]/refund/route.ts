@@ -12,7 +12,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id: orderId } = await params;
@@ -24,20 +24,20 @@ export async function POST(
   ]);
 
   const order = rr ?? mock ?? coaching;
-  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  if (!order) return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
 
   const status = "status" in order ? order.status : null;
   if (status !== "DISPUTED" && status !== "PAID" && status !== "IN_REVIEW" && status !== "DELIVERED") {
-    return NextResponse.json({ error: "Order cannot be refunded" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Order cannot be refunded" }, { status: 400 });
   }
 
   const paymentEventId = "paymentEventId" in order ? order.paymentEventId : null;
-  if (!paymentEventId) return NextResponse.json({ error: "No payment linked to order" }, { status: 400 });
+  if (!paymentEventId) return NextResponse.json({ success: false, error: "No payment linked to order" }, { status: 400 });
 
   const paymentEvent = await prisma.paymentEvent.findFirst({
     where: { gatewayEventId: paymentEventId },
   });
-  if (!paymentEvent) return NextResponse.json({ error: "Payment event not found" }, { status: 404 });
+  if (!paymentEvent) return NextResponse.json({ success: false, error: "Payment event not found" }, { status: 404 });
 
   const amount = order.platformFee + order.providerPayout;
   try {
@@ -48,7 +48,7 @@ export async function POST(
     });
   } catch (err) {
     console.error("[Refund]", err);
-    return NextResponse.json({ error: "Refund failed" }, { status: 502 });
+    return NextResponse.json({ success: false, error: "Refund failed" }, { status: 502 });
   }
 
   if (rr) {

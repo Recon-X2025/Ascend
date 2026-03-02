@@ -8,13 +8,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const invoice = await prisma.invoice.findFirst({
     where: { id, userId: session.user.id },
     include: { lineItems: true },
   });
-  if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!invoice) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   return NextResponse.json(invoice);
 }

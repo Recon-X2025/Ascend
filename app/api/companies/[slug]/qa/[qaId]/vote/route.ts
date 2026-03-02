@@ -11,25 +11,25 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; qaId: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { slug, qaId } = await params;
   const company = await prisma.company.findUnique({
     where: { slug },
     select: { id: true },
   });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
 
   const qa = await prisma.companyQA.findFirst({
     where: { id: qaId, companyId: company.id },
     select: { id: true, upvotes: true, downvotes: true },
   });
-  if (!qa) return NextResponse.json({ error: "Question not found" }, { status: 404 });
+  if (!qa) return NextResponse.json({ success: false, error: "Question not found" }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
   const parsed = voteSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "upvote (boolean) required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "upvote (boolean) required" }, { status: 400 });
   }
 
   const vote: CompanyQAVoteType = parsed.data.upvote ? "UP" : "DOWN";

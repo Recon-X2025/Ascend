@@ -6,7 +6,7 @@ import { PaymentGateway, PaymentStatus } from "@prisma/client";
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: Request) {
-  if (!WEBHOOK_SECRET) return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  if (!WEBHOOK_SECRET) return NextResponse.json({ success: false, error: "Webhook not configured" }, { status: 500 });
 
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") ?? "";
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const stripe = getStripeInstance();
     event = stripe.webhooks.constructEvent(body, sig, WEBHOOK_SECRET) as typeof event;
   } catch {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 });
   }
 
   if (event.type === "invoice.payment_succeeded" && event.data?.object) {

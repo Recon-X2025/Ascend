@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 
 export async function GET() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const sub = await prisma.userSubscription.findUnique({
     where: { userId },

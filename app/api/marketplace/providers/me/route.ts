@@ -5,7 +5,7 @@ import { z } from "zod";
 
 export async function GET() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const provider = await prisma.marketplaceProvider.findUnique({
     where: { userId },
@@ -52,19 +52,19 @@ const patchSchema = z.object({
 
 export async function PATCH(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const provider = await prisma.marketplaceProvider.findUnique({
     where: { userId },
   });
-  if (!provider) return NextResponse.json({ error: "Provider profile not found" }, { status: 404 });
+  if (!provider) return NextResponse.json({ success: false, error: "Provider profile not found" }, { status: 404 });
   if (provider.status === "SUSPENDED") {
-    return NextResponse.json({ error: "Your provider account is suspended" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Your provider account is suspended" }, { status: 403 });
   }
 
   const parsed = patchSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
   }
 
   const d = parsed.data;

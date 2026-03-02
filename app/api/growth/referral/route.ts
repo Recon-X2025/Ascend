@@ -9,7 +9,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let referralCode = await prisma.referralCode.findUnique({
@@ -26,12 +26,12 @@ export async function GET() {
       });
     } catch (e) {
       console.error("[growth/referral] generateReferralCode failed:", e);
-      return NextResponse.json({ error: "Failed to generate referral code" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "Failed to generate referral code" }, { status: 500 });
     }
   }
 
   if (!referralCode) {
-    return NextResponse.json({ error: "Failed to load referral code" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to load referral code" }, { status: 500 });
   }
 
   const rewardsPending = await prisma.referral.count({

@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -21,14 +21,14 @@ export async function GET(req: Request, { params }: Params) {
   });
 
   if (!conversation) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Conversation not found" }, { status: 404 });
   }
 
   const isParticipant =
     conversation.participantA === session.user.id ||
     conversation.participantB === session.user.id;
   if (!isParticipant) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const page = Math.max(1, parseInt(new URL(req.url).searchParams.get("page") ?? "1", 10));

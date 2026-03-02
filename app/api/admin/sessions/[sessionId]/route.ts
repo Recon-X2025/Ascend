@@ -12,7 +12,7 @@ type Params = { params: Promise<{ sessionId: string }> };
 export async function GET(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { sessionId } = await params;
@@ -35,7 +35,7 @@ export async function GET(req: Request, { params }: Params) {
     },
   });
 
-  if (!eng) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  if (!eng) return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
 
   return NextResponse.json({
     id: eng.id,

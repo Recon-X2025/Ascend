@@ -35,7 +35,7 @@ function pct(arr: number[], p: number): number {
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   const sp = new URL(req.url).searchParams;
   const jobTitle = sp.get("jobTitle")?.trim();
   const page = Math.max(1, parseInt(sp.get("page") ?? "1", 10));
@@ -83,10 +83,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   const { allowed, resetIn } = await checkRateLimit("salary:" + userId, 5, 3600);
   if (!allowed)
     return NextResponse.json(
@@ -96,7 +96,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const body = await req.json().catch(() => ({}));
   const parsed = postSchema.safeParse(body);
   if (!parsed.success)
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   const year = parsed.data.year;
   const existing = await prisma.salaryReport.findFirst({
     where: {

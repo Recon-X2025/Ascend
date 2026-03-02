@@ -21,7 +21,7 @@ export async function GET(
   const session = await getServerSession(authOptions);
   const { actorIp, actorAgent } = getRequestContext(req);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId } = await params;
@@ -30,10 +30,10 @@ export async function GET(
     where: { id: contractId },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   if (contract.mentorUserId !== session.user.id && contract.menteeUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   if (contract.status !== "ACTIVE" && contract.status !== "COMPLETED") {

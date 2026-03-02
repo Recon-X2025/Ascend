@@ -14,7 +14,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId } = await params;
@@ -30,12 +30,12 @@ export async function GET(
     },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Contract not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Contract not found" }, { status: 404 });
   }
   const isParty =
     contract.mentorUserId === session.user.id || contract.menteeUserId === session.user.id;
   if (!isParty) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const escrow = await getEscrowByContract(contractId);

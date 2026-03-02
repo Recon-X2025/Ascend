@@ -25,16 +25,16 @@ const STATUSES: ApplicationStatus[] = [
 export async function GET(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const jobId = parseId((await params).id);
   if (jobId == null) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   }
   const canManage = await canManageJob(session.user.id, jobId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const url = new URL(req.url);

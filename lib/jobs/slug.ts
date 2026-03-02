@@ -2,14 +2,10 @@
  * Job post slug: slugify title + id suffix for uniqueness.
  */
 
+import { slugify } from "@/lib/utils/slugify";
+
 export function slugifyTitle(title: string): string {
-  return title
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "job";
+  return slugify(title, "job");
 }
 
 export function jobSlug(title: string, id: number): string {

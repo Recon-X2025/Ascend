@@ -21,22 +21,22 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const role = (session.user as { role?: string }).role;
   if (role !== "RECRUITER" && role !== "COMPANY_ADMIN") {
-    return NextResponse.json({ error: "Only recruiters can invite teammates" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Only recruiters can invite teammates" }, { status: 403 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "emails required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "emails required" }, { status: 400 });
   }
 
   const emails = parsed.data.emails
@@ -44,10 +44,10 @@ export async function POST(req: Request) {
     .map((e) => e.trim().toLowerCase())
     .filter((e) => e.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
   if (emails.length === 0) {
-    return NextResponse.json({ error: "At least one valid email required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "At least one valid email required" }, { status: 400 });
   }
   if (emails.length > 10) {
-    return NextResponse.json({ error: "Maximum 10 invites at a time" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Maximum 10 invites at a time" }, { status: 400 });
   }
 
   const { success, remaining } = await rateLimit(

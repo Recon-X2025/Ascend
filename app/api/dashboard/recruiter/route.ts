@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorised" }, { status: 401 });
   }
 
   const [activeJobs, recentApplications, pipelineSummary] = await Promise.all([

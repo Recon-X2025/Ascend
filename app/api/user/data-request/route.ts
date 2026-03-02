@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const userId = session.user.id;
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const requests = await prisma.dataRequest.findMany({

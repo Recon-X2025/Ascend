@@ -24,7 +24,7 @@ export async function GET(
     const { id } = await params;
     const jobId = parseInt(id, 10);
     if (Number.isNaN(jobId)) {
-      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid job ID" }, { status: 400 });
     }
 
     const job = await prisma.jobPost.findFirst({
@@ -46,7 +46,7 @@ export async function GET(
     });
 
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 
     return NextResponse.json({ data: job });
@@ -61,25 +61,25 @@ export async function PATCH(
     const { id } = await params;
     const jobId = parseInt(id, 10);
     if (Number.isNaN(jobId)) {
-      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid job ID" }, { status: 400 });
     }
 
     const existing = await prisma.jobPost.findFirst({
       where: { id: jobId, companyId: apiKey.companyId },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 
     let body: unknown;
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
     }
     const parsed = updateBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
 
     const update: Record<string, unknown> = {};
@@ -133,14 +133,14 @@ export async function DELETE(
     const { id } = await params;
     const jobId = parseInt(id, 10);
     if (Number.isNaN(jobId)) {
-      return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid job ID" }, { status: 400 });
     }
 
     const existing = await prisma.jobPost.findFirst({
       where: { id: jobId, companyId: apiKey.companyId },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 
     await prisma.jobPost.update({

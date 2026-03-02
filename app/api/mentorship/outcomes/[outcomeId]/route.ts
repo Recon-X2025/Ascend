@@ -26,7 +26,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { outcomeId } = await params;
@@ -35,13 +35,13 @@ export async function GET(
     where: { id: outcomeId },
   });
   if (!outcome) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   const isParty = outcome.mentorId === session.user.id || outcome.menteeId === session.user.id;
   const isAdmin = (session.user as { role?: string }).role === "PLATFORM_ADMIN";
   if (!isParty && !isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const includeOps = outcome.mentorId === session.user.id || isAdmin;
@@ -83,7 +83,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { outcomeId } = await params;
@@ -92,7 +92,7 @@ export async function PATCH(
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   try {
@@ -106,22 +106,22 @@ export async function PATCH(
     }
     if (body.action === "ops-review") {
       const isAdmin = (session.user as { role?: string }).role === "PLATFORM_ADMIN";
-      if (!isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (!isAdmin) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       const outcome = await opsReviewOutcome(outcomeId, session.user.id, body.decision, body.note);
       return NextResponse.json({ outcome: toOutcomeJson(outcome) });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed";
     if (message === "Forbidden" || message === "Outcome not found") {
-      return NextResponse.json({ error: message }, { status: 403 });
+      return NextResponse.json({ success: false, error: message }, { status: 403 });
     }
     if (message.includes("not pending") || message.includes("at least 20")) {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
 }
 
 function toOutcomeJson(o: {

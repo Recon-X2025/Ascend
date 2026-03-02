@@ -12,13 +12,13 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ success: false }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ success: false }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Bad request" }, { status: 400 });
   }
 
   await rateAIInteraction(parsed.data.interactionId, parsed.data.rating);

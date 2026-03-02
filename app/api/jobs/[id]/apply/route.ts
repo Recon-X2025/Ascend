@@ -26,19 +26,19 @@ export async function POST(req: Request, { params }: Params) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const role = (session.user as { role?: string }).role;
     if (role !== "JOB_SEEKER") {
-      return NextResponse.json({ error: "Only job seekers can apply" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only job seekers can apply" }, { status: 403 });
     }
     if (!(await isEnabled("easy_apply_enabled"))) {
-      return NextResponse.json({ error: "Easy Apply is temporarily disabled" }, { status: 503 });
+      return NextResponse.json({ success: false, error: "Easy Apply is temporarily disabled" }, { status: 503 });
     }
 
     const jobId = parseId((await params).id);
     if (jobId == null) {
-      return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
     }
 
     const job = await prisma.jobPost.findUnique({
@@ -49,13 +49,13 @@ export async function POST(req: Request, { params }: Params) {
       },
     });
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
     if (job.status !== "ACTIVE") {
-      return NextResponse.json({ error: "Job is not accepting applications" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Job is not accepting applications" }, { status: 400 });
     }
     if (!job.easyApply) {
-      return NextResponse.json({ error: "This job does not accept Easy Apply" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "This job does not accept Easy Apply" }, { status: 400 });
     }
 
     const existing = await prisma.jobApplication.findUnique({
@@ -79,7 +79,7 @@ export async function POST(req: Request, { params }: Params) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
     }
     const referralId = body.ref ?? urlRef ?? null;
 

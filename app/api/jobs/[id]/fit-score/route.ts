@@ -31,7 +31,7 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     if (!(await isEnabled("fit_score_enabled"))) {
-      return NextResponse.json({ error: "Feature not available" }, { status: 503 });
+      return NextResponse.json({ success: false, error: "Feature not available" }, { status: 503 });
     }
 
     const role = session.user.role ?? "JOB_SEEKER";
@@ -47,7 +47,7 @@ export async function GET(req: Request, { params }: Params) {
       select: { id: true },
     });
     if (!jobExists) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 
     const url = new URL(req.url);

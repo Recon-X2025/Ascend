@@ -7,7 +7,7 @@ import { getMentorProgressToNextTier } from "@/lib/mentorship/analytics";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
@@ -15,7 +15,7 @@ export async function GET() {
     select: { id: true },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Not a mentor" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Not a mentor" }, { status: 403 });
   }
 
   const progress = await getMentorProgressToNextTier(session.user.id);

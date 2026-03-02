@@ -16,18 +16,18 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
   }
 
   const alert = await prisma.opsAlert.findUnique({ where: { id } });
-  if (!alert) return NextResponse.json({ error: "Alert not found" }, { status: 404 });
+  if (!alert) return NextResponse.json({ success: false, error: "Alert not found" }, { status: 404 });
 
   const updates: { isRead?: boolean; resolvedAt?: Date | null; resolvedById?: string | null } = {};
   if (parsed.data.isRead !== undefined) updates.isRead = parsed.data.isRead;
@@ -63,7 +63,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -71,6 +71,6 @@ export async function GET(
     where: { id },
     include: { resolvedBy: { select: { id: true, name: true, email: true } } },
   });
-  if (!alert) return NextResponse.json({ error: "Alert not found" }, { status: 404 });
+  if (!alert) return NextResponse.json({ success: false, error: "Alert not found" }, { status: 404 });
   return NextResponse.json(alert);
 }

@@ -18,7 +18,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { sessionId } = await params;
@@ -31,7 +31,7 @@ export async function PATCH(
 
   const action = body.action as string | undefined;
   if (!action || !VALID_ACTIONS.includes(action as (typeof VALID_ACTIONS)[number])) {
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   }
 
   const mentorSession = await prisma.mentorSession.findUnique({
@@ -43,7 +43,7 @@ export async function PATCH(
   });
 
   if (!mentorSession) {
-    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
   }
 
   const isMentor = mentorSession.mentorProfile.userId === session.user.id;
@@ -51,12 +51,12 @@ export async function PATCH(
 
   if (action === "accept" || action === "decline" || action === "schedule" || action === "complete") {
     if (!isMentor) {
-      return NextResponse.json({ error: "Only the mentor can perform this action" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only the mentor can perform this action" }, { status: 403 });
     }
   }
   if (action === "cancel") {
     if (!isMentor && !isMentee) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
   }
 
@@ -85,7 +85,7 @@ export async function PATCH(
       newStatus = "CANCELLED";
       break;
     default:
-      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   }
 
   const updateData: { status: "ACCEPTED" | "DECLINED" | "SCHEDULED" | "COMPLETED" | "CANCELLED"; scheduledAt?: Date | null; meetingLink?: string | null } = {

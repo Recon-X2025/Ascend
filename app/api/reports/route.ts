@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { allowed, resetIn } = await checkRateLimit(
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = createReportSchema.safeParse(body);
   if (!parsed.success) {

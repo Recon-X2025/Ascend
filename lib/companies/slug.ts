@@ -4,19 +4,12 @@
  */
 
 import { prisma } from "@/lib/prisma/client";
+import { slugify } from "@/lib/utils/slugify";
 
-export function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "company";
-}
+export { slugify };
 
 export async function generateUniqueSlug(baseName: string): Promise<string> {
-  const slug = slugify(baseName);
+  const slug = slugify(baseName, "company");
   let candidate = slug;
   let n = 2;
   while (await prisma.company.findUnique({ where: { slug: candidate } })) {

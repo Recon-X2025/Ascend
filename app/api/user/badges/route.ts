@@ -17,7 +17,7 @@ const postSchema = z.object({
 
 export async function GET() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const badges = await prisma.profileBadge.findMany({
     where: { userId },
@@ -42,10 +42,10 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = postSchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
 
   const { provider, skill, score, percentile, badgeUrl, verificationUrl, issuedAt, expiresAt } = parsed.data;
 

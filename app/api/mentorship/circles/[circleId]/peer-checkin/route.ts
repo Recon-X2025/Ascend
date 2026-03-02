@@ -17,7 +17,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { circleId } = await params;
@@ -30,7 +30,7 @@ export async function GET(
     },
   });
   if (!member) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const checkIns = await prisma.circlePeerCheckIn.findMany({
@@ -66,7 +66,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { circleId } = await params;
@@ -79,14 +79,14 @@ export async function POST(
     },
   });
   if (!member) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = PeerCheckInSchema.safeParse(body);
@@ -102,6 +102,6 @@ export async function POST(
     return NextResponse.json(result);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create check-in";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

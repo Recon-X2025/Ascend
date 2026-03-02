@@ -9,7 +9,7 @@ type Params = { params: Promise<{ slug: string }> };
 export async function GET(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const { slug } = await params;
   const company = await prisma.company.findUnique({
@@ -17,7 +17,7 @@ export async function GET(req: Request, { params }: Params) {
     select: { id: true, name: true, slug: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
   const employee = await prisma.companyEmployee.findUnique({
     where: { userId_companyId: { userId: session.user.id, companyId: company.id } },

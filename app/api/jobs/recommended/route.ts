@@ -8,10 +8,10 @@ import { redis } from "@/lib/redis/client";
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   if ((session.user as { role?: string }).role !== "JOB_SEEKER") {
-    return NextResponse.json({ error: "Only job seekers get recommendations" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Only job seekers get recommendations" }, { status: 403 });
   }
   if (!(await isEnabled("smart_recommendations"))) {
     return NextResponse.json({ jobs: [] });

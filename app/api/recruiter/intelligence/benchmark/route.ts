@@ -10,15 +10,15 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const jobPostIdParam = url.searchParams.get("jobPostId");
   if (!jobPostIdParam) {
-    return NextResponse.json({ error: "jobPostId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "jobPostId is required" }, { status: 400 });
   }
   const jobPostId = parseInt(jobPostIdParam, 10);
   if (Number.isNaN(jobPostId)) {
-    return NextResponse.json({ error: "Invalid jobPostId" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid jobPostId" }, { status: 400 });
   }
   const canManage = await canManageJob(auth.userId, jobPostId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const job = await prisma.jobPost.findUnique({
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     },
   });
   if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
   }
 
   const [appStats, platformJobs] = await Promise.all([

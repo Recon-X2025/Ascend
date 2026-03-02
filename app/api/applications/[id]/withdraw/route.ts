@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const id = (await params).id;
@@ -19,10 +19,10 @@ export async function POST(_req: Request, { params }: Params) {
   });
 
   if (!app) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
   if (app.applicantId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
   if (app.status === "WITHDRAWN" || app.status === "REJECTED") {
     return NextResponse.json(

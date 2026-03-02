@@ -21,7 +21,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { disputeId } = await params;
@@ -46,7 +46,7 @@ export async function POST(
   });
 
   if (!dispute) {
-    return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Dispute not found" }, { status: 404 });
   }
 
   if (dispute.status === "RESOLVED") {
@@ -91,6 +91,6 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Failed to resolve dispute";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ success: false, error: msg }, { status: 400 });
   }
 }

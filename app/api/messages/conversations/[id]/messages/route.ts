@@ -15,13 +15,13 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: conversationId } = await params;
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { body, jobPostId, companyId } = parsed.data;
 
@@ -30,19 +30,19 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   if (!conversation) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Conversation not found" }, { status: 404 });
   }
 
   if (
     conversation.participantA !== session.user.id &&
     conversation.participantB !== session.user.id
   ) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const cleanBody = body.replace(/<[^>]*>/g, "").trim();
   if (!cleanBody) {
-    return NextResponse.json({ error: "Message body required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Message body required" }, { status: 400 });
   }
 
   const message = await prisma.message.create({

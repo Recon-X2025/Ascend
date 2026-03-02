@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       limit: searchParams.get("limit") ?? 20,
     });
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
     const { page, limit } = parsed.data;
 

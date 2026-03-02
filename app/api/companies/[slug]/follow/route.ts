@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { slug } = await params;
   const companyId = await getCompanyId(slug);
   if (!companyId) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const followerCount = await prisma.companyFollow.count({
@@ -45,13 +45,13 @@ export async function GET(_req: Request, { params }: Params) {
 export async function POST(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { slug } = await params;
   const companyId = await getCompanyId(slug);
   if (!companyId) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const existing = await prisma.companyFollow.findUnique({

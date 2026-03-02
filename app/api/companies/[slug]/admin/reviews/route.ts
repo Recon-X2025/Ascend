@@ -9,12 +9,12 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   if (!(await isCompanyOwnerOrAdmin(userId, company.id)))
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   const sp = new URL(req.url).searchParams;
   const statusFilter = sp.get("status") ?? "all"; // all | PENDING | APPROVED | FLAGGED | REJECTED
   const page = Math.max(1, parseInt(sp.get("page") ?? "1", 10));

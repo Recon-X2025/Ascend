@@ -15,7 +15,7 @@ const putSchema = z.object({
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const profile = await prisma.billingProfile.findUnique({
     where: { userId: session.user.id },
@@ -25,10 +25,10 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = putSchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: parsed.error.message }, { status: 400 });
 
   const { legalName, billingAddress, gstin, stateCode } = parsed.data;
   const hasGstin = !!(gstin && gstin !== "");

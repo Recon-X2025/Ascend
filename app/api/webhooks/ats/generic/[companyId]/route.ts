@@ -14,7 +14,7 @@ export async function POST(
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const eventType = typeof payload === "object" && payload && "type" in payload

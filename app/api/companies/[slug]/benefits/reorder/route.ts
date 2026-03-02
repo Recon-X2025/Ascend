@@ -11,19 +11,19 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
 
   const allowed = await isCompanyOwnerOrAdmin(userId, company.id);
-  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!allowed) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const parsed = reorderSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "orderedIds array required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "orderedIds array required" }, { status: 400 });
   }
 
   await prisma.$transaction(

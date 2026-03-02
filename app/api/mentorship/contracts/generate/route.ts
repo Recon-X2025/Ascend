@@ -14,18 +14,18 @@ import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: { applicationId?: string };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const applicationId = body.applicationId;
   if (!applicationId) {
-    return NextResponse.json({ error: "applicationId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "applicationId required" }, { status: 400 });
   }
 
   const application = await prisma.mentorApplication.findUnique({
@@ -33,10 +33,10 @@ export async function POST(req: Request) {
     include: { mentorProfile: { select: { userId: true } } },
   });
   if (!application) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   if (application.mentorProfile.userId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
   if (application.status !== "ACCEPTED") {
     return NextResponse.json(
@@ -71,6 +71,6 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create contract";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

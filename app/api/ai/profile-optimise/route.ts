@@ -13,13 +13,13 @@ export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if ((session.user as { role?: string }).role !== "JOB_SEEKER") {
-      return NextResponse.json({ error: "Only job seekers can run profile optimiser" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only job seekers can run profile optimiser" }, { status: 403 });
     }
     if (!(await isEnabled("profile_optimiser"))) {
-      return NextResponse.json({ error: "Feature not available" }, { status: 503 });
+      return NextResponse.json({ success: false, error: "Feature not available" }, { status: 503 });
     }
 
     const rlKey = `profile-optimise:${session.user.id}`;
@@ -48,6 +48,6 @@ export async function POST() {
     });
   } catch (e) {
     console.error("[ProfileOptimise POST]", e);
-    return NextResponse.json({ error: "Failed to queue profile optimiser" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to queue profile optimiser" }, { status: 500 });
   }
 }

@@ -22,11 +22,11 @@ export async function GET(
   });
 
   if (!profile) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   if (!profile.isPublic || profile.verificationStatus !== "VERIFIED") {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   return NextResponse.json({ profile });

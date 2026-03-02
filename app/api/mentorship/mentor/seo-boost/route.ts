@@ -17,14 +17,14 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
     where: { userId: session.user.id },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Mentor profile required" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Mentor profile required" }, { status: 403 });
   }
 
   const plan = await prisma.userSubscription.findUnique({
@@ -44,13 +44,13 @@ export async function POST(req: Request) {
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const pricing = MENTOR_MARKETPLACE_PLAN.seoBoostPricing;
   const pricePaise = pricing[body.boostType as keyof typeof pricing];
   if (pricePaise == null) {
-    return NextResponse.json({ error: "Invalid boost type" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid boost type" }, { status: 400 });
   }
 
   const orderResult = await createOrder({

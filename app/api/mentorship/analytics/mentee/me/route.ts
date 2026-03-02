@@ -7,7 +7,7 @@ import { trackOutcome } from "@/lib/tracking/outcomes";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const summary = await getMenteeEngagementSummary(session.user.id);

@@ -11,13 +11,13 @@ const schema = z.object({
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorised" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
   }
 
   const { notificationId } = parsed.data;
@@ -34,5 +34,5 @@ export async function PATCH(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }

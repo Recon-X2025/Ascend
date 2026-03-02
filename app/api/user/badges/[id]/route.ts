@@ -7,13 +7,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const badge = await prisma.profileBadge.findUnique({
     where: { id },
   });
-  if (!badge || badge.userId !== userId) return NextResponse.json({ error: "Badge not found" }, { status: 404 });
+  if (!badge || badge.userId !== userId) return NextResponse.json({ success: false, error: "Badge not found" }, { status: 404 });
 
   await prisma.profileBadge.delete({ where: { id } });
   return NextResponse.json({ success: true });

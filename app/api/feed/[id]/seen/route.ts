@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -17,7 +17,7 @@ export async function PATCH(_req: Request, { params }: Params) {
   });
 
   if (!signal) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   await prisma.careerSignal.update({

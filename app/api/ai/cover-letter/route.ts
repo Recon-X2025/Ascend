@@ -14,19 +14,19 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if ((session.user as { role?: string }).role !== "JOB_SEEKER") {
-      return NextResponse.json({ error: "Only job seekers can generate cover letters" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only job seekers can generate cover letters" }, { status: 403 });
     }
     if (!(await isEnabled("cover_letter_generator"))) {
-      return NextResponse.json({ error: "Feature not available" }, { status: 503 });
+      return NextResponse.json({ success: false, error: "Feature not available" }, { status: 503 });
     }
 
     const body = await req.json().catch(() => ({}));
     const jobId = typeof body.jobId === "number" ? body.jobId : parseInt(String(body.jobId), 10);
     if (Number.isNaN(jobId)) {
-      return NextResponse.json({ error: "Invalid jobId" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid jobId" }, { status: 400 });
     }
 
     const jobExists = await prisma.jobPost.findUnique({
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       select: { id: true },
     });
     if (!jobExists) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 
     const rlKey = `cover-letter:${session.user.id}`;
@@ -74,6 +74,6 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error("[CoverLetter POST]", e);
-    return NextResponse.json({ error: "Failed to queue cover letter" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to queue cover letter" }, { status: 500 });
   }
 }

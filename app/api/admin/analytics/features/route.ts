@@ -18,7 +18,7 @@ const FEATURE_EVENTS = [
 export async function GET() {
   const session = await getServerSession(authOptions);
   if ((session?.user as { role?: string })?.role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const since = subDays(new Date(), 30);

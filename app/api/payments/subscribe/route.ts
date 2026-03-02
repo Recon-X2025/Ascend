@@ -21,11 +21,11 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
   }
 
   const { plan, currency, billingCycle = "monthly", companyId } = parsed.data;
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       : `STRIPE_PRICE_${plan}_${billingCycle.toUpperCase()}`;
   const planId = process.env[planKey];
   if (!planId) {
-    return NextResponse.json({ error: "Plan not configured" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Plan not configured" }, { status: 500 });
   }
 
   const totalCount = billingCycle === "yearly" ? 12 : undefined;

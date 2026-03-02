@@ -16,27 +16,27 @@ const bodySchema = z.object({
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
     where: { userId: session.user.id },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Mentor profile required" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Mentor profile required" }, { status: 403 });
   }
 
   let body: z.infer<typeof bodySchema>;
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const result = await setSessionFee(session.user.id, body.feePaise);
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true, sessionFeePaise: body.feePaise });
+  return NextResponse.json({ success: true, sessionFeePaise: body.feePaise });
 }

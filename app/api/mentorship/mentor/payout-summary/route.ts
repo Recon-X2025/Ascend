@@ -11,14 +11,14 @@ import { prisma } from "@/lib/prisma/client";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const profile = await prisma.mentorProfile.findUnique({
     where: { userId: session.user.id },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Mentor profile required" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Mentor profile required" }, { status: 403 });
   }
 
   const summary = await getMentorPayoutSummary(session.user.id);

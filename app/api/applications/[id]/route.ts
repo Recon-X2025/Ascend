@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const id = (await params).id;
   const app = await prisma.jobApplication.findUnique({
@@ -17,20 +17,20 @@ export async function PATCH(req: Request, { params }: Params) {
     select: { id: true, jobPostId: true },
   });
   if (!app) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
   const canManage = await canManageJob(session.user.id, app.jobPostId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
   let body: { recruiterNotes?: string };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   if (typeof body.recruiterNotes !== "string") {
-    return NextResponse.json({ error: "recruiterNotes required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "recruiterNotes required" }, { status: 400 });
   }
   const updated = await prisma.jobApplication.update({
     where: { id },
@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: Params) {
 export async function GET(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const id = (await params).id;
@@ -72,7 +72,7 @@ export async function GET(_req: Request, { params }: Params) {
   });
 
   if (!app) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
 
   const canManage = await canManageJob(session.user.id, app.jobPostId);
@@ -113,5 +113,5 @@ export async function GET(_req: Request, { params }: Params) {
     });
   }
 
-  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
 }

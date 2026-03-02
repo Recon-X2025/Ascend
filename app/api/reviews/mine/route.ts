@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 export async function GET() {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const [companyReviews, interviewReviews, salaryReports] = await Promise.all([

@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -28,10 +28,10 @@ export async function PATCH(
     select: { id: true, email: true, name: true, bannedAt: true },
   });
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
   }
   if (user.bannedAt) {
-    return NextResponse.json({ error: "User is already banned" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "User is already banned" }, { status: 400 });
   }
 
   await prisma.$transaction(async (tx) => {

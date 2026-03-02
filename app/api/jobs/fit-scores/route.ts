@@ -9,11 +9,11 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     const role = (session.user as { role?: string }).role;
     if (role !== "JOB_SEEKER") {
-      return NextResponse.json({ error: "Fit scores are for job seekers" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Fit scores are for job seekers" }, { status: 403 });
     }
 
     const url = new URL(req.url);
@@ -45,6 +45,6 @@ export async function GET(req: Request) {
     }
     return NextResponse.json(result);
   } catch {
-    return NextResponse.json({ error: "Failed to fetch fit scores" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch fit scores" }, { status: 500 });
   }
 }

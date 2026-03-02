@@ -20,7 +20,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { milestoneId } = await params;
@@ -29,11 +29,11 @@ export async function PATCH(
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   if (body.action !== "file") {
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   }
 
   const milestone = await prisma.engagementMilestone.findUnique({
@@ -50,14 +50,14 @@ export async function PATCH(
   });
 
   if (!milestone) {
-    return NextResponse.json({ error: "Milestone not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Milestone not found" }, { status: 404 });
   }
 
   const contract = milestone.contract;
   const isMentor = contract.mentorUserId === session.user.id;
   const isMentee = contract.menteeUserId === session.user.id;
   if (!isMentor && !isMentee) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const now = new Date();

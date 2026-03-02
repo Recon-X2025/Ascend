@@ -14,7 +14,7 @@ export async function POST(
     where: { id: courseId },
   });
   if (!course || !course.isActive) {
-    return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Course not found" }, { status: 404 });
   }
 
   await prisma.$transaction([

@@ -15,11 +15,11 @@ export async function GET(req: Request) {
   const periodDays = PERIOD_DAYS[periodKey] ?? 90;
 
   if (!companyId) {
-    return NextResponse.json({ error: "companyId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "companyId is required" }, { status: 400 });
   }
   const hasAccess = await assertCompanyAccess(auth.userId, companyId);
   if (!hasAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const since = new Date();

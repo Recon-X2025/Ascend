@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId } = await params;
@@ -32,14 +32,14 @@ export async function GET(
   });
 
   if (!contract) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   const isParty =
     contract.mentorUserId === session.user.id || contract.menteeUserId === session.user.id;
   const isAdmin = (session.user as { role?: string }).role === "PLATFORM_ADMIN";
   if (!isParty && !isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const goalDocument = contract.documents.find((d) => d.type === "GOAL_DOCUMENT") ?? null;

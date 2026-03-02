@@ -12,7 +12,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await context.params;
@@ -22,7 +22,7 @@ export async function PATCH(
     select: { id: true, companyId: true, jobTitle: true, company: { select: { name: true } } },
   });
   if (!report) {
-    return NextResponse.json({ error: "Salary submission not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Salary submission not found" }, { status: 404 });
   }
 
   await prisma.salaryReport.update({

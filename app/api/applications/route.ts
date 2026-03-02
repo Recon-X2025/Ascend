@@ -17,7 +17,7 @@ const VALID_STATUSES: ApplicationStatus[] = [
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const role = (session.user as { role?: string }).role;
   if (role !== "JOB_SEEKER") {

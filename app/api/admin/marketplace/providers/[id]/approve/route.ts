@@ -13,7 +13,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id: providerId } = await params;
@@ -22,9 +22,9 @@ export async function POST(
     include: { user: { select: { id: true, email: true } } },
   });
 
-  if (!provider) return NextResponse.json({ error: "Provider not found" }, { status: 404 });
+  if (!provider) return NextResponse.json({ success: false, error: "Provider not found" }, { status: 404 });
   if (provider.status !== "PENDING_REVIEW") {
-    return NextResponse.json({ error: "Provider is not pending review" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Provider is not pending review" }, { status: 400 });
   }
 
   const now = new Date();

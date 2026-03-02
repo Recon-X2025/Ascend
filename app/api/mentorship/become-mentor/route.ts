@@ -96,7 +96,7 @@ function parseBody(body: unknown): {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { checkMarketplaceAccess } = await import("@/lib/mentorship/legal/signatures");
@@ -125,12 +125,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const data = parseBody(body);
   if (!data) {
-    return NextResponse.json({ error: "Invalid body: currentRole and yearsOfExperience required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body: currentRole and yearsOfExperience required" }, { status: 400 });
   }
 
   if (data.agreedToList) {

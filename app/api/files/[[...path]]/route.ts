@@ -10,16 +10,16 @@ export async function GET(
 ) {
   const pathSegments = (await params).path;
   if (!pathSegments?.length) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   const key = pathSegments.join(path.sep);
   if (key.includes("..") || path.isAbsolute(key)) {
-    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid path" }, { status: 400 });
   }
   const filePath = path.join(LOCAL_UPLOAD_DIR, key);
   try {
     const stat = await fs.stat(filePath);
-    if (!stat.isFile()) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!stat.isFile()) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     const buffer = await fs.readFile(filePath);
     const ext = path.extname(key).toLowerCase();
     const mime: Record<string, string> = {
@@ -36,6 +36,6 @@ export async function GET(
       headers: { "Content-Type": contentType },
     });
   } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 }

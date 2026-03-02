@@ -7,8 +7,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const TARGET_LEVELS = ["IC", "TEAM_LEAD", "MANAGER", "DIRECTOR", "VP", "C_SUITE"] as const;
-
 const FEATURE_FLAGS = [
   { key: "fit_score_enabled", enabled: true, description: "Show fit score on job cards and detail pages" },
   { key: "resume_optimiser_enabled", enabled: true, description: "Enable JD Resume Optimiser (Phase 6A)" },

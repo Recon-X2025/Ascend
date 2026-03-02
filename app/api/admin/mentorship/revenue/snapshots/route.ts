@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string })?.role;
   if (!session?.user?.id || role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const parsed = querySchema.safeParse(

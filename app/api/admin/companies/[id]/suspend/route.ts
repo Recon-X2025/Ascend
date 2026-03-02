@@ -10,14 +10,14 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const reason = typeof body.reason === "string" ? body.reason.trim() : "";
   if (!reason) {
-    return NextResponse.json({ error: "Reason is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Reason is required" }, { status: 400 });
   }
 
   const company = await prisma.company.findUnique({
@@ -25,7 +25,7 @@ export async function PATCH(
     select: { id: true, name: true, suspendedAt: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   await prisma.$transaction([

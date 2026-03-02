@@ -20,12 +20,12 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const event = body.event;
   if (!event || !ALLOWED.has(event)) {
-    return NextResponse.json({ error: "Invalid or disallowed event" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid or disallowed event" }, { status: 400 });
   }
   await track(event, body.properties ?? {}, { userId: auth.userId });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }

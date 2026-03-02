@@ -9,7 +9,7 @@ export async function POST(
 ) {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { reviewId } = await context.params;
@@ -27,7 +27,7 @@ export async function POST(
     select: { id: true, userId: true, helpfulCount: true, notHelpfulCount: true },
   });
   if (!review) {
-    return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Review not found" }, { status: 404 });
   }
   if (review.userId === userId) {
     return NextResponse.json(

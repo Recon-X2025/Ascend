@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { disputeId } = await params;
@@ -42,14 +42,14 @@ export async function GET(
   });
 
   if (!dispute) {
-    return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Dispute not found" }, { status: 404 });
   }
 
   const isParticipant =
     dispute.contract.mentorUserId === session.user.id ||
     dispute.contract.menteeUserId === session.user.id;
   if (!isParticipant) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   return NextResponse.json({

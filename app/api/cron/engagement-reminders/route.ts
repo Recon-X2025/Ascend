@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
   if (secret && authHeader !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const now = new Date();
@@ -215,8 +215,8 @@ export async function GET(req: Request) {
       success: false,
       errorCode: err instanceof Error ? err.message : "Unknown",
     });
-    return NextResponse.json({ error: "Cron failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Cron failed" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, sends: sendLog.length });
+  return NextResponse.json({ success: true, sends: sendLog.length });
 }

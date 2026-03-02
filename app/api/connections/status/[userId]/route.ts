@@ -8,12 +8,12 @@ type Params = { params: Promise<{ userId: string }> };
 export async function GET(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { userId: targetUserId } = await params;
   if (!targetUserId) {
-    return NextResponse.json({ error: "userId required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "userId required" }, { status: 400 });
   }
 
   if (targetUserId === session.user.id) {

@@ -16,7 +16,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { circleId } = await params;
@@ -25,7 +25,7 @@ export async function POST(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = AcceptCircleApplicationSchema.safeParse(body);
@@ -45,6 +45,6 @@ export async function POST(
     return NextResponse.json(result);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to accept";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

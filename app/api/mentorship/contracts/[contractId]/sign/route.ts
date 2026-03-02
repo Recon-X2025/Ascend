@@ -25,7 +25,7 @@ export async function POST(
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { contractId } = await params;
@@ -34,17 +34,17 @@ export async function POST(
     where: { id: contractId },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
   if (contract.mentorUserId !== session.user.id && contract.menteeUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) {
@@ -101,6 +101,6 @@ export async function POST(
     if (message === "OTP_EXPIRED") {
       return NextResponse.json({ code: "OTP_EXPIRED" }, { status: 400 });
     }
-    return NextResponse.json({ error: message || "Sign failed" }, { status: 400 });
+    return NextResponse.json({ success: false, error: message || "Sign failed" }, { status: 400 });
   }
 }

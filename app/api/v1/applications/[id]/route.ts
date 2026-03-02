@@ -37,7 +37,7 @@ export async function GET(
     });
 
     if (!app) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -72,18 +72,18 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
     }
 
     let body: unknown;
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
     }
     const parsed = updateBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
 
     const newStatus = statusMap[parsed.data.status] ?? parsed.data.status;

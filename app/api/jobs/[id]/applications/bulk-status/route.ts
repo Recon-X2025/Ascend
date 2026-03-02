@@ -19,28 +19,28 @@ const ALLOWED_BULK_STATUSES: ApplicationStatus[] = ["SHORTLISTED", "REJECTED"];
 export async function PATCH(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const jobId = parseId((await params).id);
   if (jobId == null) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   }
   const canManage = await canManageJob(session.user.id, jobId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   let body: { applicationIds?: string[]; status?: ApplicationStatus };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const applicationIds = Array.isArray(body.applicationIds) ? body.applicationIds : [];
   const status = body.status;
   if (!status || !ALLOWED_BULK_STATUSES.includes(status)) {
-    return NextResponse.json({ error: "Invalid status for bulk update" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid status for bulk update" }, { status: 400 });
   }
   if (applicationIds.length === 0) {
     return NextResponse.json({ updated: 0, applications: [] });

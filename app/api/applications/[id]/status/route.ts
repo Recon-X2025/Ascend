@@ -24,7 +24,7 @@ const VALID_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
 export async function PATCH(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const id = (await params).id;
@@ -38,11 +38,11 @@ export async function PATCH(req: Request, { params }: Params) {
   const applicantEmail = app?.applicant?.email;
 
   if (!app) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
   const canManage = await canManageJob(session.user.id, app.jobPostId);
   if (!canManage) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
   if (app.status === "WITHDRAWN") {
     return NextResponse.json(
@@ -55,7 +55,7 @@ export async function PATCH(req: Request, { params }: Params) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const newStatus = body.status;

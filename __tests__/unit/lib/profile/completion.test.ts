@@ -1,5 +1,8 @@
 import { calculateCompletionScore } from "@/lib/profile/completion";
 import type { FullProfile } from "@/lib/profile/completion";
+import type { Experience, Education, UserSkill, Resume, Certification, Project, Award, ProfileLanguage, VolunteerWork, NoticePeriod, WorkMode } from "@prisma/client";
+
+type SkillWithName = UserSkill & { skill: { name: string } };
 
 function makeProfile(overrides: Partial<FullProfile> = {}): FullProfile {
   return {
@@ -90,7 +93,7 @@ describe("calculateCompletionScore", () => {
   test("awards 25pts for at least 1 experience", () => {
     const result = calculateCompletionScore(
       makeProfile({
-        experiences: [{ id: "e1", profileId: "p1", company: "C", designation: "D", employmentType: "FULL_TIME", startMonth: 1, startYear: 2020, endMonth: null, endYear: null, isCurrent: true, order: 0, createdAt: new Date(), updatedAt: new Date() } as any],
+        experiences: [{ id: "e1", profileId: "p1", company: "C", designation: "D", employmentType: "FULL_TIME", startMonth: 1, startYear: 2020, endMonth: null, endYear: null, isCurrent: true, order: 0, createdAt: new Date(), updatedAt: new Date() } as unknown as Experience],
       })
     );
     expect(result.breakdown.experience).toBe(25);
@@ -104,7 +107,7 @@ describe("calculateCompletionScore", () => {
   test("awards 10pts for at least 1 education", () => {
     const result = calculateCompletionScore(
       makeProfile({
-        educations: [{ id: "ed1", profileId: "p1", institution: "I", degree: null, fieldOfStudy: null, startYear: 2020, endYear: 2024, isCurrent: false, grade: null, order: 0, createdAt: new Date(), updatedAt: new Date() } as any],
+        educations: [{ id: "ed1", profileId: "p1", institution: "I", degree: null, fieldOfStudy: null, startYear: 2020, endYear: 2024, isCurrent: false, grade: null, order: 0, createdAt: new Date(), updatedAt: new Date() } as unknown as Education],
       })
     );
     expect(result.breakdown.education).toBe(10);
@@ -112,7 +115,7 @@ describe("calculateCompletionScore", () => {
 
   test("awards 5pts for 1 skill", () => {
     const result = calculateCompletionScore(
-      makeProfile({ skills: [{ id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "React" } } as any] })
+      makeProfile({ skills: [{ id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "React" } } as unknown as SkillWithName] })
     );
     expect(result.breakdown.skills).toBe(5);
   });
@@ -121,8 +124,8 @@ describe("calculateCompletionScore", () => {
     const result = calculateCompletionScore(
       makeProfile({
         skills: [
-          { id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "React" } } as any,
-          { id: "s2", profileId: "p1", skillId: "sk2", proficiency: "EXPERT", endorseCount: 0, order: 1, createdAt: new Date(), updatedAt: new Date(), skill: { name: "Node" } } as any,
+          { id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "React" } } as unknown as SkillWithName,
+          { id: "s2", profileId: "p1", skillId: "sk2", proficiency: "EXPERT", endorseCount: 0, order: 1, createdAt: new Date(), updatedAt: new Date(), skill: { name: "Node" } } as unknown as SkillWithName,
         ],
       })
     );
@@ -133,9 +136,9 @@ describe("calculateCompletionScore", () => {
     const result = calculateCompletionScore(
       makeProfile({
         skills: [
-          { id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "A" } } as any,
-          { id: "s2", profileId: "p1", skillId: "sk2", proficiency: "INTERMEDIATE", endorseCount: 0, order: 1, createdAt: new Date(), updatedAt: new Date(), skill: { name: "B" } } as any,
-          { id: "s3", profileId: "p1", skillId: "sk3", proficiency: "INTERMEDIATE", endorseCount: 0, order: 2, createdAt: new Date(), updatedAt: new Date(), skill: { name: "C" } } as any,
+          { id: "s1", profileId: "p1", skillId: "sk1", proficiency: "INTERMEDIATE", endorseCount: 0, order: 0, createdAt: new Date(), updatedAt: new Date(), skill: { name: "A" } } as unknown as SkillWithName,
+          { id: "s2", profileId: "p1", skillId: "sk2", proficiency: "INTERMEDIATE", endorseCount: 0, order: 1, createdAt: new Date(), updatedAt: new Date(), skill: { name: "B" } } as unknown as SkillWithName,
+          { id: "s3", profileId: "p1", skillId: "sk3", proficiency: "INTERMEDIATE", endorseCount: 0, order: 2, createdAt: new Date(), updatedAt: new Date(), skill: { name: "C" } } as unknown as SkillWithName,
         ],
       })
     );
@@ -155,7 +158,7 @@ describe("calculateCompletionScore", () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           skill: { name: `Skill${i}` },
-        })) as any,
+        })) as unknown as SkillWithName[],
       })
     );
     expect(result.breakdown.skills).toBe(15);
@@ -178,7 +181,7 @@ describe("calculateCompletionScore", () => {
             lastUsedAt: null,
             createdAt: new Date(),
             updatedAt: new Date(),
-          } as any,
+          } as unknown as Resume,
         ],
       })
     );
@@ -186,12 +189,12 @@ describe("calculateCompletionScore", () => {
   });
 
   test("awards 3pts for noticePeriod", () => {
-    const result = calculateCompletionScore(makeProfile({ noticePeriod: "THIRTY_DAYS" as any }));
+    const result = calculateCompletionScore(makeProfile({ noticePeriod: "THIRTY_DAYS" as NoticePeriod }));
     expect(result.breakdown.preferences).toBe(3);
   });
 
   test("awards 3pts for workMode", () => {
-    const result = calculateCompletionScore(makeProfile({ workMode: "REMOTE" as any }));
+    const result = calculateCompletionScore(makeProfile({ workMode: "REMOTE" as WorkMode }));
     expect(result.breakdown.preferences).toBe(3);
   });
 
@@ -208,11 +211,11 @@ describe("calculateCompletionScore", () => {
   test("awards 1pt each for extra sections up to 5", () => {
     const result = calculateCompletionScore(
       makeProfile({
-        certifications: [{} as any],
-        projects: [{} as any],
-        awards: [{} as any],
-        languages: [{} as any],
-        volunteerWork: [{} as any],
+        certifications: [{} as unknown as Certification],
+        projects: [{} as unknown as Project],
+        awards: [{} as unknown as Award],
+        languages: [{} as unknown as ProfileLanguage],
+        volunteerWork: [{} as unknown as VolunteerWork],
       })
     );
     expect(result.breakdown.extras).toBe(5);
@@ -225,19 +228,19 @@ describe("calculateCompletionScore", () => {
       city: "C",
       country: "Co",
       avatarUrl: "a.jpg",
-      experiences: [{} as any],
-      educations: [{} as any],
-      skills: [{ skill: { name: "A" } }, { skill: { name: "B" } }, { skill: { name: "C" } }] as any,
-      resumes: [{} as any],
-      noticePeriod: "THIRTY_DAYS" as any,
-      workMode: "REMOTE" as any,
+      experiences: [{} as unknown as Experience],
+      educations: [{} as unknown as Education],
+      skills: [{ skill: { name: "A" } }, { skill: { name: "B" } }, { skill: { name: "C" } }] as unknown as SkillWithName[],
+      resumes: [{} as unknown as Resume],
+      noticePeriod: "THIRTY_DAYS" as NoticePeriod,
+      workMode: "REMOTE" as WorkMode,
       currentCTC: 10,
       expectedCTC: 15,
-      certifications: [{} as any],
-      projects: [{} as any],
-      awards: [{} as any],
-      languages: [{} as any],
-      volunteerWork: [{} as any],
+      certifications: [{} as unknown as Certification],
+      projects: [{} as unknown as Project],
+      awards: [{} as unknown as Award],
+      languages: [{} as unknown as ProfileLanguage],
+      volunteerWork: [{} as unknown as VolunteerWork],
     });
     const result = calculateCompletionScore(fullProfile);
     expect(result.total).toBe(100);
@@ -258,8 +261,8 @@ describe("calculateCompletionScore", () => {
     const partialProfile = makeProfile({
       headline: "H",
       summary: "S",
-      experiences: [{} as any],
-      skills: [{ skill: { name: "A" } }, { skill: { name: "B" } }, { skill: { name: "C" } }] as any,
+      experiences: [{} as unknown as Experience],
+      skills: [{ skill: { name: "A" } }, { skill: { name: "B" } }, { skill: { name: "C" } }] as unknown as SkillWithName[],
     });
     const result = calculateCompletionScore(partialProfile);
     const sum = Object.values(result.breakdown).reduce((a, b) => a + b, 0);

@@ -20,31 +20,31 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const parsed = bodySchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
   }
 
   const { type, jobPostId, boostType, weeks = 1, billingPeriod = "monthly", currency = "INR", seekerId } = parsed.data;
 
   if (type === "boost") {
     if (!jobPostId || !boostType) {
-      return NextResponse.json({ error: "jobPostId and boostType required for boost" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "jobPostId and boostType required for boost" }, { status: 400 });
     }
     const job = await prisma.jobPost.findUnique({
       where: { id: jobPostId },
       select: { companyId: true },
     });
-    if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    if (!job) return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     const { canManageJob } = await import("@/lib/jobs/permissions");
     if (!(await canManageJob(userId, jobPostId))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
     const companyId = job.companyId;
     if (!companyId) {
-      return NextResponse.json({ error: "Job must be linked to a company to boost" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Job must be linked to a company to boost" }, { status: 400 });
     }
 
     const base = BOOST_PRICE_PAISE[boostType];
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
 
   if (type === "resume_unlock") {
     if (!seekerId) {
-      return NextResponse.json({ error: "seekerId required for resume_unlock" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "seekerId required for resume_unlock" }, { status: 400 });
     }
     const amount = RESUME_UNLOCK_PACK_PRICE_PAISE;
     const result = await createOrder({
@@ -128,5 +128,5 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ error: "Unknown type" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown type" }, { status: 400 });
 }

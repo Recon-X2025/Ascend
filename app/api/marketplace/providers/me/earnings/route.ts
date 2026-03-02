@@ -4,12 +4,12 @@ import { prisma } from "@/lib/prisma/client";
 
 export async function GET() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const provider = await prisma.marketplaceProvider.findUnique({
     where: { userId },
   });
-  if (!provider) return NextResponse.json({ error: "Provider profile not found" }, { status: 404 });
+  if (!provider) return NextResponse.json({ success: false, error: "Provider profile not found" }, { status: 404 });
 
   const [rr, mock, coaching] = await Promise.all([
     prisma.resumeReviewOrder.aggregate({

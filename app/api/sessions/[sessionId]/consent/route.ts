@@ -17,13 +17,13 @@ type Params = { params: Promise<{ sessionId: string }> };
 export async function POST(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { sessionId } = await params;
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { acknowledged } = parsed.data;
 
@@ -31,12 +31,12 @@ export async function POST(req: Request, { params }: Params) {
     where: { id: sessionId },
     include: { contract: true },
   });
-  if (!eng) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  if (!eng) return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
 
   const isMentor = eng.contract.mentorUserId === session.user.id;
   const isMentee = eng.contract.menteeUserId === session.user.id;
   if (!isMentor && !isMentee) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const participantType = isMentor ? "MENTOR" : "MENTEE";

@@ -14,7 +14,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { trancheId } = await params;
@@ -24,10 +24,10 @@ export async function POST(
     include: { escrow: { select: { menteeId: true } } },
   });
   if (!tranche) {
-    return NextResponse.json({ error: "Tranche not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Tranche not found" }, { status: 404 });
   }
   if (tranche.escrow.menteeId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden — mentee only" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden — mentee only" }, { status: 403 });
   }
 
   try {

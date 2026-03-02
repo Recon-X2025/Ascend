@@ -11,28 +11,28 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; qaId: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { slug, qaId } = await params;
   const company = await prisma.company.findUnique({
     where: { slug },
     select: { id: true },
   });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
 
   const allowed = await isCompanyOwnerOrAdmin(userId, company.id);
-  if (!allowed) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!allowed) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const parsed = answerSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "answer required (min 10 chars)" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "answer required (min 10 chars)" }, { status: 400 });
   }
 
   const qa = await prisma.companyQA.findFirst({
     where: { id: qaId, companyId: company.id },
   });
-  if (!qa) return NextResponse.json({ error: "Question not found" }, { status: 404 });
+  if (!qa) return NextResponse.json({ success: false, error: "Question not found" }, { status: 404 });
 
   await prisma.companyQA.update({
     where: { id: qaId },

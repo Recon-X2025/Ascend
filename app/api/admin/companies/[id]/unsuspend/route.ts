@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -20,10 +20,10 @@ export async function PATCH(
     select: { id: true, name: true, suspendedAt: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
   if (!company.suspendedAt) {
-    return NextResponse.json({ error: "Company is not suspended" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Company is not suspended" }, { status: 400 });
   }
 
   await prisma.company.update({

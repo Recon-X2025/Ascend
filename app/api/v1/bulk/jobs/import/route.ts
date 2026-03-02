@@ -19,17 +19,17 @@ export async function POST(request: Request) {
 
     const formData = await req.formData().catch(() => null);
     if (!formData) {
-      return NextResponse.json({ error: "Invalid multipart body" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid multipart body" }, { status: 400 });
     }
 
     const file = formData.get("file") as File | null;
     if (!file || !(file instanceof File)) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
     const ext = file.name.toLowerCase().split(".").pop();
     if (ext !== "csv" && ext !== "json") {
-      return NextResponse.json({ error: "File must be CSV or JSON" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "File must be CSV or JSON" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         const arr = Array.isArray(json) ? json : json.jobs ?? json.data ?? [];
         totalRows = arr.length;
       } catch {
-        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
       }
     }
 

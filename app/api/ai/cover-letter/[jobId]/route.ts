@@ -14,16 +14,16 @@ function parseJobId(jobId: string): number | null {
 export async function GET(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   if (!(await isEnabled("cover_letter_generator"))) {
-    return NextResponse.json({ error: "Feature not available" }, { status: 503 });
+    return NextResponse.json({ success: false, error: "Feature not available" }, { status: 503 });
   }
 
   const { jobId: jobIdParam } = await params;
   const jobId = parseJobId(jobIdParam);
   if (jobId == null) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   }
 
   const letter = await prisma.coverLetter.findUnique({

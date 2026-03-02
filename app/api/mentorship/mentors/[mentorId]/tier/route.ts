@@ -33,7 +33,7 @@ export async function GET(
   });
 
   if (!profile) {
-    return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Mentor not found" }, { status: 404 });
   }
 
   const config = TIER_CONFIG[profile.tier as MentorTierKey];
@@ -63,7 +63,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { mentorId } = await params;
@@ -72,14 +72,14 @@ export async function PATCH(
     select: { userId: true },
   });
   if (!profile) {
-    return NextResponse.json({ error: "Mentor not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Mentor not found" }, { status: 404 });
   }
 
   let body: z.infer<typeof patchSchema>;
   try {
     body = patchSchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const profileBefore = await prisma.mentorProfile.findUnique({

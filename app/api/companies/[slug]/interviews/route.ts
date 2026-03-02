@@ -30,7 +30,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -113,11 +113,11 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { slug } = await params;
   const company = await prisma.company.findUnique({ where: { slug }, select: { id: true } });
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 });
+  if (!company) return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
 
   const { allowed, resetIn } = await checkRateLimit(`interview:${userId}`, 3, 3600);
   if (!allowed) {
@@ -130,7 +130,7 @@ export async function POST(
   const body = await req.json().catch(() => ({}));
   const parsed = postInterviewSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
 
   const experience: InterviewExperience =

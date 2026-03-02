@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 
 export async function POST() {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const userSub = await prisma.userSubscription.findUnique({
     where: { userId },
@@ -12,7 +12,7 @@ export async function POST() {
   });
 
   if (!userSub) {
-    return NextResponse.json({ error: "No active subscription" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "No active subscription" }, { status: 404 });
   }
 
   await prisma.userSubscription.update({

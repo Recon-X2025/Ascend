@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       to: searchParams.get("to") ?? undefined,
     });
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ success: false, error: parsed.error.flatten() }, { status: 400 });
     }
 
     const where: Record<string, unknown> = {

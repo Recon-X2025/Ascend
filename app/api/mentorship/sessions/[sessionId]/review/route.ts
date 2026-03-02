@@ -9,7 +9,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { sessionId } = await params;
@@ -17,14 +17,14 @@ export async function POST(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const rating = typeof body.rating === "number" ? Math.min(5, Math.max(1, Math.round(body.rating))) : undefined;
   const feedback = typeof body.feedback === "string" ? body.feedback.trim().slice(0, 2000) : undefined;
 
   if (rating === undefined) {
-    return NextResponse.json({ error: "rating (1-5) required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "rating (1-5) required" }, { status: 400 });
   }
 
   const mentorSession = await prisma.mentorSession.findUnique({
@@ -33,16 +33,16 @@ export async function POST(
   });
 
   if (!mentorSession) {
-    return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
   }
   if (mentorSession.menteeId !== session.user.id) {
-    return NextResponse.json({ error: "Only the mentee can leave a review" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Only the mentee can leave a review" }, { status: 403 });
   }
   if (mentorSession.status !== "COMPLETED") {
-    return NextResponse.json({ error: "Session must be completed to review" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Session must be completed to review" }, { status: 400 });
   }
   if (mentorSession.menteeRating != null) {
-    return NextResponse.json({ error: "Already reviewed" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Already reviewed" }, { status: 400 });
   }
 
   await prisma.$transaction([

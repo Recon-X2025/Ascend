@@ -18,22 +18,22 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { type } = await params;
   if (!VALID_TYPES.includes(type as LegalDocumentType)) {
-    return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid document type" }, { status: 400 });
   }
 
   const doc = await getActiveDocument(type as LegalDocumentType);
   if (!doc) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Document not found" }, { status: 404 });
   }
 
   const alreadySigned = await hasSignedDocument(session.user.id, doc.type);
   if (alreadySigned) {
-    return NextResponse.json({ error: "Already signed" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Already signed" }, { status: 400 });
   }
 
   const otp = await requestLegalOTP(doc.id, session.user.id);

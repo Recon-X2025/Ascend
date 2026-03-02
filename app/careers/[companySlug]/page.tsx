@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { trackOutcome } from "@/lib/tracking/outcomes";
@@ -43,10 +44,13 @@ export default async function CareersPage({
       <Container className="py-12">
         <header className="mb-12">
           {config?.logoUrl && (
-            <img
+            <Image
               src={config.logoUrl}
               alt={company.name}
-              className="h-12 object-contain mb-6"
+              width={48}
+              height={48}
+              className="h-12 w-auto object-contain mb-6"
+              unoptimized
             />
           )}
           <h1 className="text-3xl font-display font-bold text-ink">

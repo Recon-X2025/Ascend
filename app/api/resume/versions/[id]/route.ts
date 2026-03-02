@@ -89,8 +89,9 @@ export async function DELETE(
   if (!existing) {
     return NextResponse.json({ success: false, error: "Resume version not found" }, { status: 404 });
   }
-  // TODO Phase 6: count JobApplication where resumeVersionId = id and return applicationCount for UI warning
-  const applicationCount = 0;
+  const applicationCount = await prisma.jobApplication.count({
+    where: { resumeVersionId: id },
+  });
   await prisma.resumeVersion.delete({ where: { id } });
   return NextResponse.json({ success: true, data: { applicationCount } });
 }

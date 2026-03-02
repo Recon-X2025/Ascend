@@ -25,21 +25,21 @@ function parseId(id: string): number | null {
 export async function POST(req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const jobId = parseId((await params).id);
   if (jobId == null) {
-    return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid job id" }, { status: 400 });
   }
   const job = await prisma.jobPost.findUnique({
     where: { id: jobId },
     include: { companyRef: { select: { name: true, slug: true } } },
   });
   if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
   }
   if (job.status !== "ACTIVE") {
-    return NextResponse.json({ error: "Job is not active" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Job is not active" }, { status: 400 });
   }
   const visibility = (job as { visibility?: string }).visibility ?? "PUBLIC";
   if (visibility === "INTERNAL" && job.companyId) {
@@ -47,7 +47,7 @@ export async function POST(req: Request, { params }: Params) {
       where: { userId_companyId: { userId: session.user.id, companyId: job.companyId } },
     });
     if (!employee) {
-      return NextResponse.json({ error: "Only verified employees can refer for this job" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Only verified employees can refer for this job" }, { status: 403 });
     }
   }
 
@@ -65,11 +65,11 @@ export async function POST(req: Request, { params }: Params) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { referredName, referredEmail } = parsed.data;
 

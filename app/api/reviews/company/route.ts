@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const companyId = searchParams.get("companyId");
   if (!companyId) {
-    return NextResponse.json({ error: "companyId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "companyId is required" }, { status: 400 });
   }
 
   const company = await prisma.company.findUnique({
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     select: { id: true, name: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -116,7 +116,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { allowed, resetIn } = await checkReviewSubmitRateLimit(userId);
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
     select: { id: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const existing = await prisma.companyReview.findUnique({

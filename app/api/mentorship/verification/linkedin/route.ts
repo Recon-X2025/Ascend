@@ -14,7 +14,7 @@ export async function PATCH(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unauthorized";
     if (msg === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.json(
       { error: "Mentor profile required" },
@@ -26,7 +26,7 @@ export async function PATCH(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const linkedInUrl =

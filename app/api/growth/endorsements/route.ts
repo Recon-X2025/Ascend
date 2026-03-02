@@ -33,14 +33,14 @@ async function areConnected(userIdA: string, userIdB: string): Promise<boolean> 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = bodySchema.safeParse(body);
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
   const endorserId = session.user.id;
 
   if (endorserId === recipientId) {
-    return NextResponse.json({ error: "Cannot endorse your own skill" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Cannot endorse your own skill" }, { status: 400 });
   }
 
   const connected = await areConnected(endorserId, recipientId);
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 
   const skillTrimmed = skill.trim();
   if (!skillTrimmed) {
-    return NextResponse.json({ error: "Skill is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Skill is required" }, { status: 400 });
   }
 
   try {
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const prismaError = e as { code?: string };
     if (prismaError.code === "P2002") {
-      return NextResponse.json({ error: "You already endorsed this skill" }, { status: 409 });
+      return NextResponse.json({ success: false, error: "You already endorsed this skill" }, { status: 409 });
     }
     throw e;
   }

@@ -9,7 +9,7 @@ const ENTERPRISE_PLAN: PlanType = "RECRUITER_ENTERPRISE";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const companies = await prisma.company.findMany({

@@ -13,7 +13,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { circleId } = await params;
@@ -23,6 +23,6 @@ export async function POST(
     return NextResponse.json({ success: true, status: "OPEN" });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to open circle";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

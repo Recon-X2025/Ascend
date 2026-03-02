@@ -17,7 +17,7 @@ export async function POST(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { outcomeId } = await params;
@@ -26,7 +26,7 @@ export async function POST(
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   try {
@@ -42,11 +42,11 @@ export async function POST(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed";
     if (message === "Forbidden" || message === "Outcome not found") {
-      return NextResponse.json({ error: message }, { status: 403 });
+      return NextResponse.json({ success: false, error: message }, { status: 403 });
     }
     if (message.includes("not yet due") || message.includes("already completed")) {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json({ success: false, error: message }, { status: 400 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }

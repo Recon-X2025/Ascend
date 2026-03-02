@@ -33,15 +33,15 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
   const { jobApplicationId, ...rest } = body;
   if (!jobApplicationId) {
-    return NextResponse.json({ error: "jobApplicationId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "jobApplicationId is required" }, { status: 400 });
   }
   const hasAccess = await assertApplicationAccess(auth.userId, jobApplicationId);
   if (!hasAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const app = await prisma.jobApplication.findUnique({
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     select: { jobPostId: true },
   });
   if (!app) {
-    return NextResponse.json({ error: "Application not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Application not found" }, { status: 404 });
   }
 
   const clamp = (n: number | null | undefined) =>
@@ -129,11 +129,11 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const jobApplicationId = url.searchParams.get("jobApplicationId");
   if (!jobApplicationId) {
-    return NextResponse.json({ error: "jobApplicationId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "jobApplicationId is required" }, { status: 400 });
   }
   const hasAccess = await assertApplicationAccess(auth.userId, jobApplicationId);
   if (!hasAccess) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const scorecards = await prisma.interviewScorecard.findMany({

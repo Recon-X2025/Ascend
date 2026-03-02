@@ -7,7 +7,7 @@ import { subDays, startOfDay } from "date-fns";
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if ((session?.user as { role?: string })?.role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const days = Math.min(90, Math.max(7, parseInt(req.nextUrl.searchParams.get("days") ?? "30", 10)));

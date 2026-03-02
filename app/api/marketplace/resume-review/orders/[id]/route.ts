@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const order = await prisma.resumeReviewOrder.findUnique({
@@ -26,11 +26,11 @@ export async function GET(
       seeker: { select: { id: true } },
     },
   });
-  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  if (!order) return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
 
   const isSeeker = order.seekerId === userId;
   const isProvider = order.provider.userId === userId;
-  if (!isSeeker && !isProvider) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!isSeeker && !isProvider) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
 
   return NextResponse.json({
     order: {
@@ -55,21 +55,21 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const order = await prisma.resumeReviewOrder.findUnique({
     where: { id },
     include: { provider: { include: { user: { select: { id: true, email: true, name: true } } } }, seeker: { select: { id: true, email: true } } },
   });
-  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  if (!order) return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
 
   const parsed = patchSchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
 
   if (parsed.data.action === "deliver") {
-    if (order.provider.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    if (order.status !== "IN_REVIEW" && order.status !== "PAID") return NextResponse.json({ error: "Order not in deliverable state" }, { status: 400 });
+    if (order.provider.userId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    if (order.status !== "IN_REVIEW" && order.status !== "PAID") return NextResponse.json({ success: false, error: "Order not in deliverable state" }, { status: 400 });
 
     await prisma.$transaction([
       prisma.resumeReviewOrder.update({
@@ -99,8 +99,8 @@ export async function PATCH(
   }
 
   if (parsed.data.action === "rate") {
-    if (order.seekerId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    if (order.status !== "DELIVERED") return NextResponse.json({ error: "Order must be delivered to rate" }, { status: 400 });
+    if (order.seekerId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    if (order.status !== "DELIVERED") return NextResponse.json({ success: false, error: "Order must be delivered to rate" }, { status: 400 });
 
     const { seekerRating, seekerReview } = parsed.data;
     const reviews = await prisma.providerReview.count({ where: { providerId: order.providerId } });
@@ -144,8 +144,8 @@ export async function PATCH(
   }
 
   if (parsed.data.action === "dispute") {
-    if (order.seekerId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    if (order.status !== "DELIVERED" && order.status !== "IN_REVIEW") return NextResponse.json({ error: "Order cannot be disputed" }, { status: 400 });
+    if (order.seekerId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    if (order.status !== "DELIVERED" && order.status !== "IN_REVIEW") return NextResponse.json({ success: false, error: "Order cannot be disputed" }, { status: 400 });
 
     await prisma.resumeReviewOrder.update({
       where: { id },
@@ -167,5 +167,5 @@ export async function PATCH(
     return NextResponse.json({ success: true, status: "DISPUTED" });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

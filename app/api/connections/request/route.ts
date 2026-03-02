@@ -14,17 +14,17 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
   const { recipientId, type, contextTag } = parsed.data;
 
   if (recipientId === session.user.id) {
-    return NextResponse.json({ error: "Cannot connect with yourself" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Cannot connect with yourself" }, { status: 400 });
   }
 
   const existing = await prisma.connection.findUnique({

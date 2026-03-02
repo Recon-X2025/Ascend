@@ -25,8 +25,14 @@ export async function GET(req: Request) {
       jobPost: { select: { id: true, title: true, companyName: true, companyId: true } },
     },
   });
-  // TODO Phase 6: count JobApplication per version and attach applicationCount
-  const data = versions.map((v) => ({ ...v, applicationCount: 0 }));
+  const versionIds = versions.map((v) => v.id);
+  const appCounts = await prisma.jobApplication.groupBy({
+    by: ["resumeVersionId"],
+    where: { resumeVersionId: { in: versionIds } },
+    _count: { id: true },
+  });
+  const countMap = new Map(appCounts.map((c) => [c.resumeVersionId, c._count.id]));
+  const data = versions.map((v) => ({ ...v, applicationCount: countMap.get(v.id) ?? 0 }));
   const plan = getPlanForUser(userId);
   const maxVersions = getMaxResumeVersions(plan);
   const limitReached = isAtResumeVersionLimit(plan, versions.length);

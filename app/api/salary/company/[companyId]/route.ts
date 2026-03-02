@@ -25,7 +25,7 @@ export async function GET(
     select: { id: true, name: true, slug: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
 
   const roles = await getCompanySalaries(companyId, { role, city, year });

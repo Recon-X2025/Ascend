@@ -8,7 +8,7 @@ type Params = { params: Promise<{ slug: string }> };
 export async function GET(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
   const { slug } = await params;
   const company = await prisma.company.findUnique({
@@ -16,14 +16,14 @@ export async function GET(_req: Request, { params }: Params) {
     select: { id: true },
   });
   if (!company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Company not found" }, { status: 404 });
   }
   const admin = await prisma.companyAdmin.findFirst({
     where: { companyId: company.id, userId: session.user.id },
   });
   const role = (session.user as { role?: string }).role;
   if (!admin && role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const since = new Date();

@@ -14,7 +14,7 @@ export async function DELETE(
     });
 
     if (!webhook) {
-      return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Webhook not found" }, { status: 404 });
     }
 
     await prisma.companyWebhook.delete({ where: { id } });

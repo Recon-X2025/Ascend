@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unauthorized";
     if (msg === "UNAUTHORIZED") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.json(
       { error: "Mentor profile required" },

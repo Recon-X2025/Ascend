@@ -17,14 +17,14 @@ const bodySchema = z.object({
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: z.infer<typeof bodySchema>;
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const contract = await prisma.mentorshipContract.findUnique({
@@ -32,10 +32,10 @@ export async function POST(req: NextRequest) {
     select: { id: true, menteeUserId: true, status: true },
   });
   if (!contract) {
-    return NextResponse.json({ error: "Contract not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Contract not found" }, { status: 404 });
   }
   if (contract.menteeUserId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden — mentee only" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden — mentee only" }, { status: 403 });
   }
 
   try {

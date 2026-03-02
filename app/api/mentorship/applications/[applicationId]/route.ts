@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { applicationId } = await params;
@@ -29,14 +29,14 @@ export async function GET(
   });
 
   if (!application) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
 
   const isMentee = application.menteeId === session.user.id;
   const isMentor = application.mentorProfile.userId === session.user.id;
 
   if (!isMentee && !isMentor) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const payload: Record<string, unknown> = {
@@ -75,7 +75,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { applicationId } = await params;
@@ -89,14 +89,14 @@ export async function PATCH(
   });
 
   if (!application || application.menteeId !== session.user.id) {
-    return NextResponse.json({ error: "Not found or forbidden" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Not found or forbidden" }, { status: 404 });
   }
 
   let body: { action?: string; answer?: string };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   if (body.action === "WITHDRAW") {
@@ -159,5 +159,5 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

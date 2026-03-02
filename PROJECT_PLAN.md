@@ -40,7 +40,7 @@ A production-ready, scalable full-stack application combining core features of N
 | **Users** | Job Seekers, Recruiters/Employers, Company Admins, Platform Admins |
 | **Stack** | Next.js 14 (App Router), TypeScript, Tailwind, ShadCN, Prisma, PostgreSQL, NextAuth, Redis, Stripe |
 | **Search** | Elasticsearch or Typesense |
-| **Deployment** | Vercel (frontend) + Railway/Render (DB, Redis, optional backend services) |
+| **Deployment** | Vercel (frontend) + Vultr (DB, Redis, optional backend services) |
 
 **Build order:** Auth → Job Seeker Profile → **Intelligent Resume Builder** → Company Profiles → Company Admin Dashboard → Jobs (create & list) → Search & Filters → **Pre-Launch Data Layer (JD Ingestion)** → **Profile Fit Score (JD)** → Applications → **JD Resume Optimiser** → Reviews → Salary Insights → Networking & Feed → Dashboards → **Candidate Intelligence Dashboard** → AI → Monetization → Admin → SEO → Mobile Polish → Data & Analytics → **Recruiter Intelligence** → Trust & Compliance → B2B / Enterprise → **Internal Job Board** → Growth & Virality → Acquisition Readiness → **Vernacular Expansion** → **Marketplace & Career Services**.
 
@@ -79,10 +79,10 @@ A production-ready, scalable full-stack application combining core features of N
 | Component | Target | Notes |
 |-----------|--------|------|
 | Frontend + API | Vercel | Edge/Serverless |
-| PostgreSQL | Railway / Render / Supabase | Managed DB |
+| PostgreSQL | Vultr | Managed DB |
 | Redis | Local (dev) / Vultr Managed Redis (prod) | ioredis client |
 | Search | Typesense Cloud or Elastic Cloud | Managed preferred |
-| Workers (aggregation, emails) | Vercel Cron / Railway workers | As needed |
+| Workers (aggregation, emails) | Vercel Cron / Vultr workers | As needed |
 
 ### 2.4 Pre–Phase 2A Infrastructure (Outcome & AI Scaffolding)
 

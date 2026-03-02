@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
   }
 
   const eventType = typeof payload === "object" && payload && "type" in payload
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   });
   const companyId = integration?.companyId ?? (await prisma.company.findFirst({ select: { id: true } }))?.id;
   if (!companyId) {
-    return NextResponse.json({ error: "No company configured for webhook" }, { status: 503 });
+    return NextResponse.json({ success: false, error: "No company configured for webhook" }, { status: 503 });
   }
 
   const event = await prisma.atsWebhookEvent.create({

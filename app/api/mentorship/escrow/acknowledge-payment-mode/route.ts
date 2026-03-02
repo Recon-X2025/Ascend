@@ -17,18 +17,18 @@ const bodySchema = z.object({
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   let body: z.infer<typeof bodySchema>;
   try {
     body = bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   if (body.paymentMode !== "FULL_UPFRONT") {
-    return NextResponse.json({ error: "Acknowledgement required only for FULL_UPFRONT" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Acknowledgement required only for FULL_UPFRONT" }, { status: 400 });
   }
 
   const escrow = await prisma.mentorshipEscrow.findUnique({
@@ -36,16 +36,16 @@ export async function POST(req: NextRequest) {
     select: { id: true, menteeId: true, status: true, paymentMode: true },
   });
   if (!escrow) {
-    return NextResponse.json({ error: "Escrow not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Escrow not found" }, { status: 404 });
   }
   if (escrow.menteeId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden — mentee only" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden — mentee only" }, { status: 403 });
   }
   if (escrow.status !== "PENDING_PAYMENT") {
-    return NextResponse.json({ error: "Escrow not in PENDING_PAYMENT" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Escrow not in PENDING_PAYMENT" }, { status: 400 });
   }
   if (escrow.paymentMode !== "FULL_UPFRONT") {
-    return NextResponse.json({ error: "Escrow is not FULL_UPFRONT" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Escrow is not FULL_UPFRONT" }, { status: 400 });
   }
 
   const existing = await prisma.paymentModeAcknowledgement.findUnique({

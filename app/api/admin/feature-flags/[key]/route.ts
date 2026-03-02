@@ -10,14 +10,14 @@ export async function PATCH(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || (session.user as { role?: string }).role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const key = decodeURIComponent((await context.params).key);
   const body = await req.json().catch(() => ({}));
   const enabled = typeof body.enabled === "boolean" ? body.enabled : undefined;
   if (enabled === undefined) {
-    return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "enabled (boolean) is required" }, { status: 400 });
   }
 
   const flag = await prisma.featureFlag.findUnique({
@@ -25,7 +25,7 @@ export async function PATCH(
     select: { id: true, key: true, enabled: true },
   });
   if (!flag) {
-    return NextResponse.json({ error: "Feature flag not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Feature flag not found" }, { status: 404 });
   }
 
   const previousValue = flag.enabled;

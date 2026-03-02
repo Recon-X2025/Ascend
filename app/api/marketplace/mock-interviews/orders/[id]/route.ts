@@ -20,15 +20,15 @@ const patchSchema = z.discriminatedUnion("action", [
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const order = await prisma.mockInterviewBooking.findUnique({
     where: { id },
     include: { provider: { include: { user: { select: { name: true, image: true } } } } },
   });
-  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  if (order.seekerId !== userId && order.provider.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!order) return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
+  if (order.seekerId !== userId && order.provider.userId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
 
   return NextResponse.json({
     order: {
@@ -55,21 +55,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const order = await prisma.mockInterviewBooking.findUnique({
     where: { id },
     include: { provider: { include: { user: { select: { email: true } } } }, seeker: { select: { email: true } } },
   });
-  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  if (!order) return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
 
   const parsed = patchSchema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ success: false, error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
 
   if (parsed.data.action === "deliver") {
-    if (order.provider.userId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    if (order.status !== "PAID") return NextResponse.json({ error: "Order not in deliverable state" }, { status: 400 });
+    if (order.provider.userId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    if (order.status !== "PAID") return NextResponse.json({ success: false, error: "Order not in deliverable state" }, { status: 400 });
 
     const { technicalScore, communicationScore, cultureScore, problemSolvingScore, scorecardNotes } = parsed.data;
     await prisma.$transaction([
@@ -108,8 +108,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   if (parsed.data.action === "rate") {
-    if (order.seekerId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    if (order.status !== "DELIVERED") return NextResponse.json({ error: "Order must be delivered to rate" }, { status: 400 });
+    if (order.seekerId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    if (order.status !== "DELIVERED") return NextResponse.json({ success: false, error: "Order must be delivered to rate" }, { status: 400 });
 
     const { seekerRating, seekerReview } = parsed.data;
     const reviews = order.provider.totalReviews;
@@ -147,7 +147,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   if (parsed.data.action === "dispute") {
-    if (order.seekerId !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (order.seekerId !== userId) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     await prisma.mockInterviewBooking.update({ where: { id }, data: { status: "DISPUTED" } });
     await createNotification({
       userId: order.provider.userId,
@@ -165,5 +165,5 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ success: true, status: "DISPUTED" });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ success: false, error: "Unknown action" }, { status: 400 });
 }

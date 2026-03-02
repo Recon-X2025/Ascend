@@ -10,7 +10,7 @@ const REFRESH_WINDOW_SECONDS = 24 * 60 * 60;
 export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorised" }, { status: 401 });
   }
   const userId = session.user.id;
 

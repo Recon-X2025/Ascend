@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ success: false }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

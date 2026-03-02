@@ -20,7 +20,7 @@ export async function POST(
   const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string })?.role;
   if (!session?.user?.id || role !== "PLATFORM_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const { trancheId } = await params;
@@ -28,14 +28,14 @@ export async function POST(
   try {
     bodySchema.parse(await req.json());
   } catch (e) {
-    return NextResponse.json({ error: "Invalid body", details: e }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid body", details: e }, { status: 400 });
   }
 
   const tranche = await prisma.escrowTranche.findUnique({
     where: { id: trancheId },
   });
   if (!tranche) {
-    return NextResponse.json({ error: "Tranche not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Tranche not found" }, { status: 404 });
   }
 
   try {

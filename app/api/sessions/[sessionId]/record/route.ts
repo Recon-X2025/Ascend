@@ -17,7 +17,7 @@ export async function GET(
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const { sessionId } = await params;
@@ -28,22 +28,22 @@ export async function GET(
     where: { id: sessionId },
     include: { contract: true, sessionRecord: true },
   });
-  if (!eng) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  if (!eng) return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
 
   const isMentor = eng.contract.mentorUserId === session.user.id;
   const isMentee = eng.contract.menteeUserId === session.user.id;
   if (!isMentor && !isMentee) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   if (!eng.sessionRecord) {
-    return NextResponse.json({ error: "Session record not yet available" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Session record not yet available" }, { status: 404 });
   }
 
   if (verifyIntegrity) {
     const ok = await verifySessionRecordIntegrity(sessionId);
     if (!ok) {
-      return NextResponse.json({ error: "Integrity verification failed" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "Integrity verification failed" }, { status: 500 });
     }
   }
 

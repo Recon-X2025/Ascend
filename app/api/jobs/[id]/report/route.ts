@@ -27,5 +27,5 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   console.info("[JobReport] jobId=%s title=%s userId=%s", job.id, job.title, session.user.id);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ success: true });
 }
