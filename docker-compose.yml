@@ -1,0 +1,28 @@
+# Optional: run Typesense locally for Phase 5 job search.
+# Start:  docker compose up -d
+# Stop:   docker compose stop typesense   (or docker stop typesense)
+# Logs:   docker compose logs -f typesense
+#
+# Then set in .env.local:
+#   TYPESENSE_HOST=localhost
+#   TYPESENSE_PORT=8108
+#   TYPESENSE_PROTOCOL=http
+#   TYPESENSE_API_KEY=xyz
+# (Use the same key as below, or generate one and set it in both places.)
+
+services:
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: typesense
+    environment:
+      TYPESENSE_API_KEY: xyz
+      TYPESENSE_ENABLE_CORS: "true"
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense-data:/data
+    command: --data-dir /data --api-key=xyz
+    restart: unless-stopped
+
+volumes:
+  typesense-data:

@@ -1,0 +1,38 @@
+---
+description: Keep Tailwind theme in sync with design system and shadcn-style UI classes
+globs: "tailwind.config.*,app/globals.css,components/ui/**/*.tsx,components/layout/*.tsx"
+alwaysApply: false
+---
+
+# Design system & Tailwind theme consistency
+
+## Rule
+
+**Every Tailwind color utility used in the app must have a matching entry in `tailwind.config.ts` under `theme.extend.colors`.** If a component uses a class like `text-foreground`, `bg-background`, `border-input`, or `focus:ring-ring`, the theme must define that color key. Otherwise the class generates no CSS and UI breaks (invisible text, wrong backgrounds, missing focus rings).
+
+## Required theme color keys (do not remove)
+
+These keys are used across the codebase (shadcn-style and layout). Keep them in `tailwind.config.ts`:
+
+| Key | Purpose | Maps to |
+|-----|---------|--------|
+| `background` | Page/surface bg, ring-offset | `var(--bg)` |
+| `foreground` | Body/heading text | `var(--ink)` |
+| `input` | Input/textarea borders | `var(--border)` |
+| `ring` | Focus ring color | `var(--green)` |
+| `primary` | Buttons, active states | `DEFAULT: var(--green)`, `foreground: #FFFFFF` |
+| `accent` | Focus/hover tints | `DEFAULT: var(--green-light)`, `foreground: var(--ink)` |
+| `muted` | Secondary surfaces, disabled | `DEFAULT: var(--surface-2)`, `foreground: var(--ink-3)` |
+| `secondary` | Dialog/sheet secondary bg | `var(--surface-2)` |
+
+Design-system tokens (`bg`, `surface`, `border`, `green`, `ink`, etc.) are also required; see the comment block in `tailwind.config.ts`.
+
+## When adding or changing UI
+
+1. **Adding a new shadcn or UI component** that uses classes like `text-foreground`, `bg-background`, `border-input`, `ring-offset-background`, `bg-accent`, `bg-secondary`: ensure each of these color names exists in `tailwind.config.ts` (see list above). If you introduce a new semantic name (e.g. `destructive`), add it to the theme and map it to the design system (e.g. `danger` / red).
+2. **Editing `tailwind.config.ts`**: do not remove the required keys listed above or in the config comment. Adding new keys is fine; map them to `app/globals.css` CSS variables where possible.
+3. **Editing `app/globals.css`**: changes to `:root` variables (e.g. `--bg`, `--ink`, `--green`) affect the whole app; ensure Tailwind theme still references them where documented.
+
+## Quick check
+
+Before merging changes that touch styling or UI: run a quick grep for `text-foreground|bg-background|border-input|ring-offset-background|bg-accent|bg-secondary` in the repo. For each unique color name used (e.g. `foreground`, `background`), confirm `theme.extend.colors` in `tailwind.config.ts` has that key.

@@ -1,0 +1,19 @@
+{
+  "crons": [
+    {"path": "/api/cron/daily-snapshot", "schedule": "30 23 * * *"},
+    {"path": "/api/cron/expire-unsigned-contracts", "schedule": "0 * * * *"},
+    {"path": "/api/cron/internal-to-public", "schedule": "0 9 * * *"},
+    {"path": "/api/cron/engagement-reminders", "schedule": "30 2 * * *"},
+    {"path": "/api/cron/mentorship-ops-check", "schedule": "30 2 * * *"},
+    {"path": "/api/cron/outcome-reminders", "schedule": "30 3 * * *"},
+    {"path": "/api/cron/recalculate-mentor-tiers", "schedule": "30 20 * * 6"},
+    {"path": "/api/cron/investor-snapshot", "schedule": "0 19 * * *"},
+    {"path": "/api/cron/mentorship-analytics-snapshot", "schedule": "30 19 * * *"},
+    {"path": "/api/cron/mentorship-revenue-snapshot", "schedule": "30 20 * * *"},
+    {"path": "/api/cron/mentorship-escrow-autorelease", "schedule": "30 3 * * *"},
+    {"path": "/api/cron/mentorship-monetisation-check", "schedule": "30 0 * * 1"},
+    {"path": "/api/cron/seo-boost-expire", "schedule": "30 18 * * *"},
+    {"path": "/api/cron/monthly-mentor-report", "schedule": "30 2 1 * *"},
+    {"path": "/api/cron/annual-mentor-summary", "schedule": "30 2 1 4 *"}
+  ]
+}

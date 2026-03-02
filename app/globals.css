@@ -2,26 +2,256 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ─── Ascend Design System ───────────────────────────────────────────────── */
+/* Palette: #F7F6F1 parchment · #16A34A green · #0F1A0F ink · Syne + DM Sans   */
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Foundation — warm parchment, not clinical white */
+    --bg: #f7f6f1;
+    --surface: #ffffff;
+    --surface-2: #f0efe9;
+    --border: #e8e6df;
+    --border-mid: #d4d1c8;
+
+    /* Signal — grounded green */
+    --green: #16a34a;
+    --green-dark: #0f6930;
+    --green-light: #dcfce7;
+    --green-mid: #bbf7d0;
+    --green-tint: rgba(22, 163, 74, 0.06);
+
+    /* Text — ink with green undertone */
+    --ink: #0f1a0f;
+    --ink-2: #374151;
+    --ink-3: #6b7280;
+    --ink-4: #9ca3af;
+    --ink-5: #d1d5db;
+
+    /* Legacy compatibility (map to new palette) */
+    --background: 247 246 241;
+    --foreground: 15 26 15;
+    --card: 255 255 255;
+    --card-foreground: 15 26 15;
+    --primary: 15 105 48;
+    --primary-foreground: 255 255 255;
+    --accent: 22 163 74;
+    --accent-foreground: 255 255 255;
+    --muted: 240 239 233;
+    --muted-foreground: 107 114 128;
+    --radius: 0.5rem;
+    --ring: 22 163 74;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grain overlay — sits under interactive elements */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.028;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--green-tint);
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes drawUnderline {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes bounceCue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.7;
+  }
+}
+
+.animate-bounce-cue {
+  animation: bounceCue 2s ease-in-out infinite;
+}
+
+@layer components {
+  .ascend-card {
+    @apply rounded-xl border transition-shadow duration-200;
+    background-color: var(--surface);
+    border-color: var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .ascend-card-hover {
+    @apply ascend-card cursor-pointer;
+  }
+  .ascend-card-hover:hover {
+    border-color: var(--border-mid);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .ascend-card-active {
+    @apply ascend-card;
+    box-shadow: 0 0 0 2px var(--green);
+  }
+
+  .btn-base {
+    @apply inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    border-radius: 8px;
+  }
+
+  .btn-primary {
+    @apply btn-base text-white;
+    background-color: var(--green);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--green-dark);
+  }
+  .btn-primary:focus-visible {
+    box-shadow: 0 0 0 3px var(--green-tint);
+  }
+
+  .btn-secondary,
+  .btn-ghost {
+    @apply btn-base border;
+    border-color: var(--border-mid);
+    color: var(--ink-2);
+  }
+  .btn-secondary:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .btn-danger {
+    @apply btn-base border;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: rgba(220, 38, 38, 0.05);
+  }
+
+  .ascend-input {
+    @apply w-full rounded-lg px-3 py-2 text-sm transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--bg);
+    border: 1.5px solid var(--border);
+    color: var(--ink);
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+  }
+  .ascend-input::placeholder {
+    color: var(--ink-5);
+  }
+  .ascend-input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  }
+
+  .ascend-label {
+    @apply block mb-1;
+    font-size: 0.78rem;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    color: var(--ink-3);
+  }
+
+  .ascend-error {
+    @apply text-xs mt-1;
+    color: #dc2626;
+  }
+
+  .ascend-hint {
+    @apply text-xs mt-1;
+    color: var(--ink-4);
+  }
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-section {
+    @apply py-8 md:py-12;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold;
+    color: var(--ink);
+    font-family: var(--font-syne), sans-serif;
+  }
+
+  .section-subtitle {
+    @apply text-sm mt-1;
+    color: var(--ink-3);
+  }
+
+  .ascend-divider {
+    border-top: 1px solid var(--border);
+    @apply my-6;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded;
+    background-color: var(--surface-2);
   }
 }

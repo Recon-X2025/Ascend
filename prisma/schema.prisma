@@ -1,0 +1,4575 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  JOB_SEEKER
+  RECRUITER
+  COMPANY_ADMIN
+  PLATFORM_ADMIN
+}
+
+enum UserPersona {
+  ACTIVE_SEEKER
+  PASSIVE_SEEKER
+  EARLY_CAREER
+  RECRUITER
+}
+
+// ─── DS-4B: Persona Deepening (UserCareerContext) ───────────────────────────
+
+enum ExperienceBand {
+  FRESHER
+  EARLY
+  MID
+  SENIOR
+  LEADERSHIP
+}
+
+enum CareerEmploymentStatus {
+  EMPLOYED_ACTIVE
+  EMPLOYED_LOOKING
+  NOTICE_PERIOD
+  UNEMPLOYED
+  FREELANCE
+  STUDENT
+  SABBATICAL
+}
+
+enum CareerNoticePeriod {
+  IMMEDIATE
+  TWO_WEEKS
+  ONE_MONTH
+  TWO_MONTHS
+  THREE_MONTHS
+  NEGOTIABLE
+}
+
+enum SearchUrgency {
+  BROWSING
+  WARMING_UP
+  ACTIVE
+  URGENT
+}
+
+enum SearchReason {
+  GROWTH
+  COMPENSATION
+  CULTURE
+  LAYOFF
+  RELOCATION
+  CAREER_SWITCH
+  FIRST_JOB
+  RETURNING
+  ENTREPRENEURSHIP
+  CURIOSITY
+}
+
+enum PrimaryNeed {
+  FIND_JOBS
+  BENCHMARK_SALARY
+  IMPROVE_RESUME
+  FIND_MENTOR
+  BUILD_NETWORK
+  UNDERSTAND_COMPANIES
+  PREPARE_INTERVIEWS
+}
+
+enum TargetCompanySizeBand {
+  STARTUP
+  SCALEUP
+  MIDSIZE
+  LARGE
+  ENTERPRISE
+  ANY
+}
+
+enum TargetGeography {
+  INDIA_ONLY
+  INDIA_TO_GLOBAL
+  GLOBAL_ONLY
+  FLEXIBLE
+}
+
+model UserCareerContext {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  currentRole         String?
+  currentCompany      String?
+  currentSalary       Int?
+  yearsOfExperience   Int?
+  experienceBand      ExperienceBand?
+
+  targetRole          String?
+  targetIndustry      String[]  @default([])
+  targetCompanySize   TargetCompanySizeBand?
+  targetCompanyType   String[]  @default([])
+  targetSalaryMin     Int?
+  targetLocations     String[]  @default([])
+  openToRelocation    Boolean   @default(false)
+  openToRemote        Boolean   @default(true)
+
+  employmentStatus    CareerEmploymentStatus?
+  noticePeriod        CareerNoticePeriod?
+  urgency             SearchUrgency?
+  searchReason        SearchReason?
+
+  primaryNeed         PrimaryNeed?
+  secondaryNeeds      PrimaryNeed[] @default([])
+
+  isFirstJob          Boolean   @default(false)
+  isSwitchingField    Boolean   @default(false)
+  targetGeography     TargetGeography?
+
+  completionScore     Int       @default(0)
+  contextSetAt        DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+enum HiringVolume {
+  OCCASIONAL
+  REGULAR
+  HIGH_VOLUME
+}
+
+enum RecruiterPainPoint {
+  CANDIDATE_QUALITY
+  TIME_TO_HIRE
+  PIPELINE_VISIBILITY
+  JD_WRITING
+  SOURCING
+  OFFER_ACCEPTANCE
+}
+
+model UserRecruiterContext {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hiringFor           String[]  @default([])
+  hiringVolume        HiringVolume?
+  painPoints          RecruiterPainPoint[] @default([])
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  emailVerified      DateTime?
+  passwordHash       String?
+  name               String?
+  image              String?
+  role               Role      @default(JOB_SEEKER)
+  onboardingComplete Boolean   @default(false)
+  persona            UserPersona?
+  personaSetAt       DateTime?
+  twoFactorEnabled   Boolean   @default(false)
+  twoFactorSecret    String?
+  bannedAt           DateTime?
+  banReason          String?
+  deletedAt          DateTime? // Phase 17: soft delete for account deletion requests
+  termsAcceptedAt    DateTime?
+  marketingConsent   Boolean   @default(false)
+  preferredCurrency  String    @default("INR")  // ISO 4217 — salary display
+  canFileDisputes    Boolean   @default(true)   // M-9: false after 2 rejected disputes
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  auditLogs           AuditLog[]
+  auditLogsAsActor    AuditLog[]       @relation("AuditLogActor")
+  dataRequests        DataRequest[]
+  userReports         UserReport[]
+  featureFlagsUpdated FeatureFlag[]
+  jobSeekerProfile JobSeekerProfile?
+  recruiterProfile RecruiterProfile?
+  outcomeEvents    OutcomeEvent[]
+  aiInteractions   AIInteraction[]
+  userJourney      UserJourney?
+  apiKeys          APIKey[]
+  careerIntents    CareerIntent[]
+  resumeVersions   ResumeVersion[]
+  jobApplications  JobApplication[]
+  companyAdmins       CompanyAdmin[]
+  companyBenefitRatings CompanyBenefitRating[]
+  companyReviews      CompanyReview[]
+  companyReviewVotes  CompanyReviewVote[]
+  interviewReviews    InterviewReview[]
+  interviewVotes       InterviewVote[]
+  salaryReports       SalaryReport[]
+  companyQAs          CompanyQA[]
+  companyQAVotes      CompanyQAVote[]
+  jobPosts            JobPost[]
+  savedJobs           SavedJob[]
+  savedSearches       SavedSearch[]
+  jobAlerts           JobAlert[]
+  searchHistories     SearchHistory[]
+  fitScores             FitScore[]
+  fitScoreHistory       FitScoreHistory[]
+  optimisationSessions  OptimisationSession[]
+  notifications         Notification[]
+  subscription          UserSubscription?
+  resumeOptimisationCredits ResumeOptimisationCredit?
+  paymentEvents         PaymentEvent[]
+  resumeUnlocksAsRecruiter ResumeUnlock[] @relation("RecruiterUnlocks")
+  unlockedBy            ResumeUnlock[]    @relation("SeekerUnlocks")
+  connectionsInitiated  Connection[]       @relation("ConnectionsInitiated")
+  connectionsReceived   Connection[]     @relation("ConnectionsReceived")
+  companyFollows        CompanyFollow[]
+  conversationsAsA      Conversation[]    @relation("ConversationA")
+  conversationsAsB      Conversation[]   @relation("ConversationB")
+  messagesSent          Message[]
+  signalFeed            CareerSignal[]    @relation("SignalFeed")
+  signalsActed          CareerSignal[]    @relation("SignalActor")
+  careerContext         UserCareerContext?
+  recruiterContext      UserRecruiterContext?
+  mentorProfile         MentorProfile?
+  menteeSessions        MentorSession[]       @relation("MenteeSession")
+  menteeApplications    MentorApplication[]   @relation("MenteeApplications")
+  mentorContracts       MentorshipContract[]  @relation("MentorContracts")
+  menteeContracts       MentorshipContract[]  @relation("MenteeContracts")
+  escrowAsMentor        MentorshipEscrow[]    @relation("EscrowMentor")
+  escrowAsMentee        MentorshipEscrow[]    @relation("EscrowMentee")
+  paymentModeAcknowledgements PaymentModeAcknowledgement[]
+  mentorOutcomes        MentorshipOutcome[]   @relation("MentorOutcomes")
+  menteeOutcomes        MentorshipOutcome[]   @relation("MenteeOutcomes")
+  mentorTierHistory    MentorTierHistory[]   @relation("MentorTierHistory")
+  contractSignatures    ContractSignature[]   @relation("ContractSignatures")
+  menteeReadiness       MenteeReadinessCheck?
+  circleMembers         CircleMember[]        @relation("CircleMembers")  // M-12
+  mentorCircles         MentorshipCircle[]    @relation("MentorCircles")    // M-12
+  verificationAuditLogsAdmin VerificationAuditLog[]
+  candidateInsightSnapshot    CandidateInsightSnapshot?
+  coverLetters                CoverLetter[]
+  interviewPreps              InterviewPrep[]
+  profileOptimiserResult      ProfileOptimiserResult?
+  jobDismissals               JobDismissal[]
+  interviewScorecards         InterviewScorecard[]
+  companyEmployees            CompanyEmployee[]
+  jobReferralsAsReferrer      JobReferral[]
+  // Phase 18: B2B / Enterprise
+  companyApiKeysCreated      CompanyApiKey[]
+  bulkImportJobsInitiated    BulkImportJob[]
+  // Phase 19: Growth & Virality
+  referralCode                ReferralCode?
+  referredBy                  Referral?       @relation("ReferredReferrals")
+  referrals                   Referral[]      @relation("ReferrerReferrals")
+  shareEvents                 ShareEvent[]
+  endorserEndorsements        ProfileEndorsement[] @relation("EndorserEndorsements")
+  recipientEndorsements       ProfileEndorsement[]  @relation("RecipientEndorsements")
+  referralPremiumUntil        DateTime?       // 30-day premium reward (no monetary payout yet)
+  // Phase 22: Marketplace & Career Services
+  marketplaceProvider        MarketplaceProvider?
+  seekerResumeReviews         ResumeReviewOrder[]   @relation("SeekerResumeReviews")
+  seekerMockInterviews        MockInterviewBooking[] @relation("SeekerMockInterviews")
+  seekerCoachingSessions      CoachingSession[]     @relation("SeekerCoachingSessions")
+  providerReviewsGiven       ProviderReview[]
+  courseClicks                CourseClick[]
+  profileBadges               ProfileBadge[]
+  // M-16: Mentorship Ops
+  mentorshipAuditLogsAsActor  MentorshipAuditLog[]
+  opsAlertsResolved           OpsAlert[]
+  // M-15: Legal Framework
+  legalDocumentSignatures     LegalDocumentSignature[]
+  // M-17: Mentorship Analytics
+  mentorAnalyticsSnapshots    MentorAnalyticsSnapshot[]
+  // GST Invoicing
+  invoices                    Invoice[]
+  billingProfile              BillingProfile?
+}
+
+enum ReferralStatus {
+  CLICKED
+  SIGNED_UP
+  CONVERTED
+  REWARDED
+}
+
+model ReferralCode {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String    @unique
+  code        String    @unique // e.g. "ANANYA42" — human-readable
+  clicks      Int       @default(0)
+  signups     Int       @default(0)
+  conversions Int       @default(0) // converted = completed onboarding
+  createdAt   DateTime  @default(now())
+  referrals   Referral[]
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrer       User           @relation("ReferrerReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
+  referrerId     String
+  referred       User?          @relation("ReferredReferrals", fields: [referredId], references: [id], onDelete: SetNull)
+  referredId     String?        @unique // null until they register
+  referralCode   ReferralCode   @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  codeId         String
+  referredEmail  String?        // captured at click if email provided
+  status         ReferralStatus @default(CLICKED)
+  clickedAt      DateTime      @default(now())
+  signedUpAt     DateTime?
+  convertedAt    DateTime?     // completed onboarding
+  rewardGranted  Boolean       @default(false)
+  rewardGrantedAt DateTime?
+
+  @@index([referrerId])
+  @@index([codeId])
+  @@index([referredId])
+}
+
+model ShareEvent {
+  id         String   @id @default(cuid())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId     String?
+  entityType String   // "JOB" | "COMPANY" | "PROFILE" | "SALARY_INSIGHT" | "MENTOR"
+  entityId   String
+  channel    String   // "COPY_LINK" | "WHATSAPP" | "LINKEDIN" | "TWITTER" | "EMAIL"
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, channel])
+  @@index([createdAt])
+}
+
+model ProfileEndorsement {
+  id          String   @id @default(cuid())
+  endorser    User     @relation("EndorserEndorsements", fields: [endorserId], references: [id], onDelete: Cascade)
+  endorserId  String
+  recipient   User     @relation("RecipientEndorsements", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  skill       String   // skill name being endorsed
+  createdAt   DateTime @default(now())
+
+  @@unique([endorserId, recipientId, skill])
+  @@index([recipientId])
+  @@index([endorserId])
+}
+
+enum NotificationType {
+  APPLICATION_STATUS_CHANGED
+  JOB_ALERT_MATCH
+  FIT_SCORE_IMPROVED
+  PROFILE_VIEW
+  RESUME_OPTIMISED
+  CONNECTION_REQUEST
+  MESSAGE_RECEIVED
+  SYSTEM
+  SKILL_ENDORSED
+  MENTOR_SESSION_REQUESTED
+  MENTOR_SESSION_ACCEPTED
+  MENTOR_SESSION_DECLINED
+  MENTOR_SESSION_COMPLETED
+  MENTOR_VERIFICATION_SUBMITTED
+  MENTOR_VERIFICATION_APPROVED
+  MENTOR_VERIFICATION_REJECTED
+  MENTOR_VERIFICATION_MORE_INFO
+  MENTOR_REVERIFICATION_REQUIRED
+  // Phase 22: Marketplace
+  MARKETPLACE_ORDER_RECEIVED
+  MARKETPLACE_ORDER_DELIVERED
+  MARKETPLACE_ORDER_DISPUTED
+  MARKETPLACE_PROVIDER_APPROVED
+  MARKETPLACE_PROVIDER_REJECTED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?
+  linkUrl   String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+// ─── Job Seeker Profile (Phase 2) ─────────────────────────────────────────
+
+enum NoticePeriod {
+  IMMEDIATE
+  FIFTEEN_DAYS
+  THIRTY_DAYS
+  SIXTY_DAYS
+  NINETY_DAYS
+  MORE_THAN_NINETY
+}
+
+enum WorkMode {
+  REMOTE
+  HYBRID
+  ONSITE
+  FLEXIBLE
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  CONNECTIONS_ONLY
+  RECRUITERS_ONLY
+  PRIVATE
+}
+
+enum OpenToWorkVisibility {
+  ALL
+  RECRUITERS_ONLY
+}
+
+model JobSeekerProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+
+  headline         String?
+  summary          String?
+  avatarUrl        String?
+  bannerUrl        String?
+
+  city             String?
+  state            String?
+  country          String?
+  pinCode          String?
+
+  currentCompany   String?
+  currentRole      String?
+  totalExpYears    Float?
+  noticePeriod     NoticePeriod?
+  currentCTC       Float?
+  expectedCTC      Float?
+  ctcCurrency      String?   @default("INR")
+  workMode         WorkMode?
+
+  openToWork       Boolean   @default(false)
+  openToWorkVisibility OpenToWorkVisibility @default(RECRUITERS_ONLY)
+
+  visibility       ProfileVisibility @default(PUBLIC)
+  hideFromCompanies String[]         @default([])
+  defaultResumeVisibility ResumeVisibility @default(RECRUITERS_ONLY)
+
+  completionScore  Int       @default(0)
+  profileViews     Int       @default(0)
+
+  username         String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiences      Experience[]
+  educations       Education[]
+  certifications  Certification[]
+  projects         Project[]
+  awards           Award[]
+  languages        ProfileLanguage[]
+  volunteerWork    VolunteerWork[]
+  publications     Publication[]
+  skills           UserSkill[]
+  resumes          Resume[]
+  careerIntents    CareerIntent[]
+}
+
+// ─── Resume Builder (Phase 2A) ─────────────────────────────────────────────
+
+enum TargetLevel {
+  IC
+  TEAM_LEAD
+  MANAGER
+  DIRECTOR
+  VP
+  C_SUITE
+}
+
+model CareerIntent {
+  id               String    @id @default(cuid())
+  userId           String
+  profileId        String
+
+  targetRole       String
+  targetIndustry   String
+  targetLevel      TargetLevel
+  careerGoal       String    @db.VarChar(300)
+  switchingIndustry Boolean  @default(false)
+  fromIndustry     String?
+  toIndustry       String?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile          JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  resumeVersions   ResumeVersion[]
+
+  @@index([userId])
+  @@index([profileId])
+}
+
+enum ResumeVersionStatus {
+  DRAFT
+  COMPLETE
+}
+
+model ResumeVersion {
+  id               String    @id @default(cuid())
+  userId           String
+  careerIntentId   String
+  name             String
+  templateId       String?
+  contentSnapshot  Json?
+  atsScore         Int?
+  lastUsedAt       DateTime?
+  lastUpdatedAt    DateTime?
+  status           ResumeVersionStatus @default(DRAFT)
+  jobPostId        Int?
+  optimisedFrom    String?
+  optimisationMeta Json?
+  isDefault        Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  careerIntent             CareerIntent           @relation(fields: [careerIntentId], references: [id], onDelete: Cascade)
+  jobPost                  JobPost?                @relation("JobPostResumeVersions", fields: [jobPostId], references: [id], onDelete: SetNull)
+  sourceVersion            ResumeVersion?          @relation("OptimisedVersions", fields: [optimisedFrom], references: [id], onDelete: SetNull)
+  derivedVersions          ResumeVersion[]        @relation("OptimisedVersions")
+  jobApplications          JobApplication[]
+  optimisationSessionsAsBase    OptimisationSession[] @relation("BaseVersion")
+  optimisationSessionsAsOutput  OptimisationSession[] @relation("OutputVersion")
+
+  @@index([userId])
+  @@index([careerIntentId])
+  @@index([jobPostId])
+  @@index([optimisedFrom])
+}
+
+// OptimisationMeta JSON shape (documented in code):
+// { fitScoreBefore: number | null, fitScoreAfter: number | null, keywordsAdded: string[],
+//   keywordsGapped: string[], bulletsRewritten: number, summaryRewritten: boolean }
+
+// ─── Phase 4: Job Posts ───────────────────────────────────────────────────
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+  TEMPORARY
+}
+
+enum EducationLevel {
+  ANY
+  HIGH_SCHOOL
+  DIPLOMA
+  BACHELORS
+  MASTERS
+  PHD
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+// Phase 18B: Internal Job Board & Employee Mobility
+enum JobVisibility {
+  PUBLIC   // default — visible to all job seekers
+  INTERNAL // verified employees of posting company only
+  UNLISTED // direct link only, not in any listing
+}
+
+enum ScreeningQuestionType {
+  TEXT
+  YES_NO
+  MULTIPLE_CHOICE
+}
+
+model JobPost {
+  id               Int          @id @default(autoincrement())
+  slug             String       @unique
+  title            String
+  description      String
+  type             JobType
+  workMode         WorkMode
+  locations        String[]     @default([])
+  salaryMin        Int?
+  salaryMax        Int?
+  salaryCurrency   String       @default("INR")
+  salaryVisible    Boolean      @default(true)
+  experienceMin    Int?
+  experienceMax    Int?
+  educationLevel   EducationLevel @default(ANY)
+  openings         Int          @default(1)
+  deadline         DateTime?
+  easyApply        Boolean      @default(true)
+  applicationUrl   String?
+  tags             String[]    @default([])
+  status               JobStatus     @default(DRAFT)
+  visibility           JobVisibility @default(PUBLIC)
+  internalFirstDays    Int?          // Phase 18B: switch to PUBLIC after N days (cron)
+  allowAnonymousApply  Boolean       @default(false) // Phase 18B: hide applicant name until shortlisted
+  viewCount            Int           @default(0)
+  applicationCount     Int           @default(0)
+  companyId            String?
+  companyName          String?
+  recruiterId          String
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  publishedAt          DateTime?
+
+  resumeVersions       ResumeVersion[]       @relation("JobPostResumeVersions")
+  jobReferrals         JobReferral[]
+  optimisationSessions OptimisationSession[]
+  companyRef           Company?              @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  recruiter            User                  @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  skills               JobPostSkill[]
+  screeningQuestions   JobScreeningQuestion[]
+  savedJobs            SavedJob[]
+  fitScores            FitScore[]
+  fitScoreHistory      FitScoreHistory[]
+  jobApplications      JobApplication[]
+  boosts               JobBoost[]
+  messageContexts      Message[]
+  signals              CareerSignal[]
+  coverLetters         CoverLetter[]
+  interviewPreps       InterviewPrep[]
+  jobDismissals        JobDismissal[]
+  hiringAnalyticsSnapshots HiringAnalyticsSnapshot[]
+  interviewScorecards  InterviewScorecard[]
+  diMetricsSnapshots   DIMetricsSnapshot[]
+
+  @@index([slug])
+  @@index([recruiterId])
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum OptimisationStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model OptimisationSession {
+  id               String             @id @default(cuid())
+  userId           String
+  jobPostId        Int
+  baseVersionId    String
+  outputVersionId  String?
+  status           OptimisationStatus @default(PENDING)
+  fitScoreBefore   Float?
+  fitScoreAfter    Float?
+  gapAnalysis      Json?
+  errorMessage     String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPost       JobPost       @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  baseVersion   ResumeVersion @relation("BaseVersion", fields: [baseVersionId], references: [id], onDelete: Cascade)
+  outputVersion ResumeVersion? @relation("OutputVersion", fields: [outputVersionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([jobPostId])
+  @@index([baseVersionId])
+  @@index([status])
+}
+
+model JobPostSkill {
+  id         String   @id @default(cuid())
+  jobPostId  Int
+  skillId    String
+  required   Boolean
+
+  jobPost JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobPostId, skillId])
+  @@index([jobPostId])
+}
+
+model JobScreeningQuestion {
+  id        String                 @id @default(cuid())
+  jobPostId Int
+  question  String
+  type      ScreeningQuestionType
+  options   String[]               @default([])
+  required  Boolean                @default(true)
+  order     Int                    @default(0)
+
+  jobPost JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostId])
+}
+
+model SavedJob {
+  id         String   @id @default(cuid())
+  userId     String
+  jobPostId  Int
+  savedAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPost JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+  @@index([jobPostId])
+}
+
+// ─── Phase 5: Search, Saved Searches, Alerts ─────────────────────────────────
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  query     String
+  filters   Json?
+  createdAt DateTime @default(now())
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobAlerts JobAlert[]
+
+  @@index([userId])
+}
+
+enum AlertFrequency {
+  IMMEDIATE
+  DAILY
+  WEEKLY
+}
+
+model JobAlert {
+  id             String         @id @default(cuid())
+  userId         String
+  savedSearchId  String?
+  name           String
+  query          String
+  filters        Json?
+  frequency      AlertFrequency
+  active         Boolean        @default(true)
+  lastSentAt     DateTime?
+  createdAt      DateTime       @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedSearch SavedSearch? @relation(fields: [savedSearchId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([frequency, active])
+}
+
+model SearchHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  query      String
+  filters    Json?
+  searchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, searchedAt(sort: Desc)])
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+  TEMPORARY
+}
+
+model Experience {
+  id             String         @id @default(cuid())
+  profileId      String
+  company        String
+  designation    String
+  employmentType EmploymentType
+  location       String?
+  workMode       WorkMode?
+  startMonth     Int
+  startYear      Int
+  endMonth       Int?
+  endYear        Int?
+  isCurrent      Boolean        @default(false)
+  description    String?
+  achievements   String[]       @default([])
+  order          Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  profile        JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Education {
+  id           String   @id @default(cuid())
+  profileId    String
+  institution  String
+  degree       String?
+  fieldOfStudy String?
+  startYear    Int?
+  endYear      Int?
+  isCurrent    Boolean  @default(false)
+  grade        String?
+  activities   String?
+  description  String?
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profile      JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Certification {
+  id             String   @id @default(cuid())
+  profileId      String
+  name           String
+  issuingOrg     String
+  issueMonth     Int?
+  issueYear      Int?
+  expiryMonth    Int?
+  expiryYear     Int?
+  doesNotExpire  Boolean  @default(false)
+  credentialId   String?
+  credentialUrl  String?
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  profile        JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  profileId       String
+  name            String
+  description     String?
+  role            String?
+  technologies    String[] @default([])
+  projectUrl      String?
+  repoUrl         String?
+  startMonth      Int?
+  startYear       Int?
+  endMonth        Int?
+  endYear         Int?
+  isCurrent       Boolean  @default(false)
+  associatedWith  String?
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  profile         JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Award {
+  id          String   @id @default(cuid())
+  profileId   String
+  title       String
+  issuer      String?
+  month        Int?
+  year         Int?
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+enum LanguageProficiency {
+  ELEMENTARY
+  CONVERSATIONAL
+  PROFESSIONAL
+  NATIVE
+}
+
+model ProfileLanguage {
+  id          String              @id @default(cuid())
+  profileId   String
+  language    String
+  proficiency LanguageProficiency
+  order       Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  profile     JobSeekerProfile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model VolunteerWork {
+  id          String   @id @default(cuid())
+  profileId   String
+  organization String
+  role        String
+  cause       String?
+  startMonth  Int?
+  startYear   Int?
+  endMonth    Int?
+  endYear     Int?
+  isCurrent   Boolean  @default(false)
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Publication {
+  id          String   @id @default(cuid())
+  profileId   String
+  title       String
+  publisher   String?
+  month       Int?
+  year        Int?
+  url         String?
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Skill {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  normalizedName String  @unique
+  category      String?
+  createdAt     DateTime @default(now())
+  userSkills    UserSkill[]
+  jobPostSkills JobPostSkill[]
+}
+
+enum SkillProficiency {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
+model UserSkill {
+  id           String          @id @default(cuid())
+  profileId    String
+  skillId      String
+  proficiency  SkillProficiency @default(INTERMEDIATE)
+  endorsedBy   String[]        @default([])
+  endorseCount Int             @default(0)
+  order        Int             @default(0)
+  createdAt    DateTime        @default(now())
+  profile      JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skill        Skill           @relation(fields: [skillId], references: [id])
+  @@unique([profileId, skillId])
+}
+
+enum ResumeVisibility {
+  PUBLIC
+  RECRUITERS_ONLY
+  PRIVATE
+}
+
+model Resume {
+  id          String          @id @default(cuid())
+  profileId   String
+  label       String
+  storageKey  String
+  originalName String
+  fileSize    Int
+  mimeType    String
+  visibility  ResumeVisibility @default(RECRUITERS_ONLY)
+  isDefault   Boolean         @default(false)
+  lastUsedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  profile     JobSeekerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model RecruiterProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  companyName  String?
+  designation  String?
+  companySize  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Outcome tracking & API keys (pre–Phase 2A scaffolding) ─────────────────
+
+enum OutcomeEventType {
+  RESUME_CREATED
+  RESUME_DOWNLOADED
+  RESUME_USED_IN_APPLICATION
+  FIT_SCORE_CALCULATED
+  FIT_SCORE_IMPROVED
+  JOB_SAVED_AFTER_SCORING
+  APPLIED_AFTER_SCORING
+  OPTIMISER_OPENED
+  OPTIMISER_DIFF_ACCEPTED
+  OPTIMISER_DIFF_REJECTED
+  OPTIMISER_RESUME_CREATED
+  APPLIED_WITH_OPTIMISED_RESUME
+  INTERVIEW_PREP_USED
+  INTERVIEW_PREP_RATED
+  CAREER_INSIGHT_VIEWED
+  SKILL_ADDED_AFTER_GAP_ANALYSIS
+  APPLICATION_SUBMITTED
+  APPLICATION_VIEWED_BY_RECRUITER
+  APPLICATION_SHORTLISTED
+  APPLICATION_REJECTED
+  APPLICATION_OFFERED
+  APPLICATION_WITHDRAWN
+  APPLICATION_STATUS_CHANGED
+  APPLY_FLOW_STARTED
+  APPLY_FLOW_ABANDONED
+  PROFILE_SCORE_IMPROVED
+  RESUME_OPTIMISED
+  // Phase 17 Trust & Safety
+  PHASE17_REPORT_SUBMITTED
+  PHASE17_DATA_EXPORT_REQUESTED
+  PHASE17_ACCOUNT_DELETION_REQUESTED
+  PHASE17_SECURITY_EVENT_LOGGED
+  PHASE17_COMPLIANCE_ACTION_TAKEN
+  // Phase 18B Internal Job Board
+  JOB_REFERRAL_SENT
+  INTERNAL_JOB_VIEWED
+  INTERNAL_JOB_APPLIED
+  EMPLOYEE_VERIFIED
+  JOB_VISIBILITY_SWITCHED
+  // M-8 Session Rhythm & Milestone
+  M8_ENGAGEMENT_INITIALISED
+  M8_SESSION_SCHEDULED
+  M8_SESSION_COMPLETED
+  M8_SESSION_CANCELLED
+  M8_MILESTONE_FILED
+  M8_MILESTONE_COMPLETE
+  M8_GOAL_DOCUMENT_CREATED
+  M8_DOCUMENT_SIGNED
+  M8_OUTCOME_DOCUMENT_CREATED
+  // M-10 Outcome Verification & Attribution
+  M10_OUTCOME_SUBMITTED
+  M10_OUTCOME_VERIFIED
+  M10_OUTCOME_DISPUTED
+  M10_OUTCOME_UNACKNOWLEDGED
+  M10_OUTCOME_OPS_REVIEWED
+  M10_CHECKIN_SUBMITTED
+  // M-11 Mentor Reputation & Tier
+  M11_TIER_PROMOTED
+  M11_TIER_DEMOTED
+  M11_TIER_UNCHANGED
+  M11_TIER_ADMIN_OVERRIDE
+  M11_WEEKLY_CALC_COMPLETE
+  M11_CAPACITY_ENFORCED
+  // Phase 20: Platform Intelligence & Investor Metrics
+  PHASE20_SNAPSHOT_COMPUTED
+  PHASE20_METRIC_ALERT_TRIGGERED
+  PHASE20_METRIC_ALERT_RESOLVED
+  PHASE20_INVESTOR_DASHBOARD_VIEWED
+  // Phase 21: Currency & PWA (multilingual rolled back)
+  PHASE21_CURRENCY_CHANGED
+  PHASE21_RESUME_GENERATED_LANG
+  PHASE21_PWA_INSTALLED
+  // Phase 18: B2B / Enterprise & API Platform
+  PHASE18_API_KEY_CREATED
+  PHASE18_API_KEY_REVOKED
+  PHASE18_API_REQUEST_MADE
+  PHASE18_ATS_EVENT_RECEIVED
+  PHASE18_ATS_EVENT_PROCESSED
+  PHASE18_CAREERS_PAGE_VIEWED
+  PHASE18_BULK_IMPORT_COMPLETED
+  PHASE18_WEBHOOK_DELIVERED
+  // Phase 22: Marketplace & Career Services
+  PHASE22_PROVIDER_APPLIED
+  PHASE22_PROVIDER_APPROVED
+  PHASE22_ORDER_CREATED
+  PHASE22_ORDER_DELIVERED
+  PHASE22_ORDER_DISPUTED
+  PHASE22_COURSE_CLICKED
+  PHASE22_BADGE_ADDED
+  PHASE22_MARKETPLACE_REVENUE
+  // M-16: Admin & Ops Layer
+  M16_OPS_ALERT_CREATED
+  M16_OPS_ALERT_RESOLVED
+  M16_ENGAGEMENT_INTERVENED
+  M16_AUDIT_LOG_WRITTEN
+  M16_OPS_CHECK_COMPLETE
+  // M-15: Legal Framework & Compliance
+  M15_DOCUMENT_SIGNED
+  M15_LEGAL_OTP_REQUESTED
+  M15_LEGAL_GATE_BLOCKED
+  // M-12: Mentorship Circles
+  M12_PEER_CHECK_IN
+  M12_CIRCLE_CREATED
+  M12_CIRCLE_APPLICATION_SUBMITTED
+  M15_NEW_VERSION_PUBLISHED
+  // M-17: Mentorship Analytics & Insights
+  M17_SNAPSHOT_COMPUTED
+  M17_MENTOR_SNAPSHOT_COMPUTED
+  M17_PLATFORM_ANALYTICS_VIEWED
+  M17_MENTOR_ANALYTICS_VIEWED
+  M17_MENTEE_ANALYTICS_VIEWED
+  // M-7: Meeting Room, Steno & Session Evidence
+  M7_SESSION_ROOM_CREATED
+  M7_SESSION_STARTED
+  M7_PARTICIPANT_JOINED
+  M7_STENO_CONSENT_RECORDED
+  M7_STENO_STARTED
+  M7_STENO_COMPLETED
+  M7_STENO_SKIPPED
+  M7_EXTRACTION_COMPLETED
+  M7_SESSION_RECORD_GENERATED
+  M7_SESSION_COMPLETED
+  M7_SESSION_INCOMPLETE
+  M7_SESSION_NO_SHOW
+  M7_EXCEPTION_FILED
+  M7_EXCEPTION_ACKNOWLEDGED
+  M7_OFF_PLATFORM_FLAG
+  // M-6: Escrow & Payment Infrastructure
+  M6_ESCROW_ORDER_CREATED
+  M6_ESCROW_FUNDED
+  M6_TRANCHE_CONFIRMED
+  M6_TRANCHE_DISPUTED
+  M6_TRANCHE_RELEASED
+  M6_TRANCHE_REFUNDED
+  M6_ESCROW_TERMINATED
+  M6_ESCROW_VOIDED
+  // M-9: Dispute Resolution Engine
+  M9_DISPUTE_FILED
+  M9_DISPUTE_EVIDENCE_ASSEMBLED
+  M9_DISPUTE_AUTO_RESOLVED
+  M9_DISPUTE_OPS_RESOLVED
+  M9_DISPUTE_UPHELD
+  M9_DISPUTE_REJECTED
+  M9_DISPUTE_REJECTED_INVALID
+  M9_STRIKE_APPLIED
+  M9_CAN_FILE_DISPUTES_REVOKED
+  // M-14: Platform Fee & Revenue Layer
+  M14_TRANCHE_FEE_APPLIED
+  M14_TRANCHE_FEE_RECALCULATED
+  M14_REVENUE_SNAPSHOT_COMPUTED
+  M14_PILOT_FEE_WAIVED
+  // Phase 12: Pricing Restructure
+  PRICING_RESUME_CREDIT_PURCHASED
+  PRICING_MENTOR_SUBSCRIPTION_PURCHASED
+  PRICING_SEEKER_UPGRADE_CLICKED
+  PRICING_RECRUITER_UPGRADE_CLICKED
+  // GST Invoicing
+  INVOICE_CREATED
+  INVOICE_PDF_GENERATED
+  INVOICE_DOWNLOADED
+  INVOICE_VOIDED
+  BILLING_PROFILE_UPDATED
+  // M-13: Mentor Monetisation Unlock
+  M13_MONETISATION_UNLOCKED
+  M13_MONETISATION_ELIGIBLE
+  M13_MONETISATION_RELOCKED
+  M13_SESSION_FEE_SET
+  M13_SESSION_FEE_UPDATED
+  M13_SEO_BOOST_PURCHASED
+  M13_SEO_BOOST_EXPIRED
+  M13_MONTHLY_REPORT_SENT
+}
+
+enum AIFeature {
+  RESUME_BUILDER
+  FIT_SCORER
+  JD_OPTIMISER
+  INTERVIEW_PREP
+  CAREER_INTELLIGENCE
+  SKILL_GAP_ANALYSER
+  SALARY_PREDICTOR
+  COVER_LETTER
+  PROFILE_OPTIMISER
+}
+
+model OutcomeEvent {
+  id        String           @id @default(cuid())
+  userId    String
+  eventType OutcomeEventType
+  entityId  String?
+  entityType String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model AIInteraction {
+  id            String    @id @default(cuid())
+  userId        String
+  feature       AIFeature
+  promptVersion String
+  inputTokens   Int?
+  outputTokens  Int?
+  latencyMs     Int?
+  rating        Int?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([feature])
+  @@index([promptVersion])
+  @@index([createdAt])
+}
+
+model UserJourney {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  resumesBuilt          Int      @default(0)
+  fitScoresRun          Int      @default(0)
+  optimiserSessions     Int      @default(0)
+  applicationsSubmitted Int      @default(0)
+  interviewsScheduled   Int      @default(0)
+  offersReceived        Int      @default(0)
+  lastActiveAt          DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model APIKey {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  keyHash     String    @unique
+  keyPrefix   String
+  lastUsedAt  DateTime?
+  requestCount Int      @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+}
+
+// ─── Phase 3: Company Profiles ─────────────────────────────────────────────
+
+enum CompanyType {
+  PUBLIC
+  PRIVATE
+  NGO
+  GOVERNMENT
+  STARTUP
+  OTHER
+}
+
+enum CompanySize {
+  SIZE_1_10
+  SIZE_11_50
+  SIZE_51_200
+  SIZE_201_500
+  SIZE_501_1000
+  SIZE_1001_PLUS
+}
+
+enum CompanyAdminRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum CompanyMediaType {
+  PHOTO
+  VIDEO_EMBED
+  VIRTUAL_TOUR
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+  REMOVED
+}
+
+enum EmploymentStatus {
+  CURRENT
+  FORMER
+}
+
+enum InterviewExperience {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum InterviewDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  VERY_HARD
+}
+
+enum CEOApproval {
+  APPROVE
+  DISAPPROVE
+  NO_OPINION
+}
+
+enum InterviewResult {
+  OFFER
+  REJECTED
+  WITHDREW
+  PENDING
+}
+
+enum SalaryReportStatus {
+  PENDING
+  APPROVED
+}
+
+enum CompanyQAVoteType {
+  UP
+  DOWN
+}
+
+model Company {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  logo        String?
+  banner      String?
+  industry    String?
+  type        CompanyType?
+  size        CompanySize?
+  founded     Int?
+  hq          String?
+  website     String?
+  linkedin    String?
+  twitter     String?
+  facebook    String?
+  instagram   String?
+  glassdoor   String?
+  mission     String?
+  about       String?
+  specialties String[]  @default([])
+  verified          Boolean   @default(false)
+  claimed           Boolean   @default(false)
+  suspendedAt       DateTime?
+  suspensionReason  String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  admins     CompanyAdmin[]
+  jobPosts   JobPost[]
+  reviews    CompanyReview[]
+  interviewReviews InterviewReview[]
+  salaryReports    SalaryReport[]
+  media      CompanyMedia[]
+  benefits   CompanyBenefit[]
+  qa         CompanyQA[]
+  invites       CompanyInvite[]
+  insight       CompanyInsight?
+  subscription  CompanySubscription?
+  boosts        JobBoost[]
+  resumeUnlocks ResumeUnlock[]
+  followers    CompanyFollow[]
+  messageContexts Message[]
+  signals       CareerSignal[]
+  diMetricsEnabled Boolean @default(false)
+  hiringAnalyticsSnapshots HiringAnalyticsSnapshot[]
+  diMetricsSnapshots DIMetricsSnapshot[]
+  verifiedDomains   String[]           @default([]) // Phase 18B: e.g. ["nexara.com"] for employee portal
+  employees         CompanyEmployee[]
+  // Phase 18: B2B / Enterprise & API Platform
+  companyApiKeys    CompanyApiKey[]
+  careersPageConfig CareersPageConfig?
+  bulkImportJobs    BulkImportJob[]
+  companyWebhooks   CompanyWebhook[]
+  atsIntegration    AtsIntegration?
+  ssoConfig         SsoConfig?
+  atsWebhookEvents  AtsWebhookEvent[]
+
+  @@index([slug])
+  @@index([industry])
+  @@index([verified])
+}
+
+// Phase 18B: verified employees (email domain match) — access to internal job portal
+model CompanyEmployee {
+  id         String   @id @default(cuid())
+  userId     String
+  companyId  String
+  domain     String   // verified email domain e.g. "nexara.com"
+  verifiedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+model CompanyAdmin {
+  id        String           @id @default(cuid())
+  companyId String
+  userId    String
+  role      CompanyAdminRole
+  createdAt DateTime        @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+}
+
+model CompanyInvite {
+  id        String   @id @default(cuid())
+  companyId String
+  email     String
+  invitedBy String   // userId
+  status    String   @default("PENDING") // PENDING | ACCEPTED | EXPIRED
+  createdAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, email])
+}
+
+model CompanyMedia {
+  id        String          @id @default(cuid())
+  companyId String
+  type      CompanyMediaType
+  url       String
+  caption   String?
+  order     Int             @default(0)
+  createdAt DateTime        @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model CompanyBenefit {
+  id        String   @id @default(cuid())
+  companyId String
+  label     String
+  icon      String?
+  emoji     String?
+  order     Int      @default(0)
+
+  company  Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ratings  CompanyBenefitRating[]
+}
+
+model CompanyBenefitRating {
+  id        String @id @default(cuid())
+  benefitId String
+  userId    String
+  rating    Int
+
+  benefit CompanyBenefit @relation(fields: [benefitId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([benefitId, userId])
+}
+
+model CompanyReview {
+  id               String           @id @default(cuid())
+  companyId        String
+  userId           String
+  employmentStatus EmploymentStatus
+  jobTitle         String
+  location         String?
+  startDate        DateTime?
+  endDate          DateTime?
+  overallRating    Int
+  workLifeRating   Int?
+  salaryRating     Int?
+  cultureRating    Int?
+  careerRating     Int?
+  managementRating Int?
+  recommend        Boolean
+  ceoApproval      Boolean?
+  pros             String    @db.Text
+  cons             String    @db.Text
+  advice           String?   @db.Text
+  anonymous        Boolean          @default(false)
+  status           ReviewStatus     @default(PENDING)
+  flagReason       String?
+  rejectionReason  String?          // set when status = REJECTED (admin reason)
+  helpfulCount     Int              @default(0)
+  notHelpfulCount  Int              @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Phase 7: structured review fields
+  headline            String?           // 80 chars max
+  employmentType      EmploymentType?
+  employmentStart    String?           // "YYYY-MM"
+  employmentEnd       String?
+  department          String?
+  ceoApprovalRating   CEOApproval?     // Phase 7 enum (replaces ceoApproval boolean for new submissions)
+  moderatedAt        DateTime?
+  moderatedById      String?
+  isVerifiedEmployee Boolean          @default(false)
+
+  company Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes   CompanyReviewVote[]
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([userId])
+}
+
+model CompanyReviewVote {
+  id       String  @id @default(cuid())
+  reviewId String
+  userId   String
+  helpful  Boolean
+
+  review CompanyReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+}
+
+model InterviewReview {
+  id              String              @id @default(cuid())
+  companyId       String
+  userId          String
+  jobTitle        String
+  experience      InterviewExperience
+  difficulty      InterviewDifficulty
+  gotOffer        Boolean?
+  process         String             @db.Text
+  sampleQuestions String[]           @default([])
+  durationDays    Int?
+  anonymous       Boolean            @default(false)
+  status          ReviewStatus       @default(PENDING)
+  helpfulCount    Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Phase 7: extended interview review fields
+  jobApplicationId String?
+  interviewYear   Int?
+  interviewResult InterviewResult?
+  overallRating   Int?
+  headline        String?
+  processDesc     String?            @db.Text
+  questions       String?            @db.Text
+  tips            String?            @db.Text
+  roundCount      Int?
+  durationWeeks   Int?
+  rejectionReason String?
+  moderatedAt     DateTime?
+  moderatedById   String?
+  unhelpfulCount  Int                @default(0)
+
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobApplication JobApplication? @relation(fields: [jobApplicationId], references: [id], onDelete: SetNull)
+  interviewVotes InterviewVote[]
+
+  @@unique([userId, companyId, jobTitle])
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([companyId, userId, interviewYear])
+}
+
+model InterviewVote {
+  id       String          @id @default(cuid())
+  reviewId String
+  userId   String
+  helpful  Boolean
+
+  review InterviewReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+}
+
+model SalaryReport {
+  id               String            @id @default(cuid())
+  companyId        String
+  userId           String
+  jobTitle         String
+  experienceYears  Int
+  location         String
+  employmentType   EmploymentType
+  baseSalary      Int
+  bonus           Int?
+  stockValue      Int?
+  currency        String            @default("INR")
+  anonymous       Boolean           @default(true)
+  year            Int               @default(2024) // which year this salary applies to
+  createdAt       DateTime          @default(now())
+
+  // Phase 7: moderation and optional breakdown
+  status           ReviewStatus @default(PENDING)
+  rejectionReason  String?
+  department       String?
+  salaryAmount     Float?              // annual CTC (primary for Phase 7)
+  baseSalaryOpt Float?              // optional breakdown
+  bonusOpt      Float?
+  stocksOpt     Float?              // ESOP/RSU annual value estimate
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId, jobTitle])
+  @@index([jobTitle, location])
+  @@index([companyId, status])
+}
+
+model CompanyQA {
+  id          String    @id @default(cuid())
+  companyId   String
+  userId      String
+  question    String    @db.Text
+  answer      String?   @db.Text
+  answeredBy  String?
+  answeredAt  DateTime?
+  upvotes     Int       @default(0)
+  downvotes   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes   CompanyQAVote[]
+
+  @@index([companyId])
+}
+
+model CompanyQAVote {
+  id     String          @id @default(cuid())
+  qaId   String
+  userId String
+  vote   CompanyQAVoteType
+
+  qa   CompanyQA @relation(fields: [qaId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([qaId, userId])
+}
+
+// ─── Phase 0: JD Ingestion (Pre-Launch Data Layer) ───────────────────────────
+
+model RawJD {
+  id         String    @id @default(cuid())
+  sourceUrl  String    @unique
+  rawText    String    @db.Text
+  hash       String    @unique // SHA-256 of rawText for dedup
+  source     String    @default("manual") // "kaggle" | "adzuna" | "naukri-rss" | "careers-page" | "remoteok" | "manual"
+  scrapedAt  DateTime  @default(now())
+  parsedAt   DateTime?
+  parseError String? // store error message if parsing failed
+
+  parsedJD ParsedJD?
+}
+
+model ParsedJD {
+  id              String   @id @default(cuid())
+  rawJdId         String   @unique
+  rawJD           RawJD    @relation(fields: [rawJdId], references: [id])
+
+  title           String // normalised job title
+  company         String? // company name extracted from JD — for Phase 0C insights
+  seniority       String? // "Junior" | "Mid" | "Senior" | "Lead" | "Manager" | "Director" | "VP" | "C-Suite"
+  industry        String?
+  location        String? // normalised city name
+  workMode        String? // "Remote" | "Hybrid" | "Onsite"
+  skills          Json // { mustHave: string[], niceToHave: string[] }
+  keywords        String[] // key terms extracted from JD
+  responsibilities String[] // bullet points
+  salaryMin       Int? // in INR per annum
+  salaryMax       Int?
+  currency        String?  @default("INR")
+  tone            String? // "formal" | "startup" | "technical" | "creative"
+  companySize     String? // "startup" | "sme" | "enterprise"
+  functionalArea  String? // e.g. "Engineering", "Product" — for Phase 0C insights
+  promptVersion   String // version of the parse prompt used
+  parsedAt        DateTime @default(now())
+
+  embedding       JDEmbedding?
+  salarySignal    JDSalarySignal?
+}
+
+model JDEmbedding {
+  id         String   @id @default(cuid())
+  parsedJdId String  @unique
+  parsedJD   ParsedJD @relation(fields: [parsedJdId], references: [id])
+  embedding  Json // float[] stored as JSON (pgvector optional upgrade later)
+  model      String // e.g. "text-embedding-3-small"
+  createdAt  DateTime @default(now())
+}
+
+model JDSalarySignal {
+  id         String   @id @default(cuid())
+  parsedJdId String   @unique
+  parsedJD   ParsedJD @relation(fields: [parsedJdId], references: [id])
+  role       String
+  seniority  String?
+  location   String?
+  salaryMin  Int
+  salaryMax  Int
+  currency   String   @default("INR")
+  createdAt  DateTime @default(now())
+
+  @@index([role, location])
+}
+
+// ─── Phase 0C: Company Intelligence (JD-derived signals) ─────────────────────
+
+model CompanyInsight {
+  id                  String   @id @default(cuid())
+  // Identity — one set depending on aggregationType
+  companyName         String?  // set when aggregationType = "company"
+  industryLocation    String?  // set when aggregationType = "industry", e.g. "IT-Software::Bangalore"
+  aggregationType     String   @default("company")  // "company" | "industry"
+  companyId           String?  @unique // nullable — linked when Company record exists (1:1 with Company)
+
+  totalJDsIndexed     Int      @default(0)
+  activeRoleCount     Int      @default(0)
+  topRoles            Json     @default("[]") // [{ title, count, seniority }]
+  juniorPct           Float    @default(0)
+  midPct              Float    @default(0)
+  seniorPct           Float    @default(0)
+  managerPct          Float    @default(0)
+  remotePct           Float    @default(0)
+  hybridPct           Float    @default(0)
+  onsitePct           Float    @default(0)
+  salaryMin           Int?
+  salaryMax           Int?
+  salaryMedian        Int?
+  salaryDisclosureRate Float   @default(0)
+  topSkills           Json     @default("[]") // [{ skill, count }]
+  topLocations        Json     @default("[]") // [{ city, count }]
+  primaryLocation     String?
+  industries          Json     @default("[]") // [{ industry, count }]
+  functionalAreas     Json     @default("[]") // [{ area, count }]
+  hiringVelocity      String?  // "high" | "medium" | "low"
+  lastComputedAt      DateTime @default(now())
+  corpusSize          Int      @default(0)
+
+  company             Company? @relation(fields: [companyId], references: [id])
+
+  @@unique([companyName])
+  @@unique([industryLocation])
+  @@index([companyId])
+  @@index([aggregationType])
+}
+
+// ─── Phase 12: Monetisation (Multi-Gateway) ──────────────────────────────────
+
+enum PlanType {
+  FREE
+  SEEKER_PREMIUM
+  SEEKER_ELITE
+  MENTOR_MARKETPLACE
+  RECRUITER_STARTER
+  RECRUITER_PRO
+  RECRUITER_ENTERPRISE
+}
+
+enum PaymentGateway {
+  RAZORPAY
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  PAUSED
+  EXPIRED
+}
+
+enum BillingPeriod {
+  MONTHLY
+  ANNUAL
+}
+
+model UserSubscription {
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  plan                PlanType           @default(FREE)
+  planKey             String?
+  status              SubscriptionStatus @default(ACTIVE)
+  gateway             PaymentGateway?
+  gatewaySubId        String?
+  gatewayCustomerId   String?
+  billingPeriod       BillingPeriod?
+  pricePaidPaise      Int?
+  startsAt            DateTime?
+  expiresAt           DateTime?
+  cancelledAt         DateTime?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([gatewaySubId])
+}
+
+model ResumeOptimisationCredit {
+  id          String   @id @default(cuid())
+  userId      String
+  balance     Int      @default(0)
+  paymentId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@index([userId])
+}
+
+model CompanySubscription {
+  id                  String             @id @default(cuid())
+  companyId           String             @unique
+  plan                PlanType           @default(RECRUITER_STARTER)
+  status              SubscriptionStatus @default(ACTIVE)
+  gateway             PaymentGateway?
+  gatewaySubId        String?
+  gatewayCustomerId   String?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean            @default(false)
+  seats               Int                @default(1)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  company             Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model PaymentEvent {
+  id              String         @id @default(cuid())
+  userId          String?
+  companyId       String?
+  gateway         PaymentGateway
+  gatewayEventId  String         @unique
+  gatewayOrderId  String?
+  amount          Int
+  currency        String         @default("INR")
+  status          PaymentStatus
+  description     String?
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+
+  user            User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([gatewayEventId])
+}
+
+model JobBoost {
+  id            String         @id @default(cuid())
+  jobPostId     Int
+  companyId     String
+  boostType     String
+  startsAt      DateTime
+  endsAt       DateTime
+  amountPaid    Int
+  gateway       PaymentGateway
+  gatewayPayId  String
+  active        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+
+  jobPost       JobPost        @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostId])
+  @@index([companyId])
+  @@index([endsAt])
+}
+
+model ResumeUnlock {
+  id           String         @id @default(cuid())
+  recruiterId  String
+  seekerId     String
+  companyId    String
+  amountPaid   Int
+  gateway      PaymentGateway
+  gatewayPayId String
+  unlockedAt   DateTime       @default(now())
+
+  recruiter    User           @relation("RecruiterUnlocks", fields: [recruiterId], references: [id], onDelete: Cascade)
+  seeker       User           @relation("SeekerUnlocks", fields: [seekerId], references: [id], onDelete: Cascade)
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, seekerId])
+  @@index([recruiterId])
+  @@index([companyId])
+}
+
+// ─── Phase 5A: Profile Fit Score (JD Fit Score) ─────────────────────────────
+
+model FitScore {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId        Int
+  jobPost          JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  overallScore     Int
+  skillsScore      Int
+  experienceScore  Int
+  educationScore   Int
+  keywordsScore    Int
+
+  skillGaps        Json     // FitGapItem[] — missing/weak skills
+  experienceGaps   Json     // FitGapItem[] — experience shortfalls
+  keywordGaps      Json     // FitGapItem[] — missing keywords
+  strengths        Json     // string[] — what the seeker does well for this role
+
+  profileVersion   String?  // hash of profile at time of scoring (for cache invalidation)
+  promptVersion    String   @default("1.0.0")
+  computedAt       DateTime @default(now())
+  expiresAt        DateTime // computedAt + 7 days
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+  @@index([jobPostId])
+  @@index([expiresAt])
+}
+
+model FitScoreHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId    Int
+  jobPost      JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  overallScore Int
+  recordedAt   DateTime @default(now())
+
+  @@index([userId, recordedAt])
+}
+
+// ─── Phase 6: Application System ────────────────────────────────────────────
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  OFFERED
+  HIRED
+  REJECTED
+  WITHDRAWN
+}
+
+model JobApplication {
+  id              String            @id @default(cuid())
+  jobPostId       Int
+  jobPost         JobPost           @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  applicantId     String
+  applicant       User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  resumeVersionId String?
+  resumeVersion   ResumeVersion?    @relation(fields: [resumeVersionId], references: [id], onDelete: SetNull)
+
+  coverLetter     String?           @db.Text
+  coverLetterId   String?
+  coverLetterRef  CoverLetter?      @relation(fields: [coverLetterId], references: [id], onDelete: SetNull)
+  responses       Json?             // ScreeningResponse[]
+
+  status          ApplicationStatus @default(SUBMITTED)
+  statusUpdatedAt DateTime          @default(now())
+  recruiterNotes  String?           @db.Text
+  fitScoreSnapshot Int?
+  applicationTimeline Json?         // [{ status: string, at: string }] — status transition history
+  isAnonymous    Boolean           @default(false) // Phase 18B: hide name until shortlisted
+
+  submittedAt     DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  interviewReviews InterviewReview[]
+  interviewScorecards InterviewScorecard[]
+
+  @@unique([jobPostId, applicantId])
+  @@index([jobPostId, status])
+  @@index([applicantId, submittedAt])
+  @@index([status])
+}
+
+// Phase 18B: Employee referral for a job
+enum ReferralOutcome {
+  PENDING
+  APPLIED
+  SHORTLISTED
+  HIRED
+  EXPIRED
+}
+
+model JobReferral {
+  id             String          @id @default(cuid())
+  referrerId     String
+  referredEmail  String
+  jobPostId      Int
+  outcome        ReferralOutcome @default(PENDING)
+  referredAt     DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  referrer User    @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+  jobPost  JobPost @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostId])
+  @@index([referrerId])
+}
+
+// ─── Phase 16B: Recruiter Intelligence & Hiring Analytics ───────────────────
+
+enum ScorecardRecommendation {
+  STRONG_YES
+  YES
+  UNDECIDED
+  NO
+  STRONG_NO
+}
+
+model HiringAnalyticsSnapshot {
+  id            String   @id @default(cuid())
+  jobPostId     Int
+  jobPost       JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  snapshotDate  DateTime @default(now())
+
+  totalApplicants     Int @default(0)
+  totalViewed         Int @default(0)
+  totalShortlisted    Int @default(0)
+  totalInterview      Int @default(0)
+  totalOffered        Int @default(0)
+  totalHired          Int @default(0)
+  totalRejected       Int @default(0)
+
+  avgDaysToFirstView      Float?
+  avgDaysToShortlist      Float?
+  avgDaysToInterview      Float?
+  avgDaysToOffer          Float?
+  avgDaysToHire           Float?
+
+  createdAt DateTime @default(now())
+
+  @@index([jobPostId])
+  @@index([companyId])
+  @@index([snapshotDate])
+}
+
+model InterviewScorecard {
+  id               String   @id @default(cuid())
+  jobApplicationId String
+  jobApplication   JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  recruiterId      String
+  recruiter        User     @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  jobPostId        Int
+  jobPost          JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+
+  technicalScore      Int?
+  communicationScore  Int?
+  cultureScore        Int?
+  problemSolvingScore Int?
+  overallScore        Int?
+
+  notes           String?   @db.Text
+  recommendation  ScorecardRecommendation @default(UNDECIDED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobApplicationId, recruiterId])
+  @@index([jobPostId])
+  @@index([recruiterId])
+}
+
+model DIMetricsSnapshot {
+  id           String   @id @default(cuid())
+  jobPostId    Int
+  jobPost      JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  snapshotDate DateTime @default(now())
+
+  stage       String   // APPLIED | SHORTLISTED | HIRED
+  locationDistribution  Json    // { "Bangalore": 12, "Mumbai": 8, ... }
+  educationDistribution Json   // { "BTech": 15, "MBA": 6, ... }
+  genderDistribution    Json?  // { "Male": 18, "Female": 9, "Not specified": 5 }
+  totalCount  Int
+
+  createdAt DateTime @default(now())
+
+  @@index([jobPostId])
+  @@index([companyId])
+}
+
+// ─── Phase 11: AI Features (Cover Letter, Interview Prep, Profile Optimiser, Recommendations) ───
+
+model CoverLetter {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId       Int
+  jobPost         JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  content         String   @db.Text
+  tone            String
+  generatedFrom   String   // resumeVersionId used, or 'profile'
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  jobApplications JobApplication[]
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+  @@index([jobPostId])
+}
+
+model InterviewPrep {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId       Int
+  jobPost         JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  expectQuestions Json     // array of { question, category, why }
+  askQuestions    Json     // array of { question }
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+  @@index([jobPostId])
+}
+
+model ProfileOptimiserResult {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  result        Json     // { headline, summary, skillGaps, bulletSuggestions }
+  analysedAt    DateTime @default(now())
+  promptVersion String
+
+  @@index([userId])
+}
+
+model JobDismissal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostId Int
+  jobPost   JobPost  @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobPostId])
+  @@index([userId])
+  @@index([jobPostId])
+}
+
+// ─── Phase 9: Career Graph & Contextual Networking ────────────────────────
+
+enum ConnectionType {
+  PEER
+  MENTOR
+  COLLEAGUE
+  INTERVIEWER
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum SignalType {
+  ROLE_MOVE
+  NEW_JOB_AT_FOLLOW
+  NETWORK_JOIN
+  FIT_SCORE_IMPROVE
+  CONNECTION_HIRED
+  MENTOR_AVAILABLE
+  MENTOR_PROFILE_CREATED
+  MENTOR_SESSION_COMPLETED
+  REVIEW_SUBMITTED
+}
+
+model Connection {
+  id            String           @id @default(cuid())
+  requesterId   String
+  recipientId   String
+  type          ConnectionType    @default(PEER)
+  contextTag    String?
+  status        ConnectionStatus  @default(PENDING)
+  connectedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  requester     User             @relation("ConnectionsInitiated", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipient     User             @relation("ConnectionsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, recipientId])
+  @@index([recipientId, status])
+  @@index([requesterId, status])
+}
+
+model CompanyFollow {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+}
+
+model Conversation {
+  id             String     @id @default(cuid())
+  participantA   String
+  participantB   String
+  lastMessageAt  DateTime?
+  createdAt      DateTime   @default(now())
+
+  messages Message[]
+  userA    User      @relation("ConversationA", fields: [participantA], references: [id], onDelete: Cascade)
+  userB    User      @relation("ConversationB", fields: [participantB], references: [id], onDelete: Cascade)
+
+  @@unique([participantA, participantB])
+  @@index([participantA, lastMessageAt])
+  @@index([participantB, lastMessageAt])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String       @db.Text
+  readAt         DateTime?
+  jobPostId      Int?
+  companyId      String?
+  sessionId      String?
+  createdAt      DateTime     @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  jobPost       JobPost?     @relation(fields: [jobPostId], references: [id], onDelete: SetNull)
+  company       Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model CareerSignal {
+  id        String     @id @default(cuid())
+  userId    String
+  actorId   String?
+  type      SignalType
+  companyId String?
+  jobPostId Int?
+  metadata  Json?
+  seen      Boolean    @default(false)
+  createdAt DateTime  @default(now())
+
+  user    User     @relation("SignalFeed", fields: [userId], references: [id], onDelete: Cascade)
+  actor   User?    @relation("SignalActor", fields: [actorId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  jobPost JobPost? @relation(fields: [jobPostId], references: [id], onDelete: SetNull)
+
+  @@index([userId, seen, createdAt])
+  @@index([actorId])
+}
+
+// ─── Phase 9B: Mentorship Layer ─────────────────────────────────────────────
+
+enum MentorTransition {
+  IC_TO_MANAGER
+  MANAGER_TO_IC
+  STARTUP_TO_LARGE
+  LARGE_TO_STARTUP
+  INDIA_TO_GLOBAL
+  DOMAIN_SWITCH
+  INDUSTRY_SWITCH
+  FIRST_JOB
+  LEVEL_UP
+  RETURN_TO_WORK
+}
+
+enum MentorStyle {
+  STRUCTURED
+  ASYNC
+  AD_HOC
+}
+
+enum SessionFormat {
+  VIDEO_CALL
+  VOICE_CALL
+  ASYNC_CHAT
+  IN_PERSON
+}
+
+enum SessionStatus {
+  REQUESTED
+  ACCEPTED
+  SCHEDULED
+  IN_PROGRESS           // M-7: session in progress (both joined)
+  COMPLETED
+  CANCELLED
+  DECLINED
+  NO_SHOW               // M-9: no-show detection wired here when M-7 join logs are available
+  INCOMPLETE_SESSION     // M-7: below 60% of effectiveSlotMins
+  EXCEPTION_ACKNOWLEDGED // M-7: exception filed and acknowledged
+}
+
+enum MentorFocusArea {
+  RESUME_REVIEW
+  INTERVIEW_PREP
+  CAREER_PLANNING
+  SALARY_NEGOTIATION
+  LEADERSHIP
+  TECHNICAL_GROWTH
+  WORK_LIFE_BALANCE
+  NETWORKING
+  ENTREPRENEURSHIP
+}
+
+// ─── M-2: Mentor Profile & Transition Record ───────────────────────────────
+
+enum MentorCompanyType {
+  STARTUP_SEED
+  STARTUP_SERIES_A_B
+  STARTUP_LATE_STAGE
+  MNC
+  INDIAN_LARGE_CORP
+  SME
+  GOVERNMENT_PSU
+  FREELANCE_CONSULTING
+  NGO_NONPROFIT
+  ACADEMIA
+}
+
+enum TransitionBadge {
+  SELF_REPORTED
+  PLATFORM_VERIFIED
+}
+
+enum EngagementLength {
+  SPRINT_30
+  STANDARD_60
+  DEEP_90
+}
+
+enum SessionFrequency {
+  WEEKLY
+  FORTNIGHTLY
+}
+
+enum M2FocusArea {
+  CAREER_PIVOT
+  FIRST_JOB
+  IC_TO_MANAGEMENT
+  MANAGEMENT_TO_IC
+  DOMAIN_SWITCH
+  GEOGRAPHY_MOVE
+  STARTUP_TO_ENTERPRISE
+  ENTERPRISE_TO_STARTUP
+  SALARY_NEGOTIATION
+  INTERVIEW_PREP
+  PORTFOLIO_BUILDING
+  GRADUATE_SCHOOL
+  ENTREPRENEURSHIP
+}
+
+enum GeographyScope {
+  INDIA_ONLY
+  INDIA_TO_GLOBAL
+  SPECIFIC_COUNTRIES
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REVERIFICATION_REQUIRED
+}
+
+enum VerificationDocumentType {
+  GOVERNMENT_ID
+  EMPLOYMENT_PROOF
+  LINKEDIN_PROFILE
+}
+
+enum VerificationDecision {
+  APPROVED
+  REJECTED
+  MORE_INFO_REQUESTED
+}
+
+// M-11: Mentor Reputation & Tier System
+enum MentorTier {
+  RISING       // 0–4 verified outcomes
+  ESTABLISHED  // 5–9 verified outcomes
+  ELITE        // 10+ verified outcomes
+}
+
+model MentorProfile {
+  id                    String                @id @default(cuid())
+  userId                String                @unique
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isActive              Boolean               @default(true)
+  maxMenteesPerMonth    Int                   @default(3)
+  currentMenteeCount    Int                   @default(0)
+
+  currentRole           String
+  currentCompany        String?
+  previousRole          String?
+  transitionType        MentorTransition?
+  yearsOfExperience     Int
+
+  currentCity           String?
+  previousCity          String?
+  crossBorderExperience Boolean               @default(false)
+  countriesWorkedIn     String[]              @default([])
+
+  mentoringStyles       MentorStyle[]         @default([])
+  sessionFormats        SessionFormat[]       @default([])
+  languages             String[]              @default(["English"])
+  focusAreas            MentorFocusArea[]     @default([])
+
+  totalSessions         Int                   @default(0)
+  totalMentees          Int                   @default(0)
+  averageRating         Float?
+  featuredTestimonial   String?               @db.Text
+
+  isVerified            Boolean               @default(false)
+  verifiedAt            DateTime?
+
+  verificationStatus   VerificationStatus   @default(UNVERIFIED)
+  isDiscoverable        Boolean               @default(false)
+  verification          MentorVerification?
+
+  // M-2: Transition record (structured)
+  fromRole              String?
+  fromCompanyType       MentorCompanyType?
+  fromIndustry          String?
+  fromCity              String?
+  toRole                String?
+  toCompanyType         MentorCompanyType?
+  toIndustry            String?
+  toCity                String?
+  transitionDurationMonths Int?
+  transitionYear        Int?
+  transitionBadge       TransitionBadge       @default(SELF_REPORTED)
+
+  // M-2: Key factors (20–200 chars each)
+  keyFactor1            String?               @db.VarChar(200)
+  keyFactor2            String?               @db.VarChar(200)
+  keyFactor3            String?               @db.VarChar(200)
+
+  // M-2: Mentor statements (50–400 chars each)
+  statementTransitionMade   String?            @db.VarChar(400)
+  statementWishIKnew        String?            @db.VarChar(400)
+  statementCanHelpWith     String?            @db.VarChar(400)
+  statementCannotHelpWith  String?            @db.VarChar(400)
+
+  // M-2: Capacity (maxActiveMentees moved to M-11 tier — synced from tier)
+  engagementPreference  EngagementLength[]    @default([])
+  sessionFrequency      SessionFrequency?
+  timezone              String                @default("Asia/Kolkata")
+
+  // M-2: Focus & geography
+  m2FocusAreas         M2FocusArea[]         @default([])
+  geographyScope       GeographyScope?
+  geographyCountries   String[]              @default([])
+
+  // M-2: isPublic set only by admin on verification approve
+  isPublic              Boolean               @default(false)
+
+  // M-10: Outcome verification stats (recalculated from VERIFIED outcomes)
+  verifiedOutcomeCount  Int                   @default(0)
+  totalEngagements      Int                   @default(0)
+  avgTimeToOutcomeDays  Float?
+  outcomeTypes          String[]              @default([]) // e.g. ["SWE → PM", "IC → Manager"], max 10
+
+  // M-11: Tier & reputation (system-calculated; admin can override)
+  tier                  MentorTier            @default(RISING)
+  tierUpdatedAt         DateTime?
+  tierOverriddenByAdmin Boolean               @default(false)
+  tierOverrideNote      String?               @db.Text
+  disputeRate           Float?                // upheld disputes / total engagements (rolling)
+  stenoRate             Float?                // M-7: sessions with Steno / total sessions — do not wire demotion until M-7
+  maxActiveMentees      Int                   @default(2)   // synced from tier: RISING=2, ESTABLISHED=4, ELITE=6
+  activeMenteeCount     Int                   @default(0)   // maintained when contract ACTIVE / terminal
+
+  // M-13: Mentor Monetisation Unlock
+  monetisationStatus    MentorMonetisationStatus?
+  sessionFeePaise       Int?                  // mentor-set fee (validated against floor/ceiling)
+  canChargeMentees      Boolean               @default(false) // true = isUnlocked AND MENTOR_MARKETPLACE plan
+  seoBoosts             MentorSeoBoost[]
+  monthlyReportSentAt   DateTime?
+  upheldDisputeCount    Int                   @default(0)   // M-9: from getMentorUpheldCount
+
+  sessions              MentorSession[]
+  availability          MentorAvailability[]
+  availabilityWindows   AvailabilityWindow[]
+  applications          MentorApplication[]
+  circles               MentorshipCircle[]     // M-12
+
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+}
+
+// M-13: Mentor Monetisation Unlock
+enum SeoBoostType {
+  MONTHLY_RECURRING
+  ONE_TIME_30_DAYS
+  ONE_TIME_14_DAYS
+}
+
+model MentorMonetisationStatus {
+  id                    String                @id @default(cuid())
+  mentor                MentorProfile         @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId              String                @unique
+  isUnlocked            Boolean               @default(false)
+  unlockedAt            DateTime?
+  lockedReason          String?
+  reLockedAt            DateTime?
+  verifiedOutcomeCount  Int                    @default(0)
+  stenoRate             Float?
+  upheldDisputeCount    Int                    @default(0)
+  monthsOnPlatform      Int                    @default(0)
+  reVerificationCurrent Boolean               @default(false)
+  lastCheckedAt         DateTime              @default(now())
+
+  @@index([mentorId])
+}
+
+model MentorSeoBoost {
+  id                    String                @id @default(cuid())
+  mentor                MentorProfile         @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId              String
+  boostType             SeoBoostType
+  pricePaise            Int
+  startDate             DateTime
+  endDate               DateTime
+  active                Boolean               @default(true)
+  razorpayPaymentId     String?
+  createdAt             DateTime              @default(now())
+
+  @@index([mentorId])
+  @@index([endDate, active])
+}
+
+// M-11: Tier change log (system or admin)
+model MentorTierHistory {
+  id            String      @id @default(cuid())
+  mentor        User        @relation("MentorTierHistory", fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId      String
+  previousTier  MentorTier
+  newTier       MentorTier
+  reason        String      // WEEKLY_CALC | ADMIN_OVERRIDE | DEMOTION_DISPUTE_RATE | DEMOTION_VERIFICATION_LAPSED | OUTCOME_VERIFIED
+  triggeredBy   String?     // adminId if admin override
+  createdAt     DateTime    @default(now())
+
+  @@index([mentorId])
+  @@index([createdAt])
+}
+
+enum MentorApplicationStatus {
+  PENDING           // submitted, awaiting mentor response
+  QUESTION_ASKED   // mentor asked one question, awaiting mentee answer
+  ACCEPTED         // mentor accepted
+  DECLINED         // mentor declined
+  EXPIRED          // no mentor response within 5 days
+  WITHDRAWN        // mentee withdrew
+}
+
+enum ContractStatus {
+  PENDING_MENTOR_SIGNATURE
+  PENDING_MENTEE_SIGNATURE
+  ACTIVE
+  COMPLETED
+  DISPUTED
+  TERMINATED_BY_MENTOR
+  TERMINATED_BY_MENTEE
+  VOID
+  PAUSED   // M-16: ops intervention — temporarily suspended
+}
+
+// M-8: Session rhythm enums
+enum EngagementType {
+  SPRINT   // 30 days, 4 sessions, 1 milestone
+  STANDARD // 60 days, 6 sessions, 2 milestones
+  DEEP     // 90 days, 8 sessions, 3 milestones
+}
+
+enum MilestoneType {
+  GOAL_SETTING // Session 1 mandatory — generates GoalDocument
+  MID         // Mid-engagement check-in (Standard: 1, Deep: 2)
+  FINAL       // Final outcome review — generates OutcomeDocument
+}
+
+enum MilestoneStatus {
+  PENDING
+  MENTOR_FILED
+  MENTEE_FILED
+  COMPLETE // Both filed
+}
+
+enum DocumentType {
+  GOAL_DOCUMENT
+  OUTCOME_DOCUMENT
+}
+
+// M-12: Contract source — STANDARD from MentorApplication, CIRCLE from CircleMember
+enum ContractType {
+  STANDARD
+  CIRCLE
+}
+
+// M-12: Mentorship Circles
+enum CircleStatus {
+  DRAFT
+  OPEN
+  LOCKED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CircleMemberStatus {
+  APPLIED
+  ACCEPTED
+  CONFIRMED
+  DECLINED
+  WITHDRAWN
+}
+
+model MentorshipContract {
+  id                  String          @id @default(cuid())
+  mentorApplicationId String?         @unique
+  mentorApplication   MentorApplication? @relation(fields: [mentorApplicationId], references: [id])
+  circleMemberId      String?         @unique
+  circleMember        CircleMember?   @relation("CircleMemberContract", fields: [circleMemberId], references: [id], onDelete: SetNull)
+  contractType        ContractType    @default(STANDARD)
+
+  mentorUserId        String
+  mentor              User            @relation("MentorContracts", fields: [mentorUserId], references: [id])
+  menteeUserId        String
+  mentee              User            @relation("MenteeContracts", fields: [menteeUserId], references: [id])
+
+  status              ContractStatus  @default(PENDING_MENTOR_SIGNATURE)
+
+  // M-8: Engagement rhythm
+  engagementType    EngagementType  @default(STANDARD)
+  engagementStart   DateTime?
+  engagementEnd     DateTime?
+  sessions          EngagementSession[]
+  milestones        EngagementMilestone[]
+  documents         EngagementDocument[]
+
+  // Contract content (snapshot at generation — immutable after signing)
+  contractContent     Json            // Full structured contract data
+  tcVersion           String          // Platform T&C version locked at generation
+
+  // PDF
+  pdfUrl              String?         // S3 URL — set after both signatures
+  pdfHash             String?         // SHA-256 of PDF — set after generation, verified on every access
+  pdfGeneratedAt      DateTime?
+
+  // Signing windows
+  mentorSignDeadline  DateTime?       // Set on generation: now + 48hrs
+  menteeSignDeadline  DateTime?       // Set after mentor signs: mentor sign time + 48hrs
+
+  // Timestamps
+  generatedAt         DateTime        @default(now())
+  activatedAt         DateTime?
+  completedAt         DateTime?
+  voidedAt            DateTime?
+  terminatedAt        DateTime?
+  terminatedBy        String?         // userId
+
+  signatures          ContractSignature[]
+
+  // M-10: One outcome per engagement
+  outcome              MentorshipOutcome?
+
+  // M-6: Agreed fee (nullable for backward compat)
+  agreedFeePaise       Int?
+
+  // M-6: Escrow
+  escrow               MentorshipEscrow?
+
+  // M-9: Escrow disputes
+  disputes             MentorshipDispute[]
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([mentorUserId])
+  @@index([menteeUserId])
+  @@index([status])
+}
+
+// M-9: Dispute Resolution Engine
+enum DisputeCategory {
+  SESSION_DID_NOT_HAPPEN
+  BELOW_MINIMUM_DURATION
+  STENO_NOT_GENERATED
+  OFF_PLATFORM_SOLICITATION
+  COMMITMENTS_NOT_MET
+}
+
+enum DisputeStatus {
+  PENDING_EVIDENCE
+  EVIDENCE_ASSEMBLED
+  AUTO_RESOLVING
+  AUTO_RESOLVED
+  PENDING_OPS
+  RESOLVED
+}
+
+enum DisputeOutcome {
+  UPHELD        // mentee wins — refund
+  REJECTED      // mentor wins — release
+  REJECTED_INVALID  // waived rights, invalid category, etc.
+}
+
+enum DisputeOpsReason {
+  UPHELD
+  REJECTED
+  REJECTED_INVALID
+}
+
+enum StrikeType {
+  MENTEE_DISPUTE_REJECTED   // rejected dispute = mentee strike
+  MENTOR_DISPUTE_UPHELD     // upheld dispute = mentor strike
+}
+
+model MentorshipDispute {
+  id                String            @id @default(cuid())
+  contract          MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId        String
+  milestone         EngagementMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  milestoneId       String            @unique
+  tranche           EscrowTranche     @relation(fields: [trancheId], references: [id], onDelete: Cascade)
+  trancheId         String
+
+  filedByUserId     String
+  category          DisputeCategory
+  description       String            @db.Text
+  status            DisputeStatus     @default(PENDING_EVIDENCE)
+  outcome           DisputeOutcome?
+  opsReason         DisputeOpsReason?
+  opsResolvedBy     String?
+  opsResolvedAt     DateTime?
+  opsNote           String?            @db.Text
+
+  evidenceAssembledAt DateTime?
+  autoResolvedAt    DateTime?
+  resolvedAt        DateTime?
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  evidence          DisputeEvidence[]
+  strikes           DisputeStrike[]
+
+  @@index([contractId])
+  @@index([trancheId])
+  @@index([status])
+  @@index([filedByUserId])
+}
+
+model DisputeEvidence {
+  id          String            @id @default(cuid())
+  dispute     MentorshipDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  disputeId   String
+  evidenceType String           // SESSION_RECORD, STENO_CONSENT, TRANSCRIPT, DURATION, MESSAGE_FLAGS, etc.
+  content     Json              // immutable snapshot
+  createdAt   DateTime          @default(now())
+
+  @@index([disputeId])
+}
+
+model DisputeStrike {
+  id          String            @id @default(cuid())
+  dispute     MentorshipDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  disputeId   String
+  userId      String
+  strikeType  StrikeType
+  createdAt   DateTime          @default(now())
+
+  @@index([disputeId])
+  @@index([userId])
+  @@index([strikeType])
+}
+
+// M-6: Escrow & Payment Infrastructure
+enum PaymentMode {
+  ESCROW        // tranche-based, dispute rights intact
+  FULL_UPFRONT  // full payment upfront, mentor paid immediately, mentee waives dispute rights
+}
+
+enum EscrowStatus {
+  PENDING_PAYMENT   // Order created, awaiting Razorpay capture
+  FUNDED            // Payment captured, funds held (ESCROW mode)
+  COMPLETED         // All done (FULL_UPFRONT immediate completion, or ESCROW all tranches released)
+  TERMINATED        // Early termination — partial refund/release
+  VOIDED            // Contract voided before payment
+}
+
+enum TrancheStatus {
+  HELD              // Funds held, awaiting release
+  PENDING_RELEASE   // Milestone complete, mentee confirm or 7-day auto
+  FROZEN            // Mentee disputed — ops review
+  RELEASED          // Transferred to mentor
+  REFUNDED          // Returned to mentee
+}
+
+enum MovementType {
+  IN                 // Funds in (mentee payment, refund reversal)
+  OUT                // Funds out (to mentor, refund to mentee)
+  PLATFORM_FEE       // ESCROW → PLATFORM
+}
+
+enum PaymentReasonCode {
+  ESCROW_FUNDED
+  TRANCHE_RELEASED
+  TRANCHE_REFUNDED
+  TERMINATION_REFUND
+  TERMINATION_RELEASE
+  OPS_OVERRIDE
+  PILOT_WAIVER
+  DISPUTE_RESOLVED_MENTOR   // M-9: dispute rejected — release to mentor
+  DISPUTE_RESOLVED_MENTEE   // M-9: dispute upheld — refund to mentee
+}
+
+model MentorshipEscrow {
+  id                  String        @id @default(cuid())
+  contractId          String        @unique
+  contract            MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  razorpayOrderId     String?
+  razorpayPaymentId   String?
+
+  paymentMode         PaymentMode   @default(ESCROW)
+  status              EscrowStatus  @default(PENDING_PAYMENT)
+  totalAmountPaise    Int
+  platformFeePaise    Int           @default(0)
+  mentorPayoutPaise   Int           @default(0)
+  mentorId            String
+  mentor              User          @relation("EscrowMentor", fields: [mentorId], references: [id])
+  menteeId            String
+  mentee              User          @relation("EscrowMentee", fields: [menteeId], references: [id])
+
+  pilotFeeWaived      Boolean         @default(false)
+  mentorTierAtSigning String?
+  feeRate             Float?
+
+  fundedAt            DateTime?
+  terminatedAt        DateTime?
+  voidedAt            DateTime?
+
+  tranches            EscrowTranche[]
+  movements           PaymentMovement[]
+  acknowledgement     PaymentModeAcknowledgement?
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([contractId])
+  @@index([mentorId])
+  @@index([menteeId])
+  @@index([status])
+}
+
+model PaymentModeAcknowledgement {
+  id              String             @id @default(cuid())
+  escrow          MentorshipEscrow   @relation(fields: [escrowId], references: [id])
+  escrowId        String             @unique
+  mentee          User               @relation(fields: [menteeId], references: [id])
+  menteeId        String
+  paymentMode     PaymentMode
+  waiverText      String             @db.Text
+  acknowledgedAt  DateTime           @default(now())
+  ipAddress       String?
+
+  @@index([menteeId])
+}
+
+model EscrowTranche {
+  id                  String          @id @default(cuid())
+  escrowId            String
+  escrow              MentorshipEscrow @relation(fields: [escrowId], references: [id], onDelete: Cascade)
+
+  trancheNumber       Int             // 1, 2, or 3
+  amountPaise          Int
+  percentPct           Int             // e.g. 33, 34, 50
+  status               TrancheStatus   @default(HELD)
+  platformFeePaise    Int             @default(0)
+  mentorNetPaise      Int             @default(0)
+
+  milestoneId         String?               @unique
+  milestone           EngagementMilestone?   @relation(fields: [milestoneId], references: [id])
+  autoReleaseAt       DateTime?
+  releasedAt          DateTime?
+
+  feeRecord           TrancheFeeRecord?
+  disputes            MentorshipDispute[]
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@unique([escrowId, trancheNumber])
+  @@index([escrowId])
+  @@index([status])
+  @@index([autoReleaseAt])
+}
+
+model TrancheFeeRecord {
+  id                  String          @id @default(cuid())
+  trancheId           String          @unique
+  tranche             EscrowTranche    @relation(fields: [trancheId], references: [id], onDelete: Cascade)
+
+  mentorTierAtRelease String
+  feeRateApplied      Float
+  platformFeePaise    Int
+  mentorNetPaise      Int
+  pilotFeeWaived      Boolean
+  paymentMode         PaymentMode
+  releasedAt          DateTime
+
+  createdAt           DateTime        @default(now())
+
+  @@index([releasedAt])
+  @@index([paymentMode])
+}
+
+model MentorshipRevenueSnapshot {
+  id                   String   @id @default(cuid())
+  date                 DateTime @unique
+
+  totalReleasedPaise   Int
+  platformFeePaise     Int
+  mentorPayoutPaise    Int
+  pilotWaivedPaise      Int
+  tranchesReleased     Int
+  byTier               Json
+  byPaymentMode        Json
+
+  createdAt            DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([date])
+}
+
+model PaymentMovement {
+  id                  String            @id @default(cuid())
+  escrowId            String
+  escrow              MentorshipEscrow   @relation(fields: [escrowId], references: [id], onDelete: Cascade)
+
+  amountPaise         Int
+  direction           MovementType
+  reasonCode          PaymentReasonCode
+  contractId          String
+  trancheId           String?
+  triggeredBy         String?           // userId or "SYSTEM"
+  notes               String?          @db.Text
+
+  createdAt           DateTime          @default(now())
+
+  @@index([escrowId])
+  @@index([contractId])
+  @@index([reasonCode])
+}
+
+// M-10: Outcome verification & attribution
+enum OutcomeStatus {
+  PENDING_MENTEE   // Mentor submitted — awaiting mentee response
+  VERIFIED         // Mentee confirmed
+  DISPUTED         // Mentee disputed — ops review
+  UNACKNOWLEDGED   // 7-day window passed, no mentee response
+  OPS_REVIEWED     // Admin reviewed disputed outcome
+}
+
+enum OutcomeCheckInStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+model MentorshipOutcome {
+  id                    String                @id @default(cuid())
+  contract              MentorshipContract   @relation(fields: [contractId], references: [id])
+  contractId            String                @unique
+  mentor                User                  @relation("MentorOutcomes", fields: [mentorId], references: [id])
+  mentorId              String
+  mentee                User                  @relation("MenteeOutcomes", fields: [menteeId], references: [id])
+  menteeId              String
+
+  outcomeAchieved       Boolean
+  transitionType        String                @db.VarChar(100)
+  claimedOutcome        String                @db.VarChar(500)
+  mentorReflection      String?               @db.VarChar(500)
+  testimonialConsent    Boolean               @default(false)
+
+  status                OutcomeStatus         @default(PENDING_MENTEE)
+  menteeConfirmedAt     DateTime?
+  menteeDisputedAt      DateTime?
+  menteeNote            String?               @db.Text
+  acknowledgementDeadline DateTime
+
+  opsReviewedAt         DateTime?
+  opsReviewedBy         String?
+  opsDecision           String?               @db.VarChar(20) // UPHELD | OVERTURNED
+  opsNote               String?               @db.Text
+
+  checkInStatus         OutcomeCheckInStatus  @default(PENDING)
+  checkInDueAt          DateTime?
+  checkInCompletedAt    DateTime?
+  checkInNote           String?               @db.Text
+  checkInBadgeGranted   Boolean               @default(false)
+
+  submittedAt           DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([mentorId])
+  @@index([menteeId])
+  @@index([status])
+  @@index([acknowledgementDeadline])
+}
+
+// M-7: Session Room, Steno & Evidence enums
+enum ExceptionStatus {
+  PENDING_ACKNOWLEDGEMENT
+  ACKNOWLEDGED
+  DECLINED
+  EXPIRED
+}
+
+enum MessageFlagType {
+  EXTERNAL_EMAIL
+  PHONE_NUMBER
+  EXTERNAL_VIDEO_LINK
+  PAYMENT_SOLICITATION
+}
+
+enum StenoStatus {
+  NOT_STARTED
+  ACTIVE
+  PARTIAL
+  COMPLETED
+  SKIPPED
+}
+
+model EngagementSession {
+  id                    String        @id @default(cuid())
+  contract              MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId            String
+  sessionNumber         Int            // 1–4/6/8 based on engagement type
+  scheduledAt           DateTime?
+  completedAt          DateTime?
+  status                SessionStatus  @default(SCHEDULED)
+  mentorNotes           String?        @db.Text // private to mentor
+  sharedNotes           String?        @db.Text // visible to both after session
+  durationMinutes       Int?           // actual duration (manual entry for now)
+  // M-7: session evidence fields
+  slotDurationMins      Int?           // agreed slot length (e.g. 45)
+  effectiveDurationMins Int?           // overlap where both present
+  carryOverMins         Int            @default(0)
+  effectiveSlotMins      Int?           // slotDuration + carryOver
+  stenoStatus           StenoStatus    @default(NOT_STARTED)
+  sessionRoomId         String?       @unique
+  sessionRoom           SessionRoom?   @relation(fields: [sessionRoomId], references: [id], onDelete: SetNull)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  joinLogs              SessionJoinLog[]
+  stenoConsents         StenoConsentLog[]
+  transcripts           SessionTranscript[]
+  stenoExtractions      StenoExtraction[]
+  sessionRecord         SessionRecord?
+  exceptionNotes        SessionExceptionNote[]
+  circleSessionId      String?
+  circleSession        CircleSession?  @relation(fields: [circleSessionId], references: [id], onDelete: SetNull)
+
+  @@index([contractId])
+  @@index([circleSessionId])
+}
+
+model SessionRoom {
+  id            String   @id @default(cuid())
+  session       EngagementSession? // 1:1 back-relation (1:1 session)
+  circleSession CircleSession?     // M-12: or circle group session
+  dailyRoomName String @unique
+  dailyRoomUrl  String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SessionJoinLog {
+  id                 String   @id @default(cuid())
+  session            EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId          String
+  userId             String
+  dailyParticipantId String?
+  joinedAt           DateTime
+  leftAt             DateTime?
+  durationSeconds    Int?     // computed when left
+  createdAt          DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model StenoConsentLog {
+  id              String   @id @default(cuid())
+  session         EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId       String
+  userId          String
+  participantType String   // "MENTOR" | "MENTEE"
+  acknowledged    Boolean
+  ipAddress       String?
+  createdAt       DateTime @default(now())
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+}
+
+model SessionTranscript {
+  id        String   @id @default(cuid())
+  session   EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  content   String   @db.Text // full transcript text
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model StenoExtraction {
+  id         String   @id @default(cuid())
+  session    EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  summary    String?  @db.Text
+  mentorCommitments  Json?  // string[]
+  menteeCommitments  Json?  // string[]
+  actionItems       Json?  // string[]
+  nextSessionFocus   String? @db.Text
+  goalProgressSignal String? @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model SessionRecord {
+  id           String   @id @default(cuid())
+  session      EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String   @unique
+  s3Key       String
+  sha256Hash  String   // immutable integrity
+  generatedAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+model SessionExceptionNote {
+  id         String         @id @default(cuid())
+  session    EngagementSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  filedBy    String         // userId
+  note       String         @db.Text
+  status     ExceptionStatus @default(PENDING_ACKNOWLEDGEMENT)
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  declinedAt    DateTime?
+  declinedBy    String?
+  expiresAt     DateTime?    // for acknowledgement window
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+}
+
+model MessageFlag {
+  id         String         @id @default(cuid())
+  contractId String
+  messageId  String
+  senderId   String
+  flagType   MessageFlagType
+  createdAt  DateTime @default(now())
+
+  @@index([contractId])
+  @@index([messageId])
+}
+
+model EngagementMilestone {
+  id               String           @id @default(cuid())
+  contract         MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId       String
+  milestoneNumber  Int              // 1, 2, or 3
+  type             MilestoneType
+  dueDate          DateTime
+  status           MilestoneStatus  @default(PENDING)
+  mentorAssessment String?         @db.Text
+  menteeAssessment String?         @db.Text
+  mentorFiledAt    DateTime?
+  menteeFiledAt    DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // M-6: Escrow tranche linked to this milestone (optional)
+  escrowTranche    EscrowTranche?
+
+  // M-9: One dispute per milestone (mentee only)
+  dispute          MentorshipDispute?
+
+  @@index([contractId])
+}
+
+model EngagementDocument {
+  id            String    @id @default(cuid())
+  contract      MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId    String
+  type          DocumentType
+  content       Json      // structured — Goal or Outcome shape
+  mentorSigned  Boolean   @default(false)
+  menteeSigned   Boolean   @default(false)
+  mentorSignedAt DateTime?
+  menteeSignedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([contractId, type])
+  @@index([contractId])
+}
+
+model ContractSignature {
+  id           String             @id @default(cuid())
+  contractId   String
+  contract     MentorshipContract @relation(fields: [contractId], references: [id])
+
+  signerUserId String
+  signer       User               @relation("ContractSignatures", fields: [signerUserId], references: [id])
+  signerRole   String             // "MENTOR" | "MENTEE"
+
+  // OTP verification record
+  otpRequestedAt DateTime
+  otpVerifiedAt  DateTime
+  ipAddress      String
+  userAgent      String
+
+  // Signature declaration
+  declaration    String           // "I, [Full Name], agree to the terms of this Engagement Contract."
+
+  createdAt      DateTime         @default(now())
+
+  @@unique([contractId, signerRole])
+  @@index([contractId])
+  @@index([signerUserId])
+}
+
+model MentorApplication {
+  id              String   @id @default(cuid())
+  menteeId        String
+  mentee          User     @relation("MenteeApplications", fields: [menteeId], references: [id], onDelete: Cascade)
+  mentorProfileId String
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+
+  whyThisMentor       String    @db.Text
+  goalStatement       String    @db.Text
+  commitment         String    @db.Text
+  timeline            String    @db.Text
+  whatAlreadyTried    String    @db.Text
+
+  mentorQuestion      String?   @db.Text
+  menteeAnswer        String?   @db.Text
+  declineReason       String?   @db.Text
+
+  matchReason         String    @db.Text
+  matchScore          Int
+
+  matchScoreAtApplication Int?   // M-4: snapshot at apply time (ops only)
+  matchDimensionsSnapshot Json?  // M-4: dimension breakdown at apply (ops only)
+
+  status              MentorApplicationStatus @default(PENDING)
+
+  submittedAt         DateTime  @default(now())
+  mentorRespondedAt   DateTime?
+  expiresAt           DateTime
+  questionAskedAt     DateTime?
+  answerSubmittedAt   DateTime?
+
+  contract    MentorshipContract?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([menteeId, mentorProfileId])
+  @@index([mentorProfileId, status])
+  @@index([status, expiresAt])
+}
+
+// M-12: Mentorship Circles (Group Cohorts)
+model MentorshipCircle {
+  id              String       @id @default(cuid())
+  mentorId        String
+  mentor          User         @relation("MentorCircles", fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorProfileId String
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?       @db.Text
+  maxMembers      Int          @default(6)
+  feePaise        Int
+  startDate       DateTime
+  status          CircleStatus  @default(DRAFT)
+  leadTimeDays    Int          @default(7)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  members         CircleMember[]
+  sessions        CircleSession[]
+  peerCheckIns    CirclePeerCheckIn[]
+
+  @@index([mentorId])
+  @@index([mentorProfileId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model CircleMember {
+  id              String           @id @default(cuid())
+  circleId        String
+  circle          MentorshipCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  menteeId        String
+  mentee          User             @relation("CircleMembers", fields: [menteeId], references: [id], onDelete: Cascade)
+  status          CircleMemberStatus @default(APPLIED)
+  applicationNote String?          @db.Text
+  contract        MentorshipContract? @relation("CircleMemberContract")  // 1:1 via contract.circleMemberId
+  appliedAt       DateTime         @default(now())
+  acceptedAt      DateTime?
+  confirmedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  oneOnOneSlots   CircleOneOnOneSlot[]
+  peerCheckInsFrom CirclePeerCheckIn[] @relation("PeerCheckInFrom")
+  peerCheckInsTo   CirclePeerCheckIn[] @relation("PeerCheckInTo")
+
+  @@unique([circleId, menteeId])
+  @@index([circleId])
+  @@index([menteeId])
+  @@index([status])
+}
+
+model CircleSession {
+  id             String        @id @default(cuid())
+  circleId       String
+  circle         MentorshipCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  sessionNumber  Int
+  scheduledAt    DateTime?
+  sessionRoomId  String?       @unique
+  sessionRoom    SessionRoom?  @relation(fields: [sessionRoomId], references: [id], onDelete: SetNull)
+  status         String        @default("SCHEDULED")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  memberSessions EngagementSession[]
+
+  @@unique([circleId, sessionNumber])
+  @@index([circleId])
+  @@index([sessionRoomId])
+}
+
+model CircleOneOnOneSlot {
+  id             String      @id @default(cuid())
+  circleMemberId String
+  circleMember   CircleMember @relation(fields: [circleMemberId], references: [id], onDelete: Cascade)
+  sessionNumber  Int
+  scheduledAt    DateTime?
+  durationMins  Int         @default(30)
+  status        String      @default("SCHEDULED")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([circleMemberId])
+}
+
+model CirclePeerCheckIn {
+  id           String      @id @default(cuid())
+  circleId     String
+  circle       MentorshipCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  fromMemberId String
+  fromMember   CircleMember @relation("PeerCheckInFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  toMemberId   String
+  toMember     CircleMember @relation("PeerCheckInTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+  content      String      @db.Text
+  createdAt    DateTime    @default(now())
+
+  @@index([circleId])
+  @@index([fromMemberId])
+  @@index([toMemberId])
+}
+
+model MenteeReadinessCheck {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  profileComplete       Boolean @default(false)
+  careerContextComplete Boolean @default(false)
+  transitionDeclared    Boolean @default(false)
+  allGatesPassed        Boolean @default(false)
+
+  targetFromRole        String?
+  targetFromIndustry    String?
+  targetToRole          String?
+  targetToIndustry      String?
+  targetCity            String?
+  targetTimelineMonths  Int?
+
+  lastCheckedAt DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AvailabilityWindow {
+  id              String        @id @default(cuid())
+  mentorProfileId String
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  dayOfWeek       DayOfWeek
+  startTime       String
+  endTime         String
+}
+
+model MentorAvailability {
+  id              String        @id @default(cuid())
+  mentorProfileId String
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  timezone        String        @default("Asia/Kolkata")
+}
+
+model MentorVerification {
+  id                  String               @id @default(cuid())
+  mentorProfileId     String               @unique
+  status              VerificationStatus   @default(UNVERIFIED)
+  submittedAt         DateTime?
+  reviewedAt          DateTime?
+  reviewedBy          String?
+  linkedInUrl         String?
+  linkedInChecked     Boolean              @default(false)
+  employmentVerified  Boolean              @default(false)
+  idVerified          Boolean              @default(false)
+  verifiedAt          DateTime?
+  nextReviewDue       DateTime?
+  notes               String?              @db.Text
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  mentorProfile       MentorProfile        @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  documents           VerificationDocument[]
+  auditLog            VerificationAuditLog[]
+}
+
+model VerificationDocument {
+  id                     String                   @id @default(cuid())
+  mentorVerificationId   String
+  type                   VerificationDocumentType
+  fileUrl                String
+  fileName               String
+  fileSize               Int
+  mimeType               String
+  uploadedAt             DateTime                 @default(now())
+  reviewedAt             DateTime?
+  accepted               Boolean?
+  rejectionReason        String?                  @db.Text
+
+  mentorVerification     MentorVerification       @relation(fields: [mentorVerificationId], references: [id], onDelete: Cascade)
+}
+
+model VerificationAuditLog {
+  id                   String               @id @default(cuid())
+  mentorVerificationId String
+  adminId              String
+  decision             VerificationDecision
+  reasonCode           String
+  note                 String?              @db.Text
+  createdAt            DateTime             @default(now())
+
+  mentorVerification   MentorVerification   @relation(fields: [mentorVerificationId], references: [id], onDelete: Cascade)
+  admin                User                 @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+model MentorSession {
+  id                String        @id @default(cuid())
+  mentorProfileId   String
+  mentorProfile     MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
+  menteeId          String
+  mentee            User          @relation("MenteeSession", fields: [menteeId], references: [id], onDelete: Cascade)
+
+  status            SessionStatus @default(REQUESTED)
+  sessionGoal       String        @db.Text
+  sessionFormat     SessionFormat
+  scheduledAt       DateTime?
+  durationMinutes   Int           @default(45)
+  meetingLink       String?
+
+  menteeRating      Int?
+  menteeFeedback    String?       @db.Text
+  mentorNotes       String?       @db.Text
+  outcomeAchieved   Boolean?
+
+  careerSignalFired Boolean       @default(false)
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+// ─── M-16: Admin & Ops Layer ────────────────────────────────────────────────
+
+enum MentorshipAuditCategory {
+  VERIFICATION
+  CONTRACT
+  ENGAGEMENT
+  OUTCOME
+  DISPUTE
+  TIER
+  INTERVENTION
+  SYSTEM
+}
+
+model MentorshipAuditLog {
+  id           String                   @id @default(cuid())
+  actor        User                     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actorId      String
+  action       String
+  category     MentorshipAuditCategory
+  entityType   String
+  entityId     String
+  previousState Json?
+  newState     Json?
+  reason       String?                  @db.Text
+  actorIp      String?
+  createdAt    DateTime                 @default(now())
+
+  @@index([actorId])
+  @@index([category])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+enum OpsAlertType {
+  VERIFICATION_SLA_BREACH
+  DISPUTE_SLA_BREACH
+  OUTCOME_UNACKNOWLEDGED
+  MENTOR_HIGH_DISPUTE_RATE
+  MENTOR_LAPSED_REVERIFICATION
+  ENGAGEMENT_STALLED
+  CONTRACT_UNSIGNED
+  STENO_FAILURE
+  INVOICE_PDF_FAILED
+  MENTEE_3_STRIKES  // M-9: 3 rejected disputes = ops alert
+  ESCROW_DISPUTE_SLA_BREACH  // M-9: PENDING_OPS > 5 business days
+}
+
+model OpsAlert {
+  id           String       @id @default(cuid())
+  type         OpsAlertType
+  severity     String       // "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  entityType   String
+  entityId     String
+  message      String       @db.Text
+  isRead       Boolean      @default(false)
+  resolvedAt   DateTime?
+  resolvedBy   User?        @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedById String?
+  createdAt    DateTime     @default(now())
+
+  @@index([type])
+  @@index([severity])
+  @@index([isRead])
+  @@index([entityType, entityId])
+}
+
+// ─── M-15: Legal Framework & Compliance ────────────────────────────────────
+
+enum LegalDocumentType {
+  MENTORSHIP_MARKETPLACE_ADDENDUM
+  MENTOR_CONDUCT_AGREEMENT
+}
+
+model LegalDocument {
+  id          String             @id @default(cuid())
+  type        LegalDocumentType
+  version     String             // semver e.g. "1.0.0"
+  title       String
+  content     String             @db.Text // full legal text, markdown
+  effectiveAt DateTime
+  isActive    Boolean            @default(true) // only one active per type
+  createdAt   DateTime          @default(now())
+
+  signatures  LegalDocumentSignature[]
+
+  @@index([type])
+  @@index([type, isActive])
+}
+
+model LegalDocumentSignature {
+  id         String        @id @default(cuid())
+  document   LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  signedAt   DateTime      @default(now())
+  ipAddress  String?
+  userAgent  String?
+  method     String        @default("OTP_EMAIL") // OTP_EMAIL | CHECKBOX (future)
+
+  @@unique([documentId, userId])
+  @@index([userId])
+  @@index([documentId])
+}
+
+// ─── M-17: Mentorship Analytics & Insights ──────────────────────────────────
+
+model MentorshipAnalyticsSnapshot {
+  id                        String   @id @default(cuid())
+  snapshotDate              DateTime @unique
+
+  activeEngagements         Int
+  newEngagementsThisWeek    Int
+  completedEngagementsTotal Int
+  stalledEngagements        Int
+  averageEngagementDays     Float
+
+  outcomesSubmittedTotal    Int
+  outcomesVerifiedTotal     Int
+  outcomesDisputedTotal     Int
+  outcomeVerificationRate   Float
+  avgTimeToOutcomeDays      Float
+  sixMonthCheckinRate       Float
+
+  totalMentors              Int
+  verifiedMentors           Int
+  activeMentors             Int
+  mentorsByTier             Json
+  avgDisputeRate            Float
+  highDisputeRateMentors    Int
+
+  sessionsCompletedTotal    Int
+  sessionsCompletedThisWeek Int
+  avgSessionsPerEngagement  Float
+  milestonesCompletedRate  Float
+
+  platformRevenuePaise      Int      @default(0)
+  mentorPayoutsPaise        Int      @default(0)
+  pilotWaivedRevenuePaise   Int      @default(0)
+
+  createdAt                 DateTime @default(now())
+}
+
+model MentorAnalyticsSnapshot {
+  id                       String   @id @default(cuid())
+  mentor                   User     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  mentorId                 String
+  snapshotDate             DateTime
+
+  applicationsReceived     Int
+  applicationsAccepted     Int
+  applicationsDeclined     Int
+  acceptanceRate           Float
+
+  engagementsActive        Int
+  engagementsCompleted    Int
+  engagementsTotal         Int
+  completionRate           Float
+
+  outcomesSubmitted        Int
+  outcomesVerified         Int
+  outcomesDisputed         Int
+  outcomeRate              Float
+
+  sessionsCompleted        Int
+  avgSessionsPerEngagement  Float
+
+  currentTier              String
+  verifiedOutcomeCount     Int
+  disputeRate              Float
+
+  totalEarnedPaise         Int      @default(0)
+  pendingEarnedPaise       Int      @default(0)
+  inEscrowPaise            Int      @default(0)
+
+  createdAt                DateTime @default(now())
+
+  @@unique([mentorId, snapshotDate])
+  @@index([mentorId])
+  @@index([snapshotDate])
+}
+
+// ─── Phase 13: Admin Panel (Lite) ───────────────────────────────────────────
+// ─── Phase 17: Trust, Safety & Compliance (extended) ────────────────────────
+
+enum AuditCategory {
+  AUTH
+  DATA_ACCESS
+  DATA_MUTATION
+  ADMIN_ACTION
+  PAYMENT
+  MENTORSHIP
+  SECURITY
+  COMPLIANCE
+  SYSTEM
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String?  // kept for backward compat; use actorId for new entries
+  action      String
+  targetType  String
+  targetId    String
+  targetLabel String?
+
+  // Phase 17: actor (who)
+  actorId     String?
+  actorRole   String?
+  actorIp     String?
+  actorAgent  String?  // User-Agent truncated to 500 chars
+
+  // Phase 17: category & severity
+  category    AuditCategory @default(ADMIN_ACTION)
+  severity    AuditSeverity @default(INFO)
+
+  // Phase 17: payload
+  metadata       Json?
+  previousState  Json?
+  newState       Json?
+
+  // Phase 17: outcome
+  success    Boolean  @default(true)
+  errorCode  String?
+
+  createdAt  DateTime @default(now())
+
+  admin  User? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  actor  User? @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([actorId])
+  @@index([category])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([severity])
+}
+
+model SecurityEvent {
+  id       String   @id @default(cuid())
+  type     String   // RATE_LIMIT_HIT | INVALID_TOKEN | SUSPICIOUS_PATTERN | BRUTE_FORCE
+  actorIp  String?
+  actorId  String?
+  endpoint String
+  metadata Json?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([actorIp])
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+enum ReportTargetType {
+  JOB_POST
+  COMPANY_REVIEW
+  USER_PROFILE
+  MESSAGE
+  MENTOR_PROFILE
+}
+
+enum ReportReason {
+  SPAM
+  MISLEADING
+  INAPPROPRIATE
+  FAKE
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED_ACTION_TAKEN
+  RESOLVED_NO_ACTION
+  DISMISSED
+}
+
+model UserReport {
+  id          String           @id @default(cuid())
+  reporterId  String
+  targetType  ReportTargetType
+  targetId    String
+  reason      ReportReason
+  description String?          @db.Text
+  status      ReportStatus     @default(PENDING)
+  resolvedBy  String?
+  resolution  String?          @db.Text
+  resolvedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([targetType, targetId])
+  @@index([reporterId])
+}
+
+enum DataRequestType {
+  EXPORT
+  DELETE
+  RECTIFY
+}
+
+enum DataRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model DataRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  type        DataRequestType
+  status      DataRequestStatus @default(PENDING)
+  requestedAt DateTime          @default(now())
+  completedAt DateTime?
+  exportUrl   String?
+  deletedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  enabled     Boolean  @default(true)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([key])
+}
+
+// ─── Phase 16: Data & Analytics Platform ─────────────────────────────────────
+
+model AnalyticsEvent {
+  id         String        @id @default(cuid())
+  userId     String?
+  sessionId  String?
+  event      String
+  properties Json          @default("{}")
+  persona    UserPersona?
+  page       String?
+  referrer   String?
+  deviceType String?
+  createdAt  DateTime      @default(now())
+
+  @@index([event, createdAt])
+  @@index([userId, createdAt])
+  @@index([persona, createdAt])
+}
+
+model DailyMetricSnapshot {
+  id                        String   @id @default(cuid())
+  date                      DateTime @unique
+
+  totalUsers                Int      @default(0)
+  newUsersToday             Int      @default(0)
+  activeUsersToday          Int      @default(0)
+  activeUsersWeek           Int      @default(0)
+  activeUsersMonth          Int      @default(0)
+
+  activeSeekersCount        Int      @default(0)
+  passiveSeekersCount       Int      @default(0)
+  earlyCareerCount          Int      @default(0)
+  recruiterCount            Int      @default(0)
+  noPersonaCount            Int      @default(0)
+
+  registrationsToday        Int      @default(0)
+  personaCompletedToday     Int      @default(0)
+  contextCompletedToday     Int      @default(0)
+  firstJobViewToday         Int      @default(0)
+  firstApplicationToday     Int      @default(0)
+
+  fitScoresRunToday         Int      @default(0)
+  resumeOptimisationsToday  Int      @default(0)
+  resumeBuildsToday         Int      @default(0)
+  mentorSessionsRequested   Int      @default(0)
+  mentorSessionsCompleted   Int      @default(0)
+
+  activeJobPostings         Int      @default(0)
+  applicationsToday         Int      @default(0)
+  jobsIndexedTotal          Int      @default(0)
+
+  createdAt                 DateTime @default(now())
+}
+
+// Phase 20: Platform Intelligence & Investor Metrics
+model InvestorSnapshot {
+  id                    String   @id @default(cuid())
+  snapshotDate          DateTime @unique
+
+  totalUsers            Int
+  newUsersToday         Int
+  dau                   Int
+  wau                   Int
+  mau                   Int
+  dauMauRatio           Float
+
+  activeSeekers         Int
+  profileCompletionAvg Float
+  resumesGenerated      Int
+  applicationsSubmitted Int
+
+  activeCompanies       Int
+  activeRecruiters      Int
+  jobPostsActive        Int
+  avgApplicantsPerJob   Float
+
+  mentorsVerified       Int
+  activeEngagements     Int
+  verifiedOutcomes      Int
+  outcomeVerificationRate Float
+
+  mrrInr                Float
+  mrrUsd                Float
+  arpu                  Float
+  payingUsers           Int
+  churnRate             Float
+  ltv                   Float
+
+  referralConversionRate Float
+  viralCoefficient      Float
+  organicSignupRate     Float
+
+  aiInteractionsToday   Int
+  aiInteractions30d     Int
+  resumeOptimisations   Int
+  fitScoresComputed     Int
+
+  createdAt             DateTime @default(now())
+}
+
+model MetricAlert {
+  id          String    @id @default(cuid())
+  metric      String
+  threshold   Float
+  direction   String
+  message     String    @db.Text
+  triggeredAt DateTime?
+  resolvedAt  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+// ─── Phase 8: Salary Insights ─────────────────────────────────────────────────
+
+model SalaryInsightCache {
+  id              String   @id @default(cuid())
+  cacheKey        String   @unique // e.g. "role:software-engineer:bangalore" or "company:google:all"
+  data            Json     // cached aggregate result
+  submissionCount Int
+  jdSignalCount   Int
+  computedAt      DateTime @default(now())
+  expiresAt       DateTime // recompute after 24hrs
+
+  @@index([cacheKey])
+}
+
+model CityMetric {
+  id        String   @id @default(cuid())
+  city      String   @unique
+  rentIndex Float?   // relative cost index (base: Bangalore = 100)
+  costIndex Float?   // overall CoL index
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Phase 10B: Candidate Intelligence Dashboard ─────────────────────────────
+
+model CandidateInsightSnapshot {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Market Value
+  marketValueMin    Float?
+  marketValueMax    Float?
+  marketValueMedian Float?
+  marketValueBasis  String? // e.g. "Based on 34 data points for Senior PM in Bangalore"
+  marketValueAt     DateTime?
+
+  // Profile Visibility Score (0–100)
+  visibilityScore   Int?
+  visibilityFactors Json? // { completeness: 80, keywordDensity: 60, recency: 70, ... }
+
+  // Skills gap (top 5 missing skills vs target JDs)
+  skillsGapData Json? // [{ skill, frequency, urgency }]
+  skillsGapAt   DateTime?
+
+  // Application performance
+  appPerformanceData Json? // { applied, viewed, shortlisted, rejected, responseRate, ... }
+  appPerformanceAt   DateTime?
+
+  // Best time to apply heatmap data
+  heatmapData Json? // { mon: { 9: 12, 10: 8, ... }, tue: { ... }, ... }
+  heatmapAt   DateTime?
+
+  computedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// ─── Phase 22: Marketplace & Career Services ─────────────────────────────────
+
+enum ProviderStatus {
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProviderType {
+  RESUME_REVIEWER
+  MOCK_INTERVIEWER
+  CAREER_COACH
+}
+
+model MarketplaceProvider {
+  id              String          @id @default(cuid())
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String          @unique
+  type            ProviderType
+  status          ProviderStatus  @default(PENDING_REVIEW)
+  bio             String          @db.Text
+  specialisations String[]
+  languages       String[]
+  pricePerSession Int
+  currency        String          @default("INR")
+  avgRating       Float?
+  totalReviews    Int             @default(0)
+  totalSessions   Int             @default(0)
+  isAvailable     Boolean         @default(true)
+  turnaroundHours Int?
+  calendarUrl     String?
+  adminNote       String?         @db.Text
+  approvedAt      DateTime?
+  suspendedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  resumeReviews   ResumeReviewOrder[]
+  mockInterviews  MockInterviewBooking[]
+  coachingSessions CoachingSession[]
+  reviews         ProviderReview[]
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  IN_REVIEW
+  DELIVERED
+  DISPUTED
+  REFUNDED
+}
+
+model ResumeReviewOrder {
+  id              String             @id @default(cuid())
+  seeker          User               @relation("SeekerResumeReviews", fields: [seekerId], references: [id], onDelete: Cascade)
+  seekerId        String
+  provider        MarketplaceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId      String
+  resumeVersionId String?
+  resumeUrl       String
+  careerGoal      String             @db.Text
+  status          OrderStatus        @default(PENDING_PAYMENT)
+  paymentEventId  String?
+  platformFee     Int
+  providerPayout  Int
+  feedbackUrl     String?
+  deliveredAt     DateTime?
+  seekerRating    Int?
+  seekerReview    String?            @db.Text
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([seekerId])
+  @@index([providerId])
+  @@index([status])
+}
+
+model MockInterviewBooking {
+  id                  String             @id @default(cuid())
+  seeker              User               @relation("SeekerMockInterviews", fields: [seekerId], references: [id], onDelete: Cascade)
+  seekerId            String
+  provider            MarketplaceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId          String
+  durationMinutes     Int
+  targetRole          String
+  status              OrderStatus        @default(PENDING_PAYMENT)
+  scheduledAt         DateTime?
+  paymentEventId      String?
+  platformFee         Int
+  providerPayout      Int
+  technicalScore      Int?
+  communicationScore  Int?
+  cultureScore        Int?
+  problemSolvingScore Int?
+  scorecardNotes      String?            @db.Text
+  recordingConsent    Boolean            @default(false)
+  deliveredAt         DateTime?
+  seekerRating        Int?
+  seekerReview        String?            @db.Text
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([seekerId])
+  @@index([providerId])
+  @@index([status])
+}
+
+model CoachingSession {
+  id              String             @id @default(cuid())
+  seeker          User               @relation("SeekerCoachingSessions", fields: [seekerId], references: [id], onDelete: Cascade)
+  seekerId        String
+  provider        MarketplaceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId      String
+  topic           String
+  durationMinutes Int
+  status          OrderStatus        @default(PENDING_PAYMENT)
+  scheduledAt     DateTime?
+  paymentEventId  String?
+  platformFee     Int
+  providerPayout  Int
+  sessionNotes    String?            @db.Text
+  seekerRating    Int?
+  seekerReview    String?            @db.Text
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([seekerId])
+  @@index([providerId])
+  @@index([status])
+}
+
+model ProviderReview {
+  id          String              @id @default(cuid())
+  provider    MarketplaceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerId  String
+  reviewer    User                @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  rating      Int
+  review      String?             @db.Text
+  serviceType String
+  orderId     String
+  createdAt   DateTime            @default(now())
+
+  @@unique([reviewerId, orderId])
+  @@index([providerId])
+}
+
+model CourseRecommendation {
+  id            String    @id @default(cuid())
+  skill         String
+  title         String
+  provider      String
+  url           String
+  affiliateCode String?
+  priceInr      Int?
+  durationHours Int?
+  level         String?
+  language      String    @default("en")
+  isActive      Boolean   @default(true)
+  clickCount    Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  clicks        CourseClick[]
+
+  @@index([skill])
+  @@index([isActive])
+}
+
+model CourseClick {
+  id          String               @id @default(cuid())
+  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+  course      CourseRecommendation  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId    String
+  skill       String
+  createdAt   DateTime             @default(now())
+
+  @@index([courseId])
+  @@index([userId])
+}
+
+enum BadgeStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+model ProfileBadge {
+  id              String      @id @default(cuid())
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  provider        String
+  skill           String
+  score           Float?
+  percentile      Float?
+  badgeUrl        String?
+  verificationUrl String?
+  issuedAt        DateTime
+  expiresAt       DateTime?
+  status          BadgeStatus @default(ACTIVE)
+  createdAt       DateTime    @default(now())
+
+  @@unique([userId, provider, skill])
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Phase 18: B2B / Enterprise & API Platform ───────────────────────────────
+
+enum ApiKeyEnvironment {
+  LIVE
+  TEST
+}
+
+enum AtsProvider {
+  GREENHOUSE
+  LEVER
+  WORKDAY
+  GENERIC
+}
+
+enum BulkImportType {
+  JOB_POSTS
+  CANDIDATES
+}
+
+enum BulkJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model CompanyApiKey {
+  id          String            @id @default(cuid())
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String            @unique
+  keyPrefix   String
+  environment ApiKeyEnvironment
+  scopes      String[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime          @default(now())
+
+  usageLogs   ApiUsageLog[]
+
+  @@index([companyId])
+}
+
+model ApiUsageLog {
+  id         String        @id @default(cuid())
+  apiKeyId   String
+  apiKey     CompanyApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  endpoint   String
+  method     String
+  statusCode Int
+  latencyMs  Int
+  createdAt  DateTime      @default(now())
+
+  @@index([apiKeyId, createdAt])
+}
+
+model AtsWebhookEvent {
+  id         String      @id @default(cuid())
+  companyId  String
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider   AtsProvider
+  eventType  String
+  payload    Json
+  processed  Boolean     @default(false)
+  processedAt DateTime?
+  error      String?
+  createdAt  DateTime    @default(now())
+
+  @@index([companyId, processed])
+}
+
+model CareersPageConfig {
+  id                  String   @id @default(cuid())
+  companyId           String   @unique
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customDomain        String?  @unique
+  logoUrl             String?
+  primaryColor        String?
+  accentColor         String?
+  heroTitle           String?
+  heroSubtitle        String?
+  hideAscendBranding  Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model BulkImportJob {
+  id          String         @id @default(cuid())
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId      String
+  initiatedBy User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        BulkImportType
+  status      BulkJobStatus  @default(PENDING)
+  totalRows   Int            @default(0)
+  processed   Int            @default(0)
+  failed      Int            @default(0)
+  errorLog    Json?
+  s3Key       String?
+  createdAt   DateTime       @default(now())
+  completedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+}
+
+model CompanyWebhook {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  url       String
+  secret    String
+  events    String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+}
+
+model AtsIntegration {
+  id            String      @id @default(cuid())
+  companyId     String      @unique
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider      AtsProvider
+  webhookSecret String?
+  apiKey        String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+}
+
+model SsoConfig {
+  id         String   @id @default(cuid())
+  companyId  String   @unique
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider   String
+  entryPoint String
+  certificate String @db.Text
+  issuer     String
+  isActive   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// ─── GST Invoicing ────────────────────────────────────────────────────────
+
+enum GstType {
+  CGST_SGST
+  IGST
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINALISED
+  VOID
+}
+
+enum InvoicePaymentType {
+  SUBSCRIPTION
+  MARKETPLACE_ORDER
+  MENTORSHIP_TRANCHE
+}
+
+model Invoice {
+  id                 String              @id @default(cuid())
+  invoiceNumber      String              @unique
+  invoiceDate        DateTime            @default(now())
+  financialYear      String
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  payerName          String
+  payerEmail         String
+  payerAddress       String?
+  payerGstin         String?
+  payerStateCode     String?
+
+  lineItems          InvoiceLineItem[]
+
+  subtotalPaise      Int
+  cgstPaise          Int
+  sgstPaise          Int
+  igstPaise          Int
+  totalPaise        Int
+
+  gstType            GstType
+  paymentType        InvoicePaymentType
+  paymentId          String?
+  orderId           String?
+
+  subscriptionId    String?
+  marketplaceOrderId String?
+  escrowTrancheId   String?
+
+  pdfS3Key          String?
+  pdfGeneratedAt    DateTime?
+
+  status             InvoiceStatus       @default(DRAFT)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([financialYear])
+  @@index([status])
+  @@index([invoiceDate])
+}
+
+model InvoiceLineItem {
+  id              String  @id @default(cuid())
+  invoice         Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId       String
+  description     String
+  sacCode         String  @default("998314")
+  quantity        Int     @default(1)
+  unitPricePaise  Int
+  totalPaise      Int
+
+  @@index([invoiceId])
+}
+
+model InvoiceSequence {
+  id            String   @id @default(cuid())
+  financialYear String   @unique
+  lastSequence  Int      @default(0)
+}
+
+model BillingProfile {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @unique
+  gstin           String?
+  gstinVerified   Boolean  @default(false)
+  legalName       String?
+  billingAddress  String?
+  stateCode       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}

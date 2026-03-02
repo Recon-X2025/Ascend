@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ascend — Build Progress Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #00e5a0;
+    --amber: #f5a623;
+    --red: #ff4d6d;
+    --text: #e8e8f0;
+    --text-muted: #6b6b80;
+    --text-dim: #9494a8;
+    --done: #00e5a0;
+    --next: #6c63ff;
+    --pending: #2a2a3a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .brand { display: flex; flex-direction: column; gap: 4px; }
+
+  .brand-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .brand-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #6c63ff 0%, #00e5a0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 80px;
+  }
+
+  .stat-pill .num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+  }
+
+  .stat-pill .lbl {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 3px;
+    display: block;
+  }
+
+  .stat-pill.done .num { color: var(--done); }
+  .stat-pill.next .num { color: var(--next); }
+  .stat-pill.total .num { color: var(--text-dim); }
+
+  .overall-progress {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .overall-progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .overall-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .overall-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+    transition: width 0.6s ease;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -2px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent2);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent2);
+  }
+
+  /* Build warning banner */
+  .build-warning {
+    background: rgba(245,166,35,0.08);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .build-warning-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .build-warning-text {
+    font-size: 11px;
+    color: var(--amber);
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+
+  .build-warning-text strong {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .build-warning-text code {
+    background: rgba(245,166,35,0.12);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
+  /* Pilot milestone banner */
+  .milestone-banner {
+    background: rgba(108,99,255,0.07);
+    border: 1px solid rgba(108,99,255,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .milestone-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .milestone-text { font-size: 11px; color: var(--text-dim); line-height: 1.7; }
+  .milestone-text strong { color: var(--accent); font-weight: 600; }
+  .milestone-text .done-item { color: var(--done); }
+  .milestone-text .next-item { color: var(--accent); }
+  .milestone-text .pending-item { color: var(--text-muted); }
+
+  .phases-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .phase-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 48px 1fr auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    user-select: none;
+  }
+
+  .phase-row:hover {
+    border-color: rgba(108,99,255,0.4);
+    background: var(--surface2);
+    transform: translateX(2px);
+  }
+
+  .phase-row.status-done  { border-left: 3px solid var(--done); }
+  .phase-row.status-next  { border-left: 3px solid var(--accent); background: rgba(108,99,255,0.05); }
+  .phase-row.status-pending { border-left: 3px solid var(--border); opacity: 0.7; }
+
+  .phase-id {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .phase-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .phase-name.status-done { color: var(--text-dim); }
+  .phase-name.status-next { color: var(--text); }
+
+  .phase-duration {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  .status-badge.done    { background: rgba(0,229,160,0.1); color: var(--done); border: 1px solid rgba(0,229,160,0.2); }
+  .status-badge.next    { background: rgba(108,99,255,0.12); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); animation: pulse-border 2s ease infinite; }
+  .status-badge.pending { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+
+  .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .done .dot    { background: var(--done); }
+  .next .dot    { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .pending .dot { background: var(--text-muted); }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(108,99,255,0.3); }
+    50%       { box-shadow: 0 0 0 3px rgba(108,99,255,0.1); }
+  }
+
+  .section-divider {
+    margin: 20px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-divider span {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+
+  .phase-notes-wrapper {
+    display: none;
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .phase-row.expanded .phase-notes-wrapper { display: block; }
+
+  .phase-notes {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  .phase-notes:focus { border-color: var(--accent); color: var(--text); }
+  .phase-notes::placeholder { color: var(--text-muted); }
+
+  .toggle-status {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 9px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    display: none;
+  }
+
+  .phase-row:hover .toggle-status { display: inline-block; }
+  .toggle-status:hover { border-color: var(--accent); color: var(--accent); }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-note { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; }
+  .footer-note strong { color: var(--accent2); font-weight: 500; }
+  .last-updated { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; }
+
+  @media (max-width: 600px) {
+    .phase-row { grid-template-columns: 40px 1fr auto; }
+    .phase-duration { display: none; }
+    .brand-name { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="brand">
+      <span class="brand-label">Build Tracker</span>
+      <div class="brand-name">Ascend</div>
+      <span class="brand-sub">Unified Job & Professional Networking Platform</span>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill done">
+        <span class="num" id="count-done">26</span>
+        <span class="lbl">Complete</span>
+      </div>
+      <div class="stat-pill next">
+        <span class="num" id="count-next">0</span>
+        <span class="lbl">In Progress</span>
+      </div>
+      <div class="stat-pill total">
+        <span class="num" id="count-total">38</span>
+        <span class="lbl">Total</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="overall-progress">
+    <div class="overall-progress-top">
+      <span class="overall-label">Overall Progress</span>
+      <span class="overall-pct" id="overall-pct">55%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width: 55%"></div>
+    </div>
+  </div>
+
+  <!-- Build warning -->
+  <div class="build-warning">
+    <div class="build-warning-icon">⚠️</div>
+    <div class="build-warning-text">
+      <strong>npm run build is currently failing — 4 ESLint no-unused-vars errors block the build. Fix before Phase 6A.</strong>
+      <code>app/api/alerts/route.ts</code> — MAX_ALERTS_PREMIUM unused ·
+      <code>app/api/jobs/route.ts</code> — useTypesense unused ·
+      <code>app/jobs/saved-searches/page.tsx</code> — Link unused ·
+      <code>components/dashboard/company/CompanyDashboardBenefits.tsx</code> — Label unused
+    </div>
+  </div>
+
+  <!-- Seeker Pilot milestone -->
+  <div class="milestone-banner">
+    <div class="milestone-icon">🚀</div>
+    <div class="milestone-text">
+      <strong>Seeker Pilot Track — resequenced for job-seeker-first launch</strong>
+      <span class="done-item">✓ Done</span>: Phase 0, 0B, 0C, 1, Pre-2, 2, 2A, 3, 3B, 4, 5, 5A, 6, 6A, 10, 15, 14, 13, 12, 9, DS-1, DS-2, DS-3, DS-4, DS-4B, DS-5, Phase 16 ·
+      <span class="next-item">⬡ Now</span>: Mentorship Track M-1 → M-17 (100% complete) → Bug fixes → Seed accounts → Pilot opens
+      <strong>🚀 Seeker Pilot Opens</strong> · Post-pilot: reconvene for next steps
+    </div>
+  </div>
+
+  <div class="phases-grid" id="phases-grid"></div>
+
+  <div class="footer">
+    <span class="footer-note">Click any phase to add notes · Double-click to cycle status · <strong>Auto-saved in browser</strong></span>
+    <span class="last-updated" id="last-updated">Last updated: —</span>
+  </div>
+</div>
+
+<script>
+  const PHASES = [
+    // ── FOUNDATION ──────────────────────────────────────────────────────────
+    { id: 'Phase 1',   name: 'Auth & Onboarding',                         duration: '2–3 weeks',   group: 'Foundation',        status: 'done',    notes: 'Complete. Email/password, Google & LinkedIn OAuth, email verification, onboarding flow, RBAC middleware.' },
+    { id: 'Pre-2',     name: 'Infrastructure & AI Scaffolding',            duration: '1 week',      group: 'Foundation',        status: 'done',    notes: 'Complete. Outcome tracking (OutcomeEvent, AIInteraction, UserJourney), AI prompt registry, BullMQ workers, B2B API key model, PROMPTS.md / ARCHITECTURE.md / OUTCOMES.md.' },
+    { id: 'Phase 2',   name: 'Job Seeker Profile',                         duration: '2–3 weeks',   group: 'Foundation',        status: 'done',    notes: 'Complete. Full profile sections, skills/endorsements, multi-resume upload, completion %, public profile page. Phase 1 & 2 build fixes + pre-2A test suite (Jest, manual checklist, db-check.ts, REGRESSION_REPORT.md) done.' },
+    { id: 'Phase 2A',  name: 'Intelligent Resume Builder',                 duration: '2–3 weeks',   group: 'Foundation',        status: 'done',    notes: 'Complete. CareerIntent CRUD, profile mapping, BullMQ AI content gen, ATS engine, keyword optimiser, 6 templates, multi-version (free:5/premium:unlim), PDF+DOCX export. All prompts in lib/ai/prompts/. All AI interactions tracked. Deps: docx, pdf-lib, ts-node.' },
+    // ── PRE-LAUNCH ──────────────────────────────────────────────────────────
+    { id: 'Phase 0',   name: 'Pre-Launch Data Layer (JD Ingestion)',       duration: '2–3 weeks',   group: 'Pre-Launch',        status: 'done',    notes: 'Complete. 4 Prisma models (RawJD, ParsedJD, JDEmbedding, JDSalarySignal). GPT-4o parser prompt v1.0.0 in lib/ai/prompts/jd-parse.ts. Scripts: load-csv/ldjson/manual/parse/embed/taxonomy/stats. GET /api/ingestion/stats (PLATFORM_ADMIN). Pipeline tested end-to-end.' },
+    { id: 'Phase 0B',  name: 'Free JD Source Scripts',                      duration: '1 week',      group: 'Pre-Launch',        status: 'done',    notes: 'Complete. 5 free ingestion sources: ingest:kaggle (CSV — naukri/linkedin/indeed/generic), ingest:adzuna (Adzuna India API — 25k/month free), ingest:rss (22 Naukri RSS feeds), ingest:careers (Playwright — 17 company careers pages), ingest:remoteok (public API). Shared upsert-raw-jd.ts helper with SHA-256 dedup. RawJD.source field added. First dataset: Kaggle Naukri 30k CSV — 26,985 inserted. Parser running with gpt-4o-mini (~$4–6 for full corpus). Fixes applied: ESM .js extensions, dotenv loading, --model flag, upsert-raw-jd.ts creation.' },
+    { id: 'Phase 0C',  name: 'Company Intelligence Bootstrap',              duration: '1 week',      group: 'Pre-Launch',        status: 'done',    notes: 'Complete. CompanyInsight Prisma model. Two aggregation modes: Mode 1 — by company name (for LinkedIn/named datasets); Mode 2 — by industry+location (fallback for Naukri where company is null — e.g. IT-Software::Bangalore, min 3 JDs). Signal fields: totalJDsIndexed, activeRoleCount, topRoles, seniority/workMode distribution, salary signals, topSkills (10), topLocations, hiringVelocity. Fully idempotent upsert. ingest:insights npm script. ingest:all updated. GET /api/companies/[slug]/insights route. CompanyInsightsCard on /companies/[slug] — shown before reviews exist. Re-run after every parse batch to refresh.' },
+    // ── CORE PLATFORM ───────────────────────────────────────────────────────
+    { id: 'Phase 3',   name: 'Company Profiles',                           duration: '2–3 weeks',   group: 'Core Platform',     status: 'done',    notes: 'Complete. Prisma models (Company, CompanyAdmin, CompanyMedia, CompanyBenefit, CompanyReview, InterviewReview, CompanyQA, SalaryReport). CRUD & claim flow, overview page, discovery, slug uniqueness, CompanyAdmin permissions, rich text sanitized (sanitize-html).' },
+    { id: 'Phase 3B',  name: 'Company Admin Dashboard Completion',         duration: '1–2 weeks',   group: 'Core Platform',     status: 'done',    notes: 'Complete. Reviews submit/list/vote/flag; interview reviews; Q&A ask/answer/vote; benefits admin add/remove/reorder; salary stub submit + aggregate; full /dashboard/company (6 tabs: Overview/Edit Profile/Media/Benefits/Reviews/Team); Redis rate limiting.' },
+    { id: 'Phase 4',   name: 'Job Post Creation & Listing',                duration: '2 weeks',     group: 'Core Platform',     status: 'done',    notes: 'Complete. JobPost/JobPostSkill/JobScreeningQuestion/SavedJob models. Job post form (6 sections), listing + detail pages, lifecycle DRAFT→ACTIVE→PAUSED→CLOSED, recruiter dashboard, canManageJob permissions, deadline cron stub, fit-score/report stubs. Queue polling at /api/queues/jobs/[jobId].' },
+    { id: 'Phase 5',   name: 'Job Search & Filters',                       duration: '2 weeks',     group: 'Core Platform',     status: 'done',    notes: 'Complete. Typesense full-text search (replaces ILIKE); faceted filters with counts; URL-synced filter state; autocomplete suggestions (Redis TTL 10min); saved searches; job alerts (immediate/daily/weekly email); search history; Redis cache 5min TTL + invalidation on index/remove.' },
+    { id: 'Phase 5A',  name: 'Profile Fit Score (JD Fit Score)',           duration: '1.5–2 weeks', group: 'Core Platform',     status: 'done',    notes: 'Complete. FitScore/FitScoreHistory models, extractors, scorer, explainer, service. GET fit-score + batch + user routes. FitScoreCard/Badge/Breakdown components. Job detail sidebar + Fit tab; JobCard badge; seeker dashboard widget. See PHASE_5A_BUILD.md.' },
+    { id: 'Phase 6',   name: 'Application System',                         duration: '2–3 weeks',   group: 'Core Platform',     status: 'done',    notes: 'Complete. Easy Apply (profile + default resume + screening answers); external apply; candidate dashboard (Applied→Viewed→Shortlisted→Interview→Offered→Rejected); recruiter Kanban pipeline; resume PDF view; internal notes; email status templates; outcome events. See PHASE_6_BUILD.md.' },
+    // ── SEEKER PILOT TRACK ──────────────────────────────────────────────────
+    { id: 'Phase 6A',  name: 'JD Resume Optimiser',                        duration: '2 weeks',     group: 'Seeker Pilot',      status: 'done',    notes: 'Complete. OptimisationSession model + ResumeVersion optimisedFrom/optimisationMeta/jobPostId fields. BullMQ worker (fact-bound — no fabrication; sourceRef + fabricationRisk on every output item). POST /api/resume/optimise (202, sessionId). GET poll + gap analysis. OptimisedVersionsList on /resume/versions. Rate limit 10/user/day. RESUME_OPTIMISED outcome event + AI interaction logged. JobPost.id is Int; contentSnapshot (not content). Worker bootstrap via worker entrypoint import.' },
+    { id: 'Phase 10',  name: 'Dashboards (Seeker-first)',                  duration: '2 weeks',     group: 'Seeker Pilot',      status: 'done',    notes: 'Complete. Notification model + NotificationType enum; GET /api/notifications (paginated + unreadCount); PATCH /api/notifications/read; NotificationCentre in nav (bell, badge, mark-all-read, deep links). GET /api/dashboard/seeker (single aggregated response: profile, application stats, saved jobs, alerts, optimised resumes). Seeker sub-components: ProfileCompletionCard, ApplicationStatsCard, RecentApplicationsList, SavedJobsCard, AlertsCard, OptimisedResumesCard. Recruiter dashboard: active jobs + deadline warnings + pipeline + recent applicants. Admin dashboard: stat tiles. /dashboard role redirect. Profile view increment + recruiter view notification wired. Application status change notification wired. Resume optimised notification wired into Phase 6A worker. Deps: date-fns, swr.' },
+    { id: 'Phase 15',  name: 'Mobile Responsiveness Polish',               duration: '1–2 weeks',   group: 'Seeker Pilot',      status: 'done',    notes: 'Complete. Container component replacing ad-hoc wrappers. BottomNav (5 tabs, mobile-only, 44px targets, pb-16 on main). Filter sidebar → bottom Sheet (h-[85vh], sticky show-results CTA). JobDetailStickyCTA (fixed bottom-16, mobile-only). NotificationCentre full-width on mobile. JobCardSkeleton; ErrorBoundary on dashboard cards/FitScoreCard/notifications/job list. next-intl (cookie-based locale, no URL segment); messages/en.json complete; messages/hi.json stub. LanguageSwitcher in Navbar. ThemeProvider defaultTheme=dark. All inputs h-11 min-h-[44px]. Skip-to-content in layout. next/image for logos; remotePatterns for S3+Cloudinary. DEFERRED: profile edit accordion/sheets; resume builder mobile; full [locale] URL routing; full t() migration — all Phase 21 or follow-up.' },
+    { id: 'Phase 14',  name: 'SEO Optimizations',                          duration: '~1 week',     group: 'Seeker Pilot',      status: 'done',    notes: 'Complete. lib/seo/metadata.ts (buildMetadata, BASE_URL, SITE_NAME); lib/seo/schemas.ts (JobPosting, Organization, BreadcrumbList, WebSite builders); components/seo/JsonLd.tsx. Job detail: JobPosting + BreadcrumbList JSON-LD + generateMetadata + dynamic OG image (opengraph-image.tsx, edge runtime, 1200×630). Job listing: query-aware metadata + ISR revalidate=300. Company page: Organization + BreadcrumbList + aggregateRating when reviews exist + ISR revalidate=3600. Root layout: default metadata + WebSite schema. Sitemap: active jobs + companies + static pages (app/sitemap.ts). Robots: allow public paths, disallow dashboard/api/settings/auth/resume/internal/admin. Salary page metadata. JD Library index + per-role static pages from ParsedJD corpus. Slug audit script. docs/SEO_SETUP.md. PENDING MANUAL: public/og-default.png (1200×630); Google Rich Results Test validation; GSC domain verify + sitemap submit.' },
+    { id: 'Fix-1',    name: 'Jobs Filter Dropdown Contrast Fix',            duration: 'Ad hoc',      group: 'Seeker Pilot',      status: 'done',    notes: 'Fixed unreadable dropdowns on /jobs filter sidebar (dark bg + dark text in dark mode). Root cause: native <select> elements ignore Tailwind CSS variables on macOS — OS renders them in system style. Fix: replaced both native selects with ShadCN Select components. __any__ sentinel for Radix Select empty value.' },
+    { id: 'Fix-2',    name: 'Kaggle Naukri Column Mapping Fix',              duration: 'Ad hoc',      group: 'Pre-Launch',        status: 'done',    notes: 'Fixed ingest:kaggle skipping all Naukri rows. Root cause: wrong column names in FORMATS.naukri (no Company or Job Description columns in actual CSV). Fix: updated to exact column names (Job Experience Required, Key Skills, Job Salary, Role). Added Role Category/Functional Area/Industry extraction. Fixed validation guard (was requiring description.length>=50 — no description column exists). Added salary filter to strip Not Disclosed strings. Fixed dedup key to use title+location+skills.' },
+    { id: 'Fix-3',    name: 'ESM Import Extensions Fix',                     duration: 'Ad hoc',      group: 'Pre-Launch',        status: 'done',    notes: 'Fixed ERR_MODULE_NOT_FOUND on all ingestion scripts. Root cause: ES module mode requires .js on all relative imports even for .ts files. Fix: added .js to all relative imports in parser.ts, kaggle.ts, embed.ts, taxonomy.ts, stats.ts. Also created missing scripts/ingestion/lib/upsert-raw-jd.ts (was specced in Phase 0B prompt but not created by Cursor).' },
+    { id: 'Fix-4',    name: 'Parser OpenAI Credentials + Model Flag',        duration: 'Ad hoc',      group: 'Pre-Launch',        status: 'done',    notes: 'Fixed OpenAIError: Missing credentials on ingest:parse. Root cause: parser.ts not loading .env.local. Fix: added dotenv/config import. Added --model CLI flag defaulting to gpt-4o-mini (~$4-6 for 26k corpus vs $110+ for gpt-4o). Usage: npm run ingest:parse -- --model gpt-4o-mini.' },
+    { id: 'Phase 13',  name: 'Admin Panel (lite → full)',                  duration: '1–2 weeks',   group: 'Seeker Pilot',      status: 'done',    notes: 'Complete. migration phase-13-admin-lite applied; 7 feature flags seeded (seeker_pilot_open=false). AuditLog + FeatureFlag models; User.bannedAt/banReason; Company.suspendedAt/suspensionReason; CompanyReview.rejectionReason. Middleware PLATFORM_ADMIN guard on all /dashboard/admin/* routes. 6-tab admin layout (Overview/Users/Companies/Moderation/Feature Flags/Audit Log). User management: ban (session invalidation + reason required) + unban; bannedAt check in NextAuth session callback. Company: verify/unverify + suspend (auto-pauses all company jobs) / unsuspend. Moderation queue: PENDING CompanyReviews FIFO; approve/reject with reason; stats bar (pending/approved today/rejected today). Feature flags: toggle switch; all changes logged; flags wired into fit-score/optimiser/easy-apply/registration routes. logAdminAction() called on every state-changing action. All admin APIs return 403 for non-admins. No client component uses Prisma directly. DEFERRED: impersonate, user reports, email templates, rate limit config UI, DAU/MAU analytics. KNOWN GAPS: company logo external URLs may need image host added to next.config.js images.domains; AdminModerationClient Load More on All tab uses cursor but full history pagination not yet wired — add cursor state + next-page request when history view is needed.' },
+    // ── COMPANY / RECRUITER TRACK ────────────────────────────────────────────
+    { id: 'Phase 7',   name: 'Reviews & Ratings',                          duration: '2 weeks',     group: 'Company Launch',    status: 'done', notes: 'Complete. CompanyReview, InterviewReview, SalarySubmission, ReviewVote, InterviewVote models. ReviewStatus enum (PENDING/APPROVED/REJECTED). Admin mod queue extended (type filter: All | Company | Interview | Salary; rejection reason codes mandatory; 48hr SLA highlight; logAdminAction on every decision). Redis rate limiting (3 submissions/user/24hrs). Author identity never exposed on public cards. Unique constraint: one company review per user per company. Salary: 5-submission privacy floor enforced API-side; community-labelled vs JD signals. Seeker dashboard AddReviewPromptCard. 7 Resend email templates. Helpful vote UI.' },
+    { id: 'Phase 8',   name: 'Salary Insights',                            duration: '1–2 weeks',   group: 'Company Launch',    status: 'done', notes: 'Complete. Two data sources: SalarySubmission (community, Phase 7, 5-submission floor) + JDSalarySignal (Phase 0 corpus, always available). lib/salary/aggregate.ts — core aggregation service; percentile.ts; cache.ts; normalize.ts. SalaryInsightCache + CityMetric Prisma models. BullMQ worker for heavy aggregations (>500 data points). 24hr cache with invalidation on new approved submission. API routes: /api/salary/roles, /api/salary/role/[slug], /api/salary/company/[id], /api/salary/estimate (rate limited), /api/salary/top-payers, /api/salary/city-comparison, /api/salary/trending. Pages: /salary hub, /salary/roles/[slug], /salary/companies/[slug], /salary/compare, /salary/estimate. PremiumGate shared component (blur + lock overlay — content visible, not hidden). Free: median + city medians + basic estimator. Premium: p25/p75/p90, top payers, city CoL comparison, full estimator range + confidence. Individual salary records never returned in any API response. Data source badge: Community reported vs From job postings.' },
+    { id: 'Phase 9',   name: 'Career Graph & Contextual Networking',      duration: '3–4 weeks',   group: 'Pre-Pilot',         status: 'done',    notes: 'NOT a LinkedIn clone — career-outcome network. ConnectionType enum: PEER/MENTOR/COLLEAGUE/INTERVIEWER (all 4 built now — MENTOR activates in Phase 9B). Message.jobPostId + companyId + sessionId context fields (sessionId null in Phase 9). Recruiter cold outreach requires jobPostId — server-side enforced. Career signal feed — no posts, no reactions. Circles: computed not stored. lib/signals/emit.ts wired into job post + connection + profile events. Models: Connection, CompanyFollow, Conversation, Message, CareerSignal. Pages: /network, /messages, /feed. Nav badges wired.' },
+    { id: 'Phase 9B',  name: 'Mentorship Layer (v1 — superseded by Mentorship Track)',  duration: '2–3 weeks',   group: 'Pre-Pilot',         status: 'done', notes: '⚠️ SUPERSEDED — Phase 9B v1 is built and complete (Cursor). However the mentorship product has been fully redesigned as a standalone 17-phase Mentorship Track (M-1 through M-17). The v1 build provides the Prisma model foundations (MentorProfile, MentorAvailability, MentorSession) which M-1 onwards will extend. Key architectural changes in the redesign: Zero Trust policy throughout; Daily.co embedded meeting rooms (not native messaging); Ascend Steno (AI session transcription + structured extraction — replaces manual mentor summary); escrow payment with tranche-based release; OTP-signed engagement contracts (per engagement, legally binding under IT Act 2000); application model (mentees apply, mentors accept — no self-serve booking); system-driven matching (max 3 matches shown, reason not score); mentor identity + employment verification before discovery; Mentorship Circles (group cohorts); 3-tier mentor system (Rising/Established/Elite) based on verified outcomes only; rule-based dispute resolution (evidence only, no adjudication). See ASCEND_MENTORSHIP_ROADMAP.md for full specification.' },
+    { id: 'M-1',       name: 'Mentorship — Identity & Verification',          duration: '1–2 weeks',   group: 'Mentorship Track',  status: 'done', notes: 'Complete. MentorVerification, VerificationDocument, VerificationAuditLog models. VerificationStatus enum: UNVERIFIED/PENDING/VERIFIED/REVERIFICATION_REQUIRED. VerificationDocumentType enum. Gov ID upload (Cloudinary, 5MB, PDF/JPG/PNG). Employment verification: company email ping OR document upload. LinkedIn URL cross-reference stored. Mentor not discoverable until VERIFIED (isDiscoverable gate). Re-verification trigger: 12 months or role change. Admin verification queue at /dashboard/admin/mentorship/verification — Approve/Request more info/Reject with mandatory reason codes, SLA 48hrs shown to mentor, all decisions immutable logged to VerificationAuditLog + AuditLog. Dashboard verification widget on mentor tab. SpringVerify/AuthBridge stub for post-pilot.' },
+    { id: 'M-2',       name: 'Mentorship — Mentor Profile & Transition Record', duration: '1 week',    group: 'Mentorship Track',  status: 'done', notes: 'Complete. MentorProfile extended fields (transition record: from/to role/company type/industry/city/duration; 3 key factors 20-200 chars; 4 statement fields 50-400 chars). AvailabilityWindow model. Enums: CompanyType, TransitionBadge (SELF_REPORTED/PLATFORM_VERIFIED), EngagementLength, SessionFrequency, FocusArea, GeographyScope, DayOfWeek. 6-step become-a-mentor flow at /mentorship/become-a-mentor (React Hook Form + Zod; character counters; submits as inactive/non-public). API: /api/mentorship/profile (GET/POST/PATCH own), /api/mentorship/profile/availability (PUT), /api/mentorship/profile/[userId] (GET public — 404 if not VERIFIED+isPublic), /api/mentorship/profile/complete (GET completeness check). Mentor dashboard /dashboard/mentor: VerificationStatusWidget, ProfileCompletenessWidget, MentorProfileCard, CapacityOverview, UpcomingSessionsPlaceholder. Public profile /mentors/[userId]. Admin approval sets isPublic=true. TransitionBadge/isPublic cannot be self-set via API. Resend emails: profile-received, approved, more-info, rejected.' },
+    { id: 'M-3',       name: 'Mentorship — Mentee Application Layer',         duration: '1 week',      group: 'Mentorship Track',  status: 'next', notes: 'IN PROGRESS — prompt parsed to Cursor 2026-03-01. MentorApplication + MenteeReadinessCheck Prisma models. ApplicationStatus enum: PENDING/QUESTION_ASKED/ACCEPTED/DECLINED/EXPIRED/WITHDRAWN. lib/mentorship/readiness.ts (3-gate computation: profile completeness, career context score >=80, target transition declared). lib/mentorship/discover.ts (max 3 matches; placeholder scoring M-4 replaces). Server-side word count enforcement via Zod (100-200 words for whyThisMentor etc). Max 2 simultaneous applications enforced server-side. One question per application (409 if already asked). matchScore stored but NEVER returned to mentee. declineReason stored but NEVER returned to mentee (generic message). BullMQ expiry worker runs every 6hrs. 7 Resend notifications. Pages: /mentorship hub (gate check + discovery), /mentorship/apply/[mentorUserId], /mentorship/applications. Seeker dashboard MentorshipWidget.' },
+    { id: 'M-4',       name: 'Mentorship — Matching Engine',                  duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'System-driven. Not a catalogue. Algorithm (lib/mentorship/match.ts): Transition similarity 40pts (exact/adjacent/partial), Geography relevance 20pts, Focus area alignment 20pts, Availability fit 10pts, Capacity 10pts. Output: ranked list max 3, plain-language reason per match. Match refresh triggers: mentee updates career context, new verified mentor joins, previous match declines, previous engagement completes.' },
+    { id: 'M-5',       name: 'Mentorship — Contract Generation & Signing',    duration: '1–2 weeks',   group: 'Mentorship Track',  status: 'pending', notes: 'Every engagement is a legal document. Contract auto-generated on acceptance: verified details, scope, session count/frequency/duration, financial terms, release conditions, obligations, off-platform prohibition, transcription consent, Zero Trust acknowledgement, governing law (Indian Contract Act 1872, IT Act 2000, Consumer Protection Act 2019). Contract versioning: locked to T&C version at signing. Digital signing: mentor first → OTP (IT Act valid e-signature, timestamp + IP logged) → mentee 48hr window → OTP. Non-signing = void, capacity restored. PDF generated post-signing, SHA-256 hash stored, S3 immutable. Integrity check on every access. Prisma: MentorshipContract, ContractSignature, ContractStatus enum.' },
+    { id: 'M-6',       name: 'Mentorship — Escrow & Payment Infrastructure',  duration: '1–2 weeks',   group: 'Mentorship Track',  status: 'pending', notes: 'Zero Trust payment rails. Full fee collected at signing, split into tranches held in Razorpay escrow. Standard 90-day: 33%/33%/34% at start/mid/final. Release: mentee confirms → immediate; mentee silent 7 days → auto-release (contractual, agreed upfront); mentee disputes → freeze, ops 48hrs. Platform fee at release: RISING 20%, ESTABLISHED 15%, ELITE 10%. Early termination: mentee exits → completed tranches to mentor + remaining refund; mentor exits → full remaining refund to mentee + strike. Dispute abuse: 2 rejections → lose dispute rights; 3 rejections → banned. Pilot: fee waived, full infrastructure runs. Payment audit log: every movement immutable, reason code, contract ref, timestamp. Payout T+2. Prisma: MentorshipEscrow, EscrowTranche, PaymentMovement, EscrowStatus, PaymentReasonCode.' },
+    { id: 'M-7',       name: 'Mentorship — Meeting Room, Ascend Steno & Evidence', duration: '2 weeks', group: 'Mentorship Track', status: 'pending', notes: 'If it did not happen on Ascend, it did not happen. Meeting: Daily.co embedded (not native messaging, not Google Meet). Platform generates room — neither party can substitute external links. Session join logging via Daily.co webhooks: who joined, timestamps, duration. Minimum 20 mins or INCOMPLETE_SESSION — cannot trigger milestone confirmation. ASCEND STENO: Daily.co transcription API (speaker-attributed via Deepgram) → GPT-4o structured extraction → immutable Session Record PDF (discussion summary, mentor commitments, mentee commitments, action items, next session focus, goal progress signal, SHA-256 hash, S3 stored). Replaces mentor manual summary entirely. Video NOT stored — transcript is the evidence. Consent: explicit at contract signing + voice announcement at session start + visible recording indicator. Transcript access: own sessions only; ops access on formal dispute only. Off-platform enforcement: keyword monitor on messages (emails, phone numbers, external video links); first = warning; second = suspended; third = terminated. Messaging remains async only: pre/post session communication, not the meeting.' },
+    { id: 'M-8',       name: 'Mentorship — Session Rhythm & Milestones',      duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Structure without rigidity. Engagement types: Sprint 30d (4 sessions, 1 milestone), Standard 60d (6 sessions, 2 milestones), Deep 90d (8 sessions, 3 milestones). Session 1 mandatory Goal Setting: structured agenda, Goal Document signed by both, becomes dispute reference. Mid-milestone: both file assessments (structured), system flags misalignment, suggests re-alignment session if needed. Final session Outcome Review: review Goal Document, what achieved/not, outcome claim, both sign Outcome Document, triggers final tranche. Rescheduling: mentee up to 2, mentor up to 1. No-show (not in room within 15 mins): mentor no-show = session credit to mentee; mentee no-show = forfeited, no refund.' },
+    { id: 'M-9',       name: 'Mentorship — Dispute Resolution Engine',        duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Evidence only. Platform is not a judge of stories. Filing window: 7 days of milestone only. Categories (structured): Session did not happen / Below minimum duration / Steno not generated / Commitments not met / Off-platform solicitation / Other. Evidence auto-assembled: join log, duration log, Steno record, message flags, contract clauses, Goal Document. Resolution rules (not discretionary — admin cannot override): did not happen → check join log; below duration → check duration log, auto-upheld if <20 mins; commitments → check Steno extraction; off-platform → check message flags. Admin only reviews Other category with structured reason code. Strike system: mentee 2 rejected = lose rights; 3 = banned. Mentor 2 upheld = warning; 3 = suspended; 4 = permanent removal. All records permanent, cannot be appealed or removed.' },
+    { id: 'M-10',      name: 'Mentorship — Outcome Verification & Attribution', duration: '1 week',    group: 'Mentorship Track',  status: 'pending', notes: 'The transition record that becomes a credential. Outcome claim at engagement end (structured): achieved Y/Partial/N, evidence optional (LinkedIn URL, employment change). Mentee acknowledgement: 7-day window — confirmed = VERIFIED, disputed = ops review, silent = UNACKNOWLEDGED (shown differently). Long-term: 6-month check-in to mentee, optional with profile badge incentive (captures delayed outcomes). Mentor profile shows: verified outcomes count, unacknowledged separately, transition types, avg time to outcome. NOT shown: mentee names/companies. Feeds: matching engine, M-17 analytics, M-11 tier calculation.' },
+    { id: 'M-11',      name: 'Mentorship — Mentor Reputation & Tier System',  duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Earned through evidence. System-calculated weekly. RISING (0-4 outcomes): max 2 mentees, no circles, 20% fee. ESTABLISHED (5-9 outcomes): max 4 mentees, 1 circle, 15% fee, priority in matching. ELITE (10+ outcomes): max 6 mentees, 2 circles, 10% fee, featured in marketing, first access to new cohorts. Tier calculation: verified outcomes (primary), dispute record, session completion rate, Steno generation rate, re-verification status. Demotion: dispute rate threshold, Steno rate <90%, lapsed verification. Demotion affects new engagements only. Public profile: tier badge, verified outcomes, transition types, avg rating. NOT shown: earnings, applications received, decline rate.' },
+    { id: 'M-12',      name: 'Mentorship — Circles (Group Cohorts)',          duration: '1–2 weeks',   group: 'Mentorship Track',  status: 'pending', notes: '4-6 mentees, one mentor, same transition goal, same duration. Mentor creates circle: transition focus, max mentees, fixed start date, price per mentee. Platform matches eligible mentees to circle. Mentees apply (same flow as 1:1). Circle locks when full or at start. Daily.co group room, Ascend Steno runs for group (speaker attribution captures each member). Individual Goal Documents per mentee. Optional 1:1 slot 15 mins per mentee per session. One contract per mentee (signed individually, escrow managed individually). Peer layer: Goal Documents visible to cohort (consent at signing), async peer check-ins via platform messaging. Pricing: mentor sets within band; ceiling = max 60% of 1:1 price; circles must be accessible. Capacity: one circle = 1 mentor slot.' },
+    { id: 'M-13',      name: 'Mentorship — Mentor Monetisation Unlock',       duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Capacity gates. Not a switch. Free tier (all mentors start here): can mentor, cannot charge, platform takes 10% for infrastructure. Paid unlock (ALL conditions): 3+ verified outcomes, 90%+ Steno generation rate, zero upheld disputes, re-verification current, 6+ months on platform. System checks weekly, unlocks automatically. Pricing rules: floor ₹2,000/session (prevents exploitation), ceiling ₹25,000/session (prevents gouging). Payout: T+2, monthly PDF report, annual earnings summary for GST. Mentor owns own GST liability; platform provides transaction records.' },
+    { id: 'M-14',      name: 'Mentorship — Platform Fee & Revenue Layer',     duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Fee applied at tranche release (not upfront). Tier at release time determines %: RISING 20%, ESTABLISHED 15%, ELITE 10%. Tier-up mid-engagement: remaining tranches use new % from next release. Refunded if: dispute upheld, mentor terminates. NOT refunded if: mentee terminates (completed sessions), auto-release after silence. Pilot: fee waived, full infrastructure runs, fee structure communicated upfront. Revenue tracking feeds M-17 and Phase 16 analytics.' },
+    { id: 'M-15',      name: 'Mentorship — Legal Framework & Compliance',     duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Three documents: (1) Mentorship Marketplace Addendum — signed once at signup, Zero Trust explicit, off-platform prohibition, transcription consent, auto-release terms. (2) Mentor Conduct Agreement — signed at mentor onboarding, capacity limits, fee structure, strike consequences, verification requirements. (3) Engagement Contract — per engagement, OTP signed, immutable (M-5). Governing law: Indian Contract Act 1872, IT Act 2000, Consumer Protection Act 2019. Data retention: transcripts 3yr, contracts + payments 7yr. Transcription clause prominent and explicit. Zero Trust statement shown before marketplace access. Post-pilot: Aadhaar eSign, GST invoice automation, DPDP Act 2023 compliance audit.' },
+    { id: 'M-16',      name: 'Mentorship — Admin & Ops Layer',                duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Verification queue: document viewer, Approve/Request/Reject with mandatory reason codes, SLA 48hrs, all decisions immutable. Dispute queue: rule-based auto-resolved (no queue), Other category ops reviews with evidence package auto-assembled, SLA 48hrs. Mentor monitoring: Steno generation rate, dispute rate, session completion rate, tier eligibility, re-verification due dates. Audit log: every payment movement, every admin action, every contract event — filterable, exportable, immutable. Platform health: active engagements, escrow total held, disputes open/resolved, tier distribution, outcome verification rate. Admin Zero Trust: cannot manually release escrow without audit trail, cannot delete session logs, cannot modify signed contracts, cannot override rule-based dispute resolutions.' },
+    { id: 'M-17',      name: 'Mentorship — Analytics & Insights',             duration: '1 week',      group: 'Mentorship Track',  status: 'pending', notes: 'Platform (admin): engagements started/completed/terminated, outcome verification rate, avg time to outcome by transition type, dispute rate by tier, revenue by tier, most common transitions, matching acceptance rate, Steno generation success rate. Mentor (own dashboard): applications received vs accepted, completion rate, outcome rate, avg rating, earnings (month/all time), tier progress, Steno rate, upcoming sessions. Mentee (own dashboard): applications sent vs accepted, engagements completed, goals achieved vs set, amount spent, outcomes logged, action items pending from Steno records. Feeds Phase 16 platform analytics.' },
+    { id: 'Phase 10B', name: 'Candidate Intelligence Dashboard',           duration: '1–2 weeks',   group: 'Company Launch',    status: 'next', notes: 'IN PROGRESS — prompt parsed to Cursor 2026-03-01. CandidateInsightSnapshot + CityMetric Prisma models. lib/intelligence/candidate.ts: computeMarketValue (reads salary aggregate layer), computeVisibilityScore (5-factor weighted: completeness 30pts/keyword density 25pts/recency 20pts/app activity 15pts/social proof 10pts), computeSkillsGap (vs top 50 ParsedJDs for targetRole; free: top 3, premium: all 10), computeApplicationPerformance (response rate/shortlist rate/avg days), computeHeatmap (JobPost.createdAt volume heatmap). Single SWR call for full snapshot — not per-widget. BullMQ compute-candidate-intelligence worker. Monday 7AM digest email (marketingConsent gate). GET /api/intelligence/candidate + /refresh (3/day rate limit). PremiumGate: Market Value + full Skills Gap. All widgets have 3 states: populated/empty/skeleton. Empty states defined — never broken UI. Heatmap empty state when <100 posts in scope.' },
+    { id: 'Phase 11',  name: 'AI Features',                                duration: '2–3 weeks',   group: 'Company Launch',    status: 'pending', notes: 'Cover letter generator per application; profile optimiser (headline/summary/skills suggestions); smart job recommendations; interview question generator from JD; salary prediction; skill gap vs trending JDs. Feature flags for gradual rollout; rate limiting + cost controls.' },
+    { id: 'Phase 12',  name: 'Monetisation (Multi-Gateway)',               duration: '2–3 weeks',   group: 'Company Launch',    status: 'done', notes: 'Multi-gateway: Razorpay (INR — UPI/cards/netbanking) + Stripe (USD/international). Payment abstraction layer in lib/payments/ — app never calls gateways directly. Plans: Seeker Free | Premium ₹499/mo · ₹3,999/yr | Elite ₹999/mo (scaffolded). Recruiter Starter ₹4,999 | Pro ₹12,999 | Enterprise ₹29,999+ (manual). Boosts: Standard ₹799/wk | Featured ₹1,999/wk | Urgent badge ₹299/wk add-on. Resume DB unlock ₹999/10 unlocks. PLAN_LIMITS single source of truth. canUseFeature() + checkJobPostLimit() gate helpers. Webhook handlers (idempotent). Billing UI at /dashboard/billing. RazorpayCheckout + StripeCheckout components. SEEKER_PILOT_OPEN=true bypasses all seeker gates during pilot. Infra: Vercel (Next.js) + Vultr (PostgreSQL ₹1,250 + Redis+Typesense ₹2,000/mo).' },
+    // ── DESIGN SYSTEM & UX ──────────────────────────────────────────────────
+    { id: 'DS-1',     name: 'Design System & Homepage Visual Pass',        duration: '1 week',      group: 'Design System',     status: 'done',    notes: 'Parchment palette (#F7F6F1) + green (#16A34A) + ink (#0F1A0F). ASCEND logotype staircase (A→D rising marginBottom 0→40px, flex alignItems flex-end, D in green). Hero two-column: logotype+search left, geometric visual+floating match cards right. Stats fix: 26,985 / 500+ / 10, count-up from 82%, no column overlap. Ticker strip between hero and features. Auth divider text "OR CONTINUE WITH". Prompt: ASCEND_FIXES_V2.md' },
+    { id: 'DS-2',     name: 'Nav Restructure — Two States',                duration: '2–3 days',    group: 'Design System',     status: 'done', notes: 'Logged-out: flat marketing nav (Jobs · Companies · Salary + Sign in + Get started). Items link to /features/[feature] showcase pages. Logged-in: three grouped dropdowns — Discover (Jobs, Companies, Salary Insights) · My Career (Dashboard, Resume Optimiser, Fit Score, Profile) · Network (Connections, Messages, Career Updates) + Avatar dropdown. Auth pages: logo only + opposite-action CTA. Prompt: ASCEND_NAV_RESTRUCTURE.md' },
+    { id: 'DS-3',     name: 'Feature Showcase Pages (5)',                  duration: '1 week',      group: 'Design System',     status: 'done', notes: 'Five full pages at /features/[feature]: Fit Score (active seeker primary) · Career Graph (passive/early career) · Salary Intelligence (passive seeker) · Resume Optimiser (active/early career) · Mentorship (early career/switcher). Each: hero headline, animated visual, 3 proof points, signup CTA. Referral source tracked (?from=fit-score etc) for persona pre-selection on signup.' },
+    { id: 'DS-4',     name: 'Persona Selection Screen',                    duration: '2–3 days',    group: 'Design System',     status: 'done',    notes: 'Complete. UserPersona enum (ACTIVE_SEEKER/PASSIVE_SEEKER/EARLY_CAREER/RECRUITER). PATCH /api/user/persona. /onboarding/persona page (2x2 grid, green selected state). Post-registration redirect. Dashboard guard. ?from= referral pre-selection. session.user.persona wired into NextAuth.' },
+    { id: 'DS-4B',    name: 'Persona Deepening — Context Flow',            duration: '3–4 days',    group: 'Design System',     status: 'done',    notes: 'Complete. UserCareerContext model live. 3-question conversational flow per persona after DS-4 screen. Completion score 0-100. Progressive profiling days 1-7. Wires into fit score, job feed, dashboard, mentor matching.' },
+    { id: 'DS-5',     name: 'Legal Pages & Signup Consent',                duration: '2–3 days',    group: 'Design System',     status: 'done', notes: 'Three static pages: /legal/terms · /legal/privacy · /legal/cookies. Documents drafted (production-ready, not pilot-only): ASCEND_TERMS_OF_SERVICE.md · ASCEND_PRIVACY_POLICY.md · ASCEND_COOKIE_POLICY.md. Entity: Coheron Tech Private Limited, [COHERON_ADDRESS] placeholder. Governing law: India / Bangalore. DPDP Act 2023 compliant. Sub-processors: Vercel, AWS, PostHog, Sentry, Resend, Razorpay. Retention: 90 days recoverable → 180 days permanent. Age gate: 18+. Register page: required legal checkbox (unchecked default, blocks submit) + optional marketing checkbox. Cookie consent banner: dark ink, bottom fixed, Accept all vs Essential only. Prisma: add termsAcceptedAt (DateTime) + marketingConsent (Boolean) to User model. Prompt: ASCEND_LEGAL_BUILD.md' },
+    // ── ACQUISITION TRACK ────────────────────────────────────────────────────
+    { id: 'Phase 16',  name: 'Data & Analytics Platform',                  duration: '2 weeks',     group: 'Pre-Pilot',         status: 'done', notes: 'Complete. PLATFORM_ADMIN analytics dashboard. AnalyticsEvent, DailyMetricSnapshot Prisma models. lib/analytics/track.ts with track() and EVENTS constants. Event tracking wired into register, persona, context, job view, application, fit score, mentorship routes. Cron GET /api/cron/daily-snapshot (midnight IST). GET /api/admin/analytics/overview|funnel|personas|features|retention (PLATFORM_ADMIN only). /dashboard/admin/analytics: Overview, Funnel, Personas, Platform Health tabs. Recharts components (OverviewLineChart, PersonaDonut, FunnelChart, PersonaCard, FeatureUsageTable). Admin nav Analytics link. Seed script scripts/seed-analytics.ts for 30 days of snapshot data. Analytics seed data is fake — DELETE FROM DailyMetricSnapshot before pilot opens.' },
+    { id: 'Phase 16B', name: 'Recruiter Intelligence & Hiring Analytics',  duration: '1–2 weeks',   group: 'Growth & Partnerships',       status: 'pending', notes: 'Time-to-hire per role/company/recruiter vs industry benchmark; funnel drop-off per job; competitive benchmarking; AI score explainability on every applicant card; interview scorecards with @mention; D&I metrics (opt-in, anonymised). Justifies enterprise pricing; high switching cost.' },
+    { id: 'Phase 17',  name: 'Trust, Safety & Compliance',                 duration: '2 weeks',     group: 'Growth & Partnerships',       status: 'pending', notes: '⚠️ BUG-19 DEPENDENCY — Current audit log is admin-actions only and does not meet Zero Trust. This phase must deliver full Zero Trust audit trail. Scope: (1) AuditEvent model extension — actor, action, target, IP, timestamp, immutable; (2) Auth event logging — every login/logout/failed attempt/session/role change via NextAuth middleware; (3) Data access logging — recruiter views candidate, profile views, sensitive data access; (4) State change logging — applications, profile updates, mentor sessions, payments, document uploads; (5) Platform integrity — feature flag evaluations, PII API calls, export requests; (6) Audit log UI extension — filter by actor type, action category, date range, export. Also: GDPR/DPDPA (data export, deletion, consent logs); job fraud detection; profile verification (email/LinkedIn/Aadhaar light); content safety (profanity filter + GPT-4o-mini classifier); rate limiting + CAPTCHA; OWASP checklist; WCAG 2.1 AA sign-off. Pre-public-launch blocker — acceptable for closed pilot.' },
+    { id: 'Phase 18',  name: 'B2B / Enterprise & API Platform',            duration: '2–3 weeks',   group: 'Growth & Partnerships',       status: 'pending', notes: 'Public REST API v1 (jobs, applications, candidates); ATS webhooks + Greenhouse/Lever/Workday inbound; Enterprise Stripe plan (SSO/SAML, unlimited jobs, API access); white-label careers page (/careers/[company-slug]); bulk import/export; developer portal (OpenAPI docs, webhook logs); usage-based billing.' },
+    { id: 'Phase 18B', name: 'Internal Job Board & Employee Mobility',     duration: '1–2 weeks',   group: 'Growth & Partnerships',       status: 'pending', notes: 'JobPost.visibility: PUBLIC | INTERNAL | UNLISTED. Domain-based employee verification (CompanyEmployee model). /internal/[company-slug] auth-gated portal. Employee referral system (JobReferral model + outcome tracking). Anonymous internal apply. HR analytics tab.' },
+    { id: 'Phase 19',  name: 'Growth, Virality & Network Effects',         duration: '2–3 weeks',   group: 'Growth & Partnerships',       status: 'pending', notes: 'Candidate + recruiter referral system; alumni networks; skill assessments + badges (Top 15% in SQL); career resources SEO blog; job aggregation (scrape/partner feed from Naukri/LinkedIn); gamification (profile strength XP, leaderboards); hiring event system.' },
+    { id: 'Phase 20',  name: 'Acquisition Readiness & Fundraise',          duration: '2 weeks',     group: 'Growth & Partnerships',       status: 'pending', notes: 'Pilot metrics dashboard (OUTCOMES.md KPIs); data room prep (ARCHITECTURE.md, PROMPTS.md, metrics exports, cap table stub); acquirer demo mode (seed data + feature flags); compliance checklist (SOC 2, ISO 27001, DPDPA); SLA infrastructure (uptime monitoring, incident runbook).' },
+    // ── EXPANSION ────────────────────────────────────────────────────────────
+    { id: 'Phase 21',  name: 'Global Vernacular & Market Expansion',        duration: '4–6 weeks',   group: 'Expansion',         status: 'pending', notes: 'Scope: global — not India-only. Top 10 world languages by speaker count: English (baseline), Mandarin Chinese, Hindi, Spanish, Arabic, Bengali, Portuguese, Russian, Japanese, French. Job posts: create in English + auto-translate to any supported language via GPT-4o pipeline, OR compose natively in that language. ParsedJDTranslation model (parsedJdId, language, translatedContent JSON). Language-specific resume builder (RTL support for Arabic; Devanagari for Hindi; CJK fonts for Mandarin/Japanese). UI i18n for all 10 languages via next-intl. Recruiter job post form: "Publish in languages" multi-select. Seeker language preference in settings — job feed + alerts in preferred language. Tier-2/3 India city data as sub-feature (not primary). PWA (offline, Android installable); WhatsApp job alerts (Twilio). Voice-to-profile deferred.' },
+    { id: 'Phase 22',  name: 'Marketplace & Career Services',              duration: '3–4 weeks',   group: 'Expansion',         status: 'pending', notes: 'Resume review marketplace (certified reviewers, Stripe, 20% commission); mock interview booking (calendar + structured feedback form); career coaching (vetted coaches + Stripe); course recommendations (Coursera/Udemy/NPTEL/Scaler affiliate); certification badges (HackerRank/AMCAT partner, ProfileBadge on profile); refined InMail credits. MENTORSHIP MONETISATION GATE (hard platform rule): mentor cannot unlock paid sessions until (a) minimum verified hours threshold is crossed (suggested: 10hrs, admin-configurable) AND (b) those hours are explicitly acknowledged by mentees — not self-reported. MentorProfile.verifiedHours only increments on mentee confirmation. MentorProfile.monetisationUnlocked flips to true server-side when both conditions met. Progress shown to mentor in dashboard. Threshold values are Feature Flag / admin-settable. Session acknowledgement flow is built in Phase 9B — Phase 22 reads the accumulated data.' },
+  ];
+
+  const STATUS_CYCLE = ['pending', 'next', 'done'];
+  const STATUS_LABEL = { done: '✓ Done', next: '⬡ In Progress', pending: '○ Pending' };
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem('ascend-tracker-v2');
+      if (saved) {
+        const state = JSON.parse(saved);
+        state.phases.forEach((s, i) => {
+          if (PHASES[i]) {
+            PHASES[i].status = s.status;
+            PHASES[i].notes = s.notes || PHASES[i].notes || '';
+          }
+        });
+      }
+    } catch(e) {}
+  }
+
+  function saveState() {
+    const state = {
+      phases: PHASES.map(p => ({ status: p.status, notes: p.notes || '' })),
+      updated: new Date().toISOString()
+    };
+    localStorage.setItem('ascend-tracker-v2', JSON.stringify(state));
+    document.getElementById('last-updated').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString();
+  }
+
+  function updateStats() {
+    const done = PHASES.filter(p => p.status === 'done').length;
+    const next = PHASES.filter(p => p.status === 'next').length;
+    const pct = Math.round((done / PHASES.length) * 100);
+    document.getElementById('count-done').textContent = done;
+    document.getElementById('count-next').textContent = next;
+    document.getElementById('count-total').textContent = PHASES.length;
+    document.getElementById('overall-pct').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  function renderPhases() {
+    const grid = document.getElementById('phases-grid');
+    grid.innerHTML = '';
+    let lastGroup = null;
+
+    PHASES.forEach((phase, idx) => {
+      if (phase.group !== lastGroup) {
+        lastGroup = phase.group;
+        const div = document.createElement('div');
+        div.className = 'section-divider';
+        div.innerHTML = `<div class="divider-line"></div><span>${phase.group}</span><div class="divider-line"></div>`;
+        grid.appendChild(div);
+      }
+
+      const row = document.createElement('div');
+      row.className = `phase-row status-${phase.status}`;
+      row.dataset.idx = idx;
+
+      row.innerHTML = `
+        <span class="phase-id">${phase.id}</span>
+        <span class="phase-name status-${phase.status}">${phase.name}</span>
+        <span class="phase-duration">${phase.duration}</span>
+        <span class="status-badge ${phase.status}">
+          <span class="dot"></span>${STATUS_LABEL[phase.status]}
+        </span>
+        <div class="phase-notes-wrapper">
+          <textarea class="phase-notes" placeholder="Add notes, blockers, links… (auto-saved)">${phase.notes || ''}</textarea>
+        </div>
+      `;
+
+      row.addEventListener('click', (e) => {
+        if (e.target.tagName === 'TEXTAREA') return;
+        row.classList.toggle('expanded');
+        phase._expanded = row.classList.contains('expanded');
+      });
+
+      row.addEventListener('dblclick', (e) => {
+        if (e.target.tagName === 'TEXTAREA') return;
+        const curr = STATUS_CYCLE.indexOf(phase.status);
+        phase.status = STATUS_CYCLE[(curr + 1) % STATUS_CYCLE.length];
+        saveState();
+        renderPhases();
+        updateStats();
+      });
+
+      const textarea = row.querySelector('.phase-notes');
+      textarea.addEventListener('input', () => {
+        phase.notes = textarea.value;
+        saveState();
+      });
+
+      if (phase._expanded) row.classList.add('expanded');
+      grid.appendChild(row);
+    });
+  }
+
+  loadState();
+  renderPhases();
+  updateStats();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('ascend-tracker-v2') || '{}');
+    if (saved.updated) {
+      document.getElementById('last-updated').textContent =
+        'Last updated: ' + new Date(saved.updated).toLocaleString();
+    }
+  } catch(e) {}
+</script>
+
+<!-- Future Roadmap / Backlog -->
+<div style="max-width:900px;margin:40px auto 60px;padding:0 24px;">
+  <div style="border:1px solid #2a2a3a;border-radius:12px;overflow:hidden;">
+    <div style="background:#16161f;padding:16px 24px;border-bottom:1px solid #2a2a3a;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:16px;">🗂</span>
+      <span style="font-family:"Syne",sans-serif;font-weight:700;color:#a0a0b8;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;">Future Roadmap — Under Discussion</span>
+      <span style="margin-left:auto;background:#2a2a3a;color:#666;font-size:11px;padding:2px 8px;border-radius:20px;font-family:"DM Mono",monospace;">not yet phased</span>
+    </div>
+    <div id="backlog-list"></div>
+  </div>
+</div>
+
+<script>
+  const BACKLOG = [
+    {
+      id: 'Backlog-1',
+      name: 'Multi-Board Job Syndication & Centralised Tracking',
+      notes: 'Recruiters post a job on Ascend and syndicate it in one click to all major job boards they subscribe to — Naukri, LinkedIn, Indeed, Foundit, Glassdoor, Monster, Shine, Internshala, and others. Ascend becomes the single command centre for everything that happens after posting. CENTRALISED TRACKING: post status per board (Live/Failed/Pending/Expired) in one table; applicant count per board in real time; views/clicks per board where APIs expose this; cost per board for paid listings with cost-per-applicant and cost-per-hire by source; source attribution on every applicant card (Applied via Naukri); best-performing board insights over time; one-click pause/takedown across all boards simultaneously. RECOMMENDED ARCHITECTURE — Ascend as apply destination: use a unique tracked redirect URL per job per board as the apply link. All CVs land in Ascend regardless of source. Source attribution is 100% reliable without depending on each board reporting API. Boards without APIs become fully trackable via this approach. INTEGRATION: direct APIs where available (Indeed, LinkedIn); partner aggregator APIs (Broadbean, Multipost, Jobsoid) as fallback. Prisma models: JobBoardSyndication (jobPostId, board, status, postedAt, expiresAt, costPaid, trackingUrl); JobBoardApplicantSource (applicationId, board, clickedAt). Likely Phase 23 or Phase 18 extension. Confirm board-by-board feasibility before scoping.'
+    },
+  ];
+
+  const backlogEl = document.getElementById('backlog-list');
+  BACKLOG.forEach(item => {
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:16px 24px;border-bottom:1px solid #1a1a28;display:flex;flex-direction:column;gap:6px;';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="color:#6366f1;font-size:11px;font-family:"DM Mono",monospace;">${item.id}</span>
+        <span style="color:#e0e0f0;font-weight:600;font-size:14px;">${item.name}</span>
+      </div>
+      <div style="color:#666;font-size:13px;line-height:1.6;">${item.notes}</div>
+    `;
+    backlogEl.appendChild(row);
+  });
+</script>
+</body>
+</html>
