@@ -211,3 +211,22 @@ Use `.env.local.example` as reference. Production must have:
 | Cloud Compute (VPS) | Products → Cloud Compute |
 
 For connection strings and firewall rules, use the Vultr dashboard for each product.
+
+---
+
+## Docker (Alternative for VPS)
+
+A `Dockerfile` is included for containerized deployment on a Vultr VPS:
+
+```bash
+docker build -t ascend .
+docker run -d -p 3000:3000 \
+  -e DATABASE_URL="..." \
+  -e REDIS_HOST="..." \
+  -e NEXTAUTH_URL="https://your-domain.com" \
+  -e NEXTAUTH_SECRET="..." \
+  --env-file .env.production \
+  ascend
+```
+
+Or use Docker Compose with a custom `docker-compose.prod.yml` that wires DB, Redis, and app.
