@@ -2,6 +2,8 @@
 
 This guide implements all cost-saving measures from [COST_ESTIMATE.md](./COST_ESTIMATE.md). Target: **~$25–35/mo** instead of ~$75–97/mo.
 
+**Not technical?** Use **[DEPLOY_LEAN_BEGINNER.md](./DEPLOY_LEAN_BEGINNER.md)** — step-by-step, beginner-friendly.
+
 ---
 
 ## Summary of Changes
@@ -78,7 +80,7 @@ docker compose -f docker-compose.lean.yml up -d
 # Allow PostgreSQL, Redis, Typesense from anywhere (or restrict to Vercel IPs)
 ufw allow 5432/tcp
 ufw allow 6379/tcp
-ufw allow 8108/tcp
+ufw allow 8109/tcp
 ufw allow 22/tcp
 ufw enable
 ```
@@ -128,7 +130,7 @@ Set in [Vercel Dashboard](https://vercel.com) → Project → Settings → Envir
 | `REDIS_PORT` | `6379` |
 | `REDIS_PASSWORD` | From `.env.lean` |
 | `TYPESENSE_HOST` | VPS IP |
-| `TYPESENSE_PORT` | `8108` |
+| `TYPESENSE_PORT` | `8109` |
 | `TYPESENSE_PROTOCOL` | `http` |
 | `TYPESENSE_API_KEY` | From `.env.lean` |
 | `NEXTAUTH_URL` | `https://ascend.vercel.app` or your domain |
@@ -150,7 +152,7 @@ Core flows (auth, jobs, applications, company pages) work **without** BullMQ wor
 1. **Reindex jobs** (local, with prod DATABASE_URL + TYPESENSE):
    ```bash
    DATABASE_URL="postgresql://ascend:PASSWORD@VPS_IP:5432/ascend" \
-   TYPESENSE_HOST=VPS_IP TYPESENSE_PORT=8108 TYPESENSE_PROTOCOL=http TYPESENSE_API_KEY=xxx \
+   TYPESENSE_HOST=VPS_IP TYPESENSE_PORT=8109 TYPESENSE_PROTOCOL=http TYPESENSE_API_KEY=xxx \
    npm run reindex:jobs
    ```
 

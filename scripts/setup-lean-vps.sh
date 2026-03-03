@@ -27,10 +27,10 @@ echo "==> Waiting for Postgres..."
 sleep 5
 until docker exec ascend-postgres pg_isready -U ascend -d ascend 2>/dev/null; do sleep 1; done
 
-echo "==> Opening firewall (5432, 6379, 8108)..."
+echo "==> Opening firewall (5432, 6379, 8109)..."
 ufw allow 5432/tcp 2>/dev/null || true
 ufw allow 6379/tcp 2>/dev/null || true
-ufw allow 8108/tcp 2>/dev/null || true
+ufw allow 8109/tcp 2>/dev/null || true
 ufw allow 22/tcp 2>/dev/null || true
 ufw --force enable 2>/dev/null || true
 
@@ -40,7 +40,7 @@ echo "==> Lean stack is ready!"
 echo "VPS IP: $VPS_IP"
 echo "DATABASE_URL=postgresql://ascend:ascend123@$VPS_IP:5432/ascend"
 echo "REDIS_HOST=$VPS_IP REDIS_PORT=6379 REDIS_PASSWORD=ascend123"
-echo "TYPESENSE_HOST=$VPS_IP TYPESENSE_PORT=8108 TYPESENSE_PROTOCOL=http TYPESENSE_API_KEY=ascend_search_key"
+echo "TYPESENSE_HOST=$VPS_IP TYPESENSE_PORT=8109 TYPESENSE_PROTOCOL=http TYPESENSE_API_KEY=ascend_search_key"
 echo ""
 echo "Run migrations from your local machine:"
 echo "  DATABASE_URL=\"postgresql://ascend:ascend123@$VPS_IP:5432/ascend\" npx prisma migrate deploy"
