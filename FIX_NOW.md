@@ -2,6 +2,8 @@
 
 **500 or "Registration failed"?** `DATABASE_URL` in Vercel must be a **Neon** URL (postgresql://...neon.tech/...), NOT your VPS.
 
+**504 on session?** Ensure `NEXTAUTH_SECRET` is set (generate with: `openssl rand -base64 32`). Set `NEXTAUTH_URL` to `https://ascend-chi-nine.vercel.app` (or your production domain).
+
 Everything you change is in **websites** (no code editing needed, except one push at the end). Here’s where each update happens.
 
 ---
@@ -18,8 +20,8 @@ Everything you change is in **websites** (no code editing needed, except one pus
 
 **5. Edit these:**
 - Click **Edit** next to **DATABASE_URL** → paste your Neon connection string → Save
-- Click **Edit** next to **NEXTAUTH_URL** → set to `https://ascend-karthikiyer25gmailcoms-projects.vercel.app` → Save
-- Click **Edit** next to **NEXT_PUBLIC_APP_URL** → set to `https://ascend-karthikiyer25gmailcoms-projects.vercel.app` → Save  
+- Click **Edit** next to **NEXTAUTH_URL** → set to `https://ascend-chi-nine.vercel.app` → Save
+- Click **Edit** next to **NEXT_PUBLIC_APP_URL** → set to `https://ascend-chi-nine.vercel.app` → Save  
 - If **REDIS_URL** exists: Edit it → paste your Upstash Redis URL → Save  
   If it doesn’t: Click **Add New** → Name: `REDIS_URL`, Value: your Upstash Redis URL → Save
 
@@ -73,5 +75,5 @@ Vercel will redeploy automatically if it’s connected to your repo. If it doesn
 
 ## WHERE: Use your app
 
-Use this URL only: **https://ascend-karthikiyer25gmailcoms-projects.vercel.app**  
+Use this URL only: **https://ascend-chi-nine.vercel.app**  
 Don’t use URLs that have random numbers (e.g. `1lo3c556c`) in them.

@@ -133,13 +133,30 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
+      const SESSION_TIMEOUT_MS = 5000;
+      const runWithTimeout = async <T>(p: Promise<T>): Promise<T | null> => {
+        try {
+          return await Promise.race([
+            p,
+            new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error("session_timeout")), SESSION_TIMEOUT_MS)
+            ),
+          ]);
+        } catch {
+          return null;
+        }
+      };
       try {
-        if (token.jti && (await isTokenDenied(token.jti as string))) {
+        const deniedByJti =
+          token.jti && (await runWithTimeout(isTokenDenied(token.jti as string)));
+        if (deniedByJti) {
           return { ...session, user: undefined } as typeof session & { user: undefined };
         }
         if (token.id && typeof token.iat === "number") {
-          const denied = await isTokenIssuedBeforeDenyAll(token.id as string, token.iat);
-          if (denied) {
+          const deniedByUser = await runWithTimeout(
+            isTokenIssuedBeforeDenyAll(token.id as string, token.iat)
+          );
+          if (deniedByUser) {
             return { ...session, user: undefined } as typeof session & { user: undefined };
           }
         }
@@ -147,15 +164,12 @@ export const authOptions = {
         // Redis down — treat as not denied so auth still works
       }
       if (token.id) {
-        let user;
-        try {
-          user = await prisma.user.findUnique({
+        const user = await runWithTimeout(
+          prisma.user.findUnique({
             where: { id: token.id as string },
             select: { bannedAt: true, preferredCurrency: true },
-          });
-        } catch {
-          user = null; // DB down — continue with token data only
-        }
+          })
+        );
         if (user?.bannedAt) {
           return { ...session, user: undefined } as typeof session & { user: undefined };
         }
