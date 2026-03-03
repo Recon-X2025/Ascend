@@ -5,27 +5,13 @@ import { buildMetadata } from "@/lib/seo/metadata";
 import { Container } from "@/components/layout/Container";
 import Link from "next/link";
 
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 function toRoleSlug(title: string): string {
   return title
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
-}
-
-export async function generateStaticParams() {
-  const roles = await prisma.parsedJD.groupBy({
-    by: ["title"],
-    _count: { title: true },
-    having: { title: { _count: { gte: 10 } } },
-    orderBy: { _count: { title: "desc" } },
-    take: 200,
-  });
-
-  return roles.map((r) => ({
-    "role-slug": toRoleSlug(r.title),
-  }));
 }
 
 interface Props {
