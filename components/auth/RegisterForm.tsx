@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +14,7 @@ import { registerSchema, type RegisterFormValues } from "@/lib/validations/auth"
 
 export function RegisterForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ReactNode | null>(null);
 
   const {
     register,
@@ -57,7 +57,19 @@ export function RegisterForm() {
       try {
         json = await res.json();
       } catch {
-        setError(res.status === 401 || res.status === 405 ? "Please use the main app URL (no random numbers in it) and ensure Deployment Protection is off." : "Registration failed. Try again.");
+        const prodUrl = "https://ascend-karthikiyer25gmailcoms-projects.vercel.app/auth/register";
+        setError(
+          res.status === 401 || res.status === 405 ? (
+            <>
+              Blocked by Vercel.{" "}
+              <a href={prodUrl} className="underline font-medium text-green" target="_blank" rel="noopener noreferrer">
+                Click here to register on the main app
+              </a>
+            </>
+          ) : (
+            "Registration failed. Try again."
+          )
+        );
         return;
       }
       if (!res.ok) {
