@@ -1,0 +1,67 @@
+# Lean deployment: Postgres + Redis + Typesense on a single Vultr VPS
+# Cost: ~$10–12/mo VPS replaces managed Postgres (~$15–30) + Redis (~$15–30) + Typesense Cloud (~$7–25)
+#
+# On the VPS:
+#   docker compose -f docker-compose.lean.yml up -d
+#
+# Then set in Vercel env (or .env):
+#   DATABASE_URL=postgresql://ascend:PASSWORD@VPS_IP:5432/ascend
+#   REDIS_HOST=VPS_IP
+#   REDIS_PORT=6379
+#   REDIS_PASSWORD=your_redis_password
+#   TYPESENSE_HOST=VPS_IP
+#   TYPESENSE_PORT=8108
+#   TYPESENSE_PROTOCOL=http
+#   TYPESENSE_API_KEY=xyz
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ascend-postgres
+    environment:
+      POSTGRES_USER: ascend
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ascend123}
+      POSTGRES_DB: ascend
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ascend -d ascend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ascend-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-ascend123}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: ascend-typesense
+    environment:
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-xyz}
+      TYPESENSE_ENABLE_CORS: "true"
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense-data:/data
+    command: --data-dir /data --api-key=${TYPESENSE_API_KEY:-xyz}
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  typesense-data:

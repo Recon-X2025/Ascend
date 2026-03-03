@@ -1,6 +1,10 @@
 # Deploy Ascend on Vultr
 
-This guide covers deploying Ascend using Vultr services. Two approaches:
+This guide covers deploying Ascend using Vultr services.
+
+**Want to minimize cost?** See [DEPLOY_LEAN.md](./DEPLOY_LEAN.md) for ~$25–35/mo (Hobby + single VPS + R2).
+
+Two main approaches:
 
 1. **Hybrid** (recommended): Vercel (Next.js) + Vultr (PostgreSQL, Redis, Object Storage)
 2. **Full Vultr**: VPS for app + workers + Vultr Managed PostgreSQL/Redis/Object Storage
