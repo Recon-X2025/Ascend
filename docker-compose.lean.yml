@@ -10,7 +10,7 @@
 #   REDIS_PORT=6379
 #   REDIS_PASSWORD=your_redis_password
 #   TYPESENSE_HOST=VPS_IP
-#   TYPESENSE_PORT=8108
+#   TYPESENSE_PORT=8109
 #   TYPESENSE_PROTOCOL=http
 #   TYPESENSE_API_KEY=xyz
 
@@ -55,7 +55,7 @@ services:
       TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-xyz}
       TYPESENSE_ENABLE_CORS: "true"
     ports:
-      - "8108:8108"
+      - "8109:8108"
     volumes:
       - typesense-data:/data
     command: --data-dir /data --api-key=${TYPESENSE_API_KEY:-xyz}
