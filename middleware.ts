@@ -9,11 +9,16 @@ const MAIN_HOSTS = new Set([
   "www.ascend.app",
 ]);
 
+/** Skip domain-slug lookup for standard Vercel URLs (avoids middleware timeout) */
+function isMainOrVercelHost(hostname: string): boolean {
+  return MAIN_HOSTS.has(hostname) || hostname.endsWith(".vercel.app");
+}
+
 export async function middleware(req: NextRequest) {
   // Phase 18: Custom careers domain → rewrite to /careers/[slug]
   const host = req.headers.get("host") ?? "";
   const hostname = host.split(":")[0];
-  if (!MAIN_HOSTS.has(hostname)) {
+  if (!isMainOrVercelHost(hostname)) {
     try {
       const base = process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
