@@ -40,7 +40,7 @@ const DISCOVER_ITEMS = [
 const MY_CAREER_ITEMS_BASE = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/resume", label: "Resume Optimiser" },
-  { href: "/fit-score", label: "Fit Score" },
+  { href: "/features/fit-score", label: "Fit Score" },
   { href: "/profile/edit", label: "My Profile" },
 ];
 
