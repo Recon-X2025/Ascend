@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import { authOptions } from "@/lib/auth/nextauth";
 
+export const maxDuration = 30;
+
 const DEFAULT_MAX_AGE = 24 * 60 * 60; // 24 hours
 const REMEMBER_ME_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 

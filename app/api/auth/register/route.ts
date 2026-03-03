@@ -16,6 +16,13 @@ const VERIFICATION_EXPIRY_HOURS = 24;
 const skipVerificationEmail =
   process.env.SKIP_VERIFICATION_EMAIL !== "false";
 
+export const maxDuration = 30;
+
+/** OPTIONS for CORS preflight */
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: { Allow: "POST" } });
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -36,9 +43,9 @@ export async function POST(req: Request) {
     }
     const { name, email, password, marketingConsent } = parsed.data;
 
-    // Allow registration if feature flag is on, or SEEKER_PILOT_OPEN env is set (e.g. for local testing)
-    const flagOpen = await isEnabled("seeker_pilot_open");
+    // Allow registration if SEEKER_PILOT_OPEN env is set first (no DB), else check feature flag
     const envOpen = process.env.SEEKER_PILOT_OPEN === "true" || process.env.SEEKER_PILOT_OPEN === "1";
+    const flagOpen = envOpen ? true : await isEnabled("seeker_pilot_open");
     if (!flagOpen && !envOpen) {
       return NextResponse.json(
         { success: false, error: "Ascend is currently in private beta. Check back soon." },
@@ -129,9 +136,10 @@ export async function POST(req: Request) {
       data: { message: "Verification email sent" },
     });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     console.error("Register error:", err);
     return NextResponse.json(
-      { success: false, error: "Registration failed" },
+      { success: false, error: "Registration failed", debug: process.env.NODE_ENV === "development" ? msg : undefined },
       { status: 500 }
     );
   }
