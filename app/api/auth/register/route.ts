@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { track, EVENTS } from "@/lib/analytics/track";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma/client";
 import { resend, sendVerificationEmail } from "@/lib/email/resend";
 import { generateToken } from "@/lib/auth/tokens";

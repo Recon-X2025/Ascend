@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/nextauth";
 import { prisma } from "@/lib/prisma/client";
 import { denyAllUserTokens } from "@/lib/auth/denylist";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 const postSchema = z

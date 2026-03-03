@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma/client";
 
 const KEY_PREFIX = "asc_live_";

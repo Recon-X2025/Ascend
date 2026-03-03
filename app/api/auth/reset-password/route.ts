@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma/client";
 import { resetPasswordSchema } from "@/lib/validations/auth";
 import { logAudit } from "@/lib/audit/log";
