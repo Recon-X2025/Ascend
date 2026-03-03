@@ -15,7 +15,8 @@ import { grantCompanyEmployeeByEmail } from "@/lib/auth/employee-verification";
 import { logAudit } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
+  trustHost: true, // Vercel: use request host for redirects
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -42,31 +43,39 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    LinkedInProvider({
-      clientId: process.env.LINKEDIN_CLIENT_ID!,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: "openid profile email",
-        },
-      },
-      issuer: "https://www.linkedin.com",
-      jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
-      async profile(profile: Record<string, unknown>) {
-        return {
-          id: (profile.sub as string) ?? "",
-          name: (profile.name as string) ?? null,
-          email: (profile.email as string) ?? null,
-          image: (profile.picture as string) ?? null,
-          role: "JOB_SEEKER" as const,
-          onboardingComplete: false,
-        };
-      },
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET
+      ? [
+          LinkedInProvider({
+            clientId: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+            authorization: {
+              params: {
+                scope: "openid profile email",
+              },
+            },
+            issuer: "https://www.linkedin.com",
+            jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
+            async profile(profile: Record<string, unknown>) {
+              return {
+                id: (profile.sub as string) ?? "",
+                name: (profile.name as string) ?? null,
+                email: (profile.email as string) ?? null,
+                image: (profile.picture as string) ?? null,
+                role: "JOB_SEEKER" as const,
+                onboardingComplete: false,
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: "jwt",
@@ -119,20 +128,29 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token.jti && (await isTokenDenied(token.jti as string))) {
-        return { ...session, user: undefined } as typeof session & { user: undefined };
-      }
-      if (token.id && typeof token.iat === "number") {
-        const denied = await isTokenIssuedBeforeDenyAll(token.id as string, token.iat);
-        if (denied) {
+      try {
+        if (token.jti && (await isTokenDenied(token.jti as string))) {
           return { ...session, user: undefined } as typeof session & { user: undefined };
         }
+        if (token.id && typeof token.iat === "number") {
+          const denied = await isTokenIssuedBeforeDenyAll(token.id as string, token.iat);
+          if (denied) {
+            return { ...session, user: undefined } as typeof session & { user: undefined };
+          }
+        }
+      } catch {
+        // Redis down — treat as not denied so auth still works
       }
       if (token.id) {
-        const user = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { bannedAt: true, preferredCurrency: true },
-        });
+        let user;
+        try {
+          user = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { bannedAt: true, preferredCurrency: true },
+          });
+        } catch {
+          user = null; // DB down — continue with token data only
+        }
         if (user?.bannedAt) {
           return { ...session, user: undefined } as typeof session & { user: undefined };
         }
@@ -236,4 +254,4 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
   },
-};
+} as NextAuthOptions;

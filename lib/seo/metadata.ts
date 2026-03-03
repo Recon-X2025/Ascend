@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://ascend.jobs";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  process.env.NEXTAUTH_URL ??
+  "https://ascend-karthikiyer25gmailcoms-projects.vercel.app";
 const SITE_NAME = "Ascend";
 const DEFAULT_DESCRIPTION =
   "Find your next role, discover what companies are really like, and build a career you are proud of. Ascend is India's job platform built for where you are going.";

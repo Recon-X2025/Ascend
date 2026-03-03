@@ -40,29 +40,39 @@ export function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setError(null);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        confirmPassword: data.confirmPassword,
-        agreeTerms: true,
-        marketingConsent: data.marketingConsent ?? false,
-      }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setError(json.error ?? "Registration failed");
-      return;
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
+          agreeTerms: true,
+          marketingConsent: data.marketingConsent ?? false,
+        }),
+      });
+      let json: { error?: string; data?: { verificationSkipped?: boolean } };
+      try {
+        json = await res.json();
+      } catch {
+        setError(res.status === 401 || res.status === 405 ? "Please use the main app URL (no random numbers in it) and ensure Deployment Protection is off." : "Registration failed. Try again.");
+        return;
+      }
+      if (!res.ok) {
+        setError(json.error ?? "Registration failed");
+        return;
+      }
+      if (json.data?.verificationSkipped) {
+        router.push("/auth/login");
+      } else {
+        router.push("/auth/verify-email-sent");
+      }
+      router.refresh();
+    } catch {
+      setError("Registration failed. Check your connection and try again.");
     }
-    if (json.data?.verificationSkipped) {
-      router.push("/auth/login");
-    } else {
-      router.push("/auth/verify-email-sent");
-    }
-    router.refresh();
   };
 
   return (

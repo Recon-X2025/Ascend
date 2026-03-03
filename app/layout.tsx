@@ -6,6 +6,7 @@ import { buildWebSiteSchema } from "@/lib/seo/schemas";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { LayoutChrome } from "@/components/layout/LayoutChrome";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 /** Critical CSS inlined so the page is never unstyled if the bundle fails to load (dev glitches, cache, streaming). */
 const CRITICAL_CSS = `
@@ -37,6 +38,9 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+/** Force dynamic render to avoid React 419 (Suspense boundary) in production */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildMetadata({
   title: "Ascend — Find Jobs, Reviews & Salary Insights in India",
   description:
@@ -62,9 +66,11 @@ export default async function RootLayout({
         style={{ backgroundColor: "#f7f6f1", color: "#0f1a0f" }}
       >
         <JsonLd schema={buildWebSiteSchema()} />
-        <SessionProvider>
-          <LayoutChrome>{children}</LayoutChrome>
-        </SessionProvider>
+        <AppErrorBoundary>
+          <SessionProvider>
+            <LayoutChrome>{children}</LayoutChrome>
+          </SessionProvider>
+        </AppErrorBoundary>
       </body>
     </html>
   );

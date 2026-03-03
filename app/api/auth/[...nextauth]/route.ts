@@ -20,14 +20,24 @@ export async function GET(
   req: Request,
   context: { params: Promise<{ nextauth: string[] }> }
 ) {
-  const options = await getOptions(req);
-  return NextAuth(options)(req, context as { params: Promise<{ nextauth: string[] }> });
+  try {
+    const options = await getOptions(req);
+    return await NextAuth(options)(req, context as { params: Promise<{ nextauth: string[] }> });
+  } catch (err) {
+    console.error("NextAuth GET error:", err);
+    return Response.json({ error: "Authentication error" }, { status: 500 });
+  }
 }
 
 export async function POST(
   req: Request,
   context: { params: Promise<{ nextauth: string[] }> }
 ) {
-  const options = await getOptions(req);
-  return NextAuth(options)(req, context as { params: Promise<{ nextauth: string[] }> });
+  try {
+    const options = await getOptions(req);
+    return await NextAuth(options)(req, context as { params: Promise<{ nextauth: string[] }> });
+  } catch (err) {
+    console.error("NextAuth POST error:", err);
+    return Response.json({ error: "Authentication error" }, { status: 500 });
+  }
 }
