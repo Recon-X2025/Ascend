@@ -1,5 +1,7 @@
 # Fix Ascend on Vercel — Simple Steps
 
+**500 or "Registration failed"?** `DATABASE_URL` in Vercel must be a **Neon** URL (postgresql://...neon.tech/...), NOT your VPS.
+
 Everything you change is in **websites** (no code editing needed, except one push at the end). Here’s where each update happens.
 
 ---
