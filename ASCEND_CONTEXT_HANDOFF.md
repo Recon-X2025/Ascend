@@ -1,7 +1,7 @@
 # ASCEND — Full Project Context Handoff
 **For:** Claude (new session)
 **Purpose:** Complete context to continue exactly where we left off — no re-explaining needed.
-**Last updated:** 2026-03-01 — 10:30 AM
+**Last updated:** 2026-03-01 — Session 3
 
 ---
 
@@ -16,8 +16,8 @@ The user is building **Ascend** — a production-ready, full-stack job & profess
 
 ## THE PRODUCT: ASCEND
 
-**Tagline:** "Your career has a direction. We make it inevitable."
-**Company:** Coheron Tech Private Limited
+**Tagline:** "Direction is yours. Structure is ours."
+**Company:** Coheron Technologies
 **Brand:** Parchment `#F7F6F1` + Green `#16A34A` + Ink `#0F1A0F`. Syne (display) + DM Sans (body).
 
 ### Tech Stack
@@ -49,25 +49,84 @@ The user is building **Ascend** — a production-ready, full-stack job & profess
 
 ## CURRENT STATUS — 2026-03-01
 
-**Build is green.** Phase 7, M-1, and M-2 confirmed complete. Phase 8 parsed to Cursor (in progress).
+**Build is green.**
 
-**Total phases: 55 | Done: 29 | Pending: 26 | Overall: ~53%**
+**Total phases: 62 | Done: 62 (ALL PHASES COMPLETE) | Pending: 0 | Overall: 100%**
 
-### What was just completed (this session):
-- ✅ Phase 7 (Reviews & Ratings) — CompanyReview, InterviewReview, SalarySubmission, vote models, admin moderation queue extension, Redis rate limiting, Resend emails, seeker dashboard nudge card
-- ✅ M-1 (Mentorship Identity & Verification) — MentorVerification, VerificationDocument, admin verification queue, SLA 48hrs, all decisions immutable
-- ✅ M-2 (Mentor Profile & Transition Record) — MentorProfile, AvailabilityWindow, 6-step onboarding form, mentor dashboard, public profile at /mentors/[userId], admin approval wired
+### Confirmed complete:
+- ✅ **Phase 7** — Reviews & Ratings: CompanyReview, InterviewReview, SalarySubmission, vote models. Admin mod queue (all 3 types, reason codes, 48hr SLA). Redis rate limiting. Author identity never exposed. 7 Resend templates.
+- ✅ **Phase 8** — Salary Insights: lib/salary/aggregate.ts, SalaryInsightCache, CityMetric, BullMQ worker, 24hr cache, PremiumGate, /salary hub + 4 sub-pages. Individual records never returned.
+- ✅ **Phase 10B** — Candidate Intelligence Dashboard: 5 widgets (Market Value / Visibility Score / Skills Gap / Application Performance / Best Time to Apply), single SWR call, BullMQ worker, Monday digest email.
+- ✅ **Phase 11** — AI Features: CoverLetter, InterviewPrep, ProfileOptimiserResult, JobDismissal models. BullMQ workers: cover-letter, interview-prep, profile-optimise. Smart recommendations (pgvector + FitScore). Salary prediction extended. Feature flags + rate limits.
+- ✅ **Phase 16** — Data & Analytics Platform: AnalyticsEvent, DailyMetricSnapshot, track(), daily-snapshot cron, admin analytics (4 tabs), recharts, seed script. ⚠️ Clear seed data before pilot.
+- ✅ **Phase 16B** — Recruiter Intelligence & Hiring Analytics: HiringAnalyticsSnapshot, InterviewScorecard, DIMetricsSnapshot models. 6 API routes (time-to-hire, funnel, benchmark, fit explainer, scorecards, D&I). /dashboard/recruiter/intelligence (6 tabs). Benchmark anonymisation enforced. D&I opt-in gate. 7 outcome events.
+- ✅ **M-1** — Mentorship Identity & Verification: MentorVerification, VerificationDocument, VerificationAuditLog. Admin queue, SLA 48hrs, all decisions immutable.
+- ✅ **M-2** — Mentor Profile & Transition Record: MentorProfile extended, AvailabilityWindow, 6-step form, mentor dashboard, public /mentors/[userId], admin sets isPublic.
+- ✅ **M-3** — Mentee Application Layer: MentorApplication, MenteeReadinessCheck, 3-gate readiness, curated discovery max 3, word-count-enforced applications, mentor inbox, BullMQ expiry worker (6hrs), 7 Resend templates.
+- ✅ **M-4** — Matching Engine: lib/mentorship/match.ts — 5-dimension scoring (Transition Similarity 40pts, Geography 20pts, Focus Area 20pts, Availability 10pts, Capacity 10pts). Redis 6hr cache. 4 refresh triggers. matchScore snapshot on apply. Admin visibility only.
+- ✅ **Phase 18B** — Internal Job Board & Employee Mobility: JobPost.visibility (PUBLIC/INTERNAL/UNLISTED). CompanyEmployee model (domain-based auto-grant on login). /internal/[company-slug] auth-gated portal (employees only). JobReferral model + referral email + outcome tracking. Anonymous internal apply (name revealed on SHORTLISTED). Internal-first cron (INTERNAL → PUBLIC after N days). HR Mobility analytics tab (fill rate, time-to-fill, referral conversion, top referrers). 5 outcome events. See PHASE_18B_BUILD.md.
 
-### What is in progress:
-- ⬡ **Phase 8** (Salary Insights) — parsed to Cursor. Two data sources (SalarySubmission + JDSalarySignal), lib/salary/aggregate.ts, SalaryInsightCache, PremiumGate component, /salary hub + role/company/compare/estimate pages
+- ✅ **M-11** — Mentor Reputation & Tier System: MentorTier enum (RISING/ESTABLISHED/ELITE). MentorTierHistory model. MentorProfile extended (tier, tierUpdatedAt, tierOverriddenByAdmin, tierOverrideNote, disputeRate, stenoRate stub, maxActiveMentees, activeMenteeCount). TIER_CONFIG constants (outcome thresholds, capacity, fee %, priority matching, featured). lib/mentorship/tiers.ts (calculateTier, checkDemotionCriteria — dispute rate + lapsed verification; stenoRate deferred to M-7 with comment, recalculateMentorTier — idempotent, recalculateDisputeRate, enforceCapacity). verifyOutcome() + opsReviewOutcome() wired. Mentor ACCEPT enforces capacity (409 MENTOR_AT_CAPACITY). activeMenteeCount maintained on contract lifecycle. 4 APIs (public tier, tier history, admin override, remove override). Weekly cron (batched 50, skips admin-overridden). Discovery: ELITE featured row (max 3) + internal tier boost to match score. ESTABLISHED/ELITE badges on cards (RISING badge hidden). /dashboard/mentor Tier & Reputation card + /dashboard/mentor/tier-history page. /dashboard/admin/mentorship/tiers. 4 Resend templates. 6 outcome events. See PHASE_M11_BUILD.md.
 
-### What comes next (on completion):
-- **Mentorship Track:** M-3 (Mentee Application Layer)
-- **Company Launch:** Phase 10B (Candidate Intelligence Dashboard) — after Phase 8 green
+- ✅ **M-10** — Outcome Verification & Attribution: MentorshipOutcome model (unique per contract). OutcomeStatus enum (PENDING_MENTEE/VERIFIED/DISPUTED/UNACKNOWLEDGED/OPS_REVIEWED). OutcomeCheckInStatus enum. MentorProfile extended (verifiedOutcomeCount, totalEngagements, avgTimeToOutcomeDays, outcomeTypes). lib/mentorship/outcomes.ts (submitOutcomeClaim, verifyOutcome, disputeOutcome, markUnacknowledged, opsReviewOutcome, submitCheckIn, recalculateMentorOutcomeStats — idempotent). 6 APIs incl. public mentor stats endpoint. BullMQ outcome-acknowledgement worker (7-day expiry) + outcome-checkin worker (6-month reminder). Mentor public profile Verified Outcomes section + testimonials (consent-only, no PII). Mentee check-in badge on profile. Engagement dashboard Outcome section. Admin /dashboard/admin/mentorship/outcomes (disputed queue + all outcomes tab). Daily cron: outcome-reminders. 9 Resend templates. 6 outcome events. UNACKNOWLEDGED ≠ VERIFIED enforced everywhere. See PHASE_M10_BUILD.md.
+
+- ✅ **M-8** — Session Rhythm & Milestone Framework: EngagementType enum (SPRINT/STANDARD/DEEP). EngagementSession, EngagementMilestone, EngagementDocument models. MentorshipContract extended (engagementType, engagementStart, engagementEnd). lib/mentorship/engagement.ts (initialiseEngagement, ENGAGEMENT_CONFIG). verifyOTPAndSign() wired → auto-creates sessions + milestones on contract ACTIVE. APIs: GET engagements/[contractId], PATCH sessions/[id] (schedule/complete/cancel), PATCH milestones/[id] (file), POST documents/[contractId]/goal, POST documents/[id]/sign, POST documents/[contractId]/outcome. Daily cron: engagement-reminders. 14 Resend templates. /mentorship/engagements/[contractId] dashboard. /mentorship/dashboard extended with Active Engagement card. 9 outcome events. See PHASE_M8_BUILD.md.
+
+- ✅ **M-5** — Contract Generation & Signing: MentorshipContract, ContractSignature, ContractStatus enum. lib/mentorship/contract.ts (generateContractContent, createContract, requestOTP, verifyOTPAndSign, generateContractPDF, verifyContractIntegrity, expireUnsignedContracts). OTP email-based, Redis TTL 10min. SHA-256 PDF integrity check on every access. S3 private + signed URLs. 8 Resend templates. contract-pdf BullMQ queue. tcVersion locked. 7 outcome events.
+
+- ✅ **Phase 17** — Trust, Safety & Compliance: Resolves Bug 19 (Critical). AuditLog extended (category/severity/actorIp/previousState/newState/success/errorCode). SecurityEvent model. UserReport model + ReportButton wired into job posts/reviews/profiles/mentor profiles. DataRequest model (GDPR + DPDP Act 2023 — EXPORT/DELETE/RECTIFY). logAudit() non-throwing. logAdminAction() backward-compatible. Auth/data access/payment/mentorship events all logged. BullMQ data-export worker. Account deletion: soft delete + PII anonymization + legal record retention (contracts 7yr, transcripts 3yr). /settings/privacy extended with Your Data section. /dashboard/admin/trust 5-tab dashboard. IP blocking via Redis. 6 Resend templates. 6 outcome events.
+
+
+### What comes next:
+- **M-6** — Escrow & Payment Infrastructure
 
 ---
 
-## OPEN BUGS — 19 total
+## POST-PILOT BACKLOG
+
+These are scoped and intentional — not forgotten. To be prioritised after pilot testing is complete and initial user feedback is gathered.
+
+### Growth & Volume (LinkedIn learnings)
+
+| # | Feature | What it does | Priority |
+|---|---------|-------------|----------|
+| BL-1 | **Richer profile view notifications** | "3 recruiters from Flipkart viewed your profile this week" — company names for paid users | High |
+| BL-2 | **Weekly career digest email** | "3 new jobs matching your target role, 2 mentors in your path went Elite" — dormant user re-engagement | High |
+| BL-3 | **Transition success stories** | Verified outcome → auto-generated story "Priya moved SWE → PM in 87 days" — consent-gated, shareable | High |
+| BL-4 | **"People in your transition" signal** | "142 people are on the same SWE → PM path as you" — community belonging | High |
+| BL-5 | **Saved search alerts** | "5 new jobs matching Product Manager, Bengaluru posted today" — passive re-engagement | High |
+| BL-6 | **Profile strength gamification** | Extend existing completion % — specific nudges, milestone rewards | Medium |
+| BL-7 | **Follow mentors** | Discovery without applying — browse mentor insights, follow without committing to engagement | Medium |
+| BL-8 | **Mentor posts / insights** | Mentors share transition tips → seekers follow → organic acquisition flywheel | Medium |
+| BL-9 | **Cohort communities** | "SWE → PM 2025 cohort" group — extends Mentorship Circles (M-12) into broader community | Medium |
+| BL-10 | **Career milestones (shareable)** | "I just completed a mentorship with an ELITE mentor" — social sharing drives acquisition | Medium |
+| BL-11 | **Skills assessment / peer endorsement** | Peers endorse skills → profile score → better matching | Medium |
+| BL-12 | **Company culture ratings (prominent)** | Surface existing reviews more prominently — brings passive seekers back | Medium |
+| BL-13 | **Creator mode for mentors** | Long-form content, newsletter — builds mentor audience on Ascend | Low |
+| BL-14 | **Verified career certificates** | Ascend-issued completion badges for mentorship engagements | Low |
+| BL-15 | **Alumni networks** | "10 people from your company are on Ascend" — enterprise acquisition lever | Low |
+
+### Job Distribution
+
+| # | Feature | What it does | Priority |
+|---|---------|-------------|----------|
+| BL-24 | **Multi-Board Job Syndication & Centralised Tracking** | Recruiters post a job on Ascend and syndicate in one click to Naukri, LinkedIn, Indeed, Foundit, Glassdoor, Monster, Shine, Internshala, and others. Ascend becomes the single command centre. CENTRALISED TRACKING: post status per board (Live/Failed/Pending/Expired); applicant count per board in real time; views/clicks where APIs expose; cost per board for paid listings with cost-per-applicant and cost-per-hire by source; source attribution on every applicant card ("Applied via Naukri"); best-performing board insights over time; one-click pause/takedown across all boards simultaneously. ARCHITECTURE: unique tracked redirect URL per job per board as apply link — all CVs land in Ascend regardless of source, attribution 100% reliable without depending on each board's reporting API. Boards without APIs become fully trackable. INTEGRATION: direct APIs where available (Indeed, LinkedIn); partner aggregators (Broadbean, Multipost, Jobsoid) as fallback. Prisma: JobBoardSyndication (jobPostId, board, status, postedAt, expiresAt, costPaid, trackingUrl), JobBoardApplicantSource (applicationId, board, clickedAt). Confirm board-by-board feasibility before scoping. | High |
+
+### Platform Intelligence
+
+| # | Feature | What it does | Priority |
+|---|---------|-------------|----------|
+| BL-17 | **Subscription invoicing** | Wire `createInvoice()` into Razorpay/Stripe subscription webhooks once userId resolution is solved (deferred from GST invoicing build) | High |
+| BL-18 | **Aadhaar eSign** | Post-pilot legal signing upgrade — replaces email OTP for contracts | Medium |
+| BL-19 | **DPDP Act 2023 compliance audit** | Full audit of data handling against Digital Personal Data Protection Act 2023 | Medium |
+| BL-20 | **Live SAML SSO** | Full SAML handshake for enterprise SSO — config collection done in Phase 18, activation deferred | Medium |
+| BL-21 | **ATS live API keys** | Greenhouse/Lever/Workday live testing — infrastructure built in Phase 18, keys pending | Medium |
+| BL-22 | **Resume builder multilingual + RTL PDF** | Devanagari script, RTL layout for Arabic — deferred from Phase 21 rollback | Low |
+| BL-23 | **hreflang / sitemaps** | SEO infrastructure for future market expansion | Low |
+
+---
+
+## OPEN BUGS — 16 total
 
 ### UI / Visual
 | # | Bug | Location | Priority |
@@ -96,14 +155,14 @@ The user is building **Ascend** — a production-ready, full-stack job & profess
 ### Architecture / Security
 | # | Bug | Location | Priority |
 |---|-----|----------|----------|
-| 19 | Audit log scope is admin-actions only — does not meet Zero Trust. Missing: auth events, data access, user state changes, direct DB changes | Phase 17 dependency | Critical (pre-public-launch) |
+| 19 | ~~Audit log scope is admin-actions only — does not meet Zero Trust. Missing: auth events, data access, user state changes, direct DB changes~~ | ✅ **RESOLVED — Phase 17** | ~~Critical (pre-public-launch)~~ |
 
 ### Pre-Pilot Operations
 | # | Action | When |
 |---|--------|------|
 | — | Clear seeded analytics data before pilot opens | `DELETE FROM "DailyMetricSnapshot"` — run day before pilot |
 | — | Shut down Prisma Studio, restrict DB to VPN only | Before pilot |
-| — | Set `seeker_pilot_open = true` in Feature Flags | Day of pilot |
+| — | Set `seeker_pilot_open = true` in Feature Flags | ⚠️ PENDING — M-17 build complete but flag not yet set |
 | — | Change your role back from PLATFORM_ADMIN to JOB_SEEKER (or create separate admin account) | Before seeding test accounts |
 
 ---
@@ -123,14 +182,15 @@ Phase 0B     Free JD Source Scripts                          ✅ DONE
 Phase 0C     Company Intelligence Bootstrap                  ✅ DONE
 
 ── CORE PLATFORM ───────────────────────────────────────────────────────
-Phase 3      Company Profiles                                ✅ DONE
-Phase 3B     Company Admin Dashboard Completion              ✅ DONE
-Phase 4      Job Post Creation & Listing                     ✅ DONE
-Phase 5      Job Search & Filters                            ✅ DONE
-Phase 5A     Profile Fit Score (JD Fit Score)                ✅ DONE
-Phase 6      Application System                              ✅ DONE
-Phase 6A     JD Resume Optimiser                             ✅ DONE
-Phase 12     Monetisation (Multi-Gateway)                    ✅ DONE
+Phase 3      Company Profiles                                ✅ Done
+Phase 3B     Company Admin Dashboard Completion              ✅ Done
+Phase 4      Job Post Creation & Listing                     ✅ Done
+Phase 5      Job Search & Filters                            ✅ Done
+Phase 5A     Profile Fit Score (JD Fit Score)                ✅ Done
+Phase 6      Application System                              ✅ Done
+Phase 6A     JD Resume Optimiser                             ✅ Done
+Phase 12     Monetisation (Multi-Gateway)                    ✅ Done
+Phase 12R    Pricing Restructure (₹699/₹1,199 plans)        ✅ Done
 
 ── SEEKER PILOT TRACK ──────────────────────────────────────────────────
 Phase 10     Dashboards (Seeker-first)                       ✅ DONE
@@ -152,45 +212,47 @@ Phase 9B     Mentorship Layer v1 (superseded — see M track)  ✅ DONE
 Phase 16     Data & Analytics Platform                       ✅ DONE
 
 ── MENTORSHIP TRACK ── Full build before pilot (M-1→M-17) ──────────────
-M-1          Identity & Verification Infrastructure          ✅ DONE
-M-2          Mentor Profile & Transition Record              ✅ DONE
-M-3          Mentee Onboarding & Application Layer           ⬜ Next
-M-4          Matching Engine                                 ⬜ Pending
-M-5          Contract Generation & Digital Signing           ⬜ Pending
-M-6          Escrow & Payment Infrastructure                 ⬜ Pending
-M-7          Meeting Room, Ascend Steno & Evidence           ⬜ Pending
-M-8          Session Rhythm & Milestone Framework            ⬜ Pending
-M-9          Dispute Resolution Engine                       ⬜ Pending
+M-1          Identity & Verification Infrastructure          ✅ Done
+M-2          Mentor Profile & Transition Record              ✅ Done
+M-3          Mentee Onboarding & Application Layer           ✅ Done
+M-4          Matching Engine                                 ✅ Done
+M-5          Contract Generation & Digital Signing           ✅ Done
+M-6          Escrow & Payment Infrastructure                 ✅ Done
+M-7          Meeting Room, Ascend Steno & Evidence           ✅ Done
+M-8          Session Rhythm & Milestone Framework            ✅ Done
+M-9          Dispute Resolution Engine                       ✅ Done
 
 ── MENTORSHIP TRACK ── continued ───────────────────────────────────────
-M-10         Outcome Verification & Attribution              ⬜ Pending
-M-11         Mentor Reputation & Tier System                 ⬜ Pending
-M-12         Mentorship Circles (Group Cohorts)              ⬜ Pending
-M-13         Mentor Monetisation Unlock                      ⬜ Pending
-M-14         Platform Fee & Revenue Layer                    ⬜ Pending
-M-15         Legal Framework & Compliance                    ⬜ Pending
-M-16         Admin & Ops Layer                               ⬜ Pending
-M-17         Mentorship Analytics & Insights                 ⬜ Pending
+M-10         Outcome Verification & Attribution              ✅ Done
+M-11         Mentor Reputation & Tier System                 ✅ Done
+M-12         Mentorship Circles (Group Cohorts)              ✅ Done
+M-13         Mentor Monetisation Unlock                      ✅ Done
+M-14         Platform Fee & Revenue Layer                    ✅ Done
+M-15         Legal Framework & Compliance                    ✅ Done
+M-16         Admin & Ops Layer                               ✅ Done
+M-17         Mentorship Analytics & Insights                 ✅ Done
 
                     ── PILOT OPENS AFTER M-17 COMPLETE ──────────────────
 
 ── COMPANY LAUNCH ── Running in parallel with Mentorship Track ──────────
 Phase 7      Reviews & Ratings                               ✅ DONE
-Phase 8      Salary Insights                                 ⬡ IN PROGRESS
-Phase 10B    Candidate Intelligence Dashboard                ⬜ Next (after Phase 8)
-Phase 11     AI Features                                     ⬜ Pending
+Phase 8      Salary Insights                                 ✅ DONE
+Phase 10B    Candidate Intelligence Dashboard                ✅ DONE
+Phase 11     AI Features                                     ✅ DONE
+Phase 16     Data & Analytics Platform                       ✅ DONE
 
 ── GROWTH & PARTNERSHIPS ───────────────────────────────────────────────
-Phase 16B    Recruiter Intelligence & Hiring Analytics       ⬜ Pending
-Phase 17     Trust, Safety & Compliance (⚠️ Bug-19 dep)     ⬜ Pending
-Phase 18     B2B / Enterprise & API Platform                 ⬜ Pending
-Phase 18B    Internal Job Board & Employee Mobility          ⬜ Pending
-Phase 19     Growth, Virality & Network Effects              ⬜ Pending
-Phase 20     Acquisition Readiness & Fundraise               ⬜ Pending
+Phase 16B    Recruiter Intelligence & Hiring Analytics       ✅ DONE
+Phase 17     Trust, Safety & Compliance                      ✅ DONE
+Phase 18     B2B / Enterprise & API Platform                 ✅ Done
+GST          GST Invoicing Layer                                ✅ Done
+Phase 18B    Internal Job Board & Employee Mobility          ✅ Done
+Phase 19     Growth, Virality & Network Effects              ✅ Done
+Phase 20     Platform Intelligence & Investor Metrics        ✅ Done
 
 ── EXPANSION ───────────────────────────────────────────────────────────
-Phase 21     Global Vernacular & Market Expansion            ⬜ Pending
-Phase 22     Marketplace & Career Services                   ⬜ Pending
+Phase 21     Global Multilingual & Market Expansion          🔄 Rolled Back
+Phase 22     Marketplace & Career Services                   ✅ Done
 ```
 
 ---
@@ -264,13 +326,29 @@ Free tier (all start): can mentor, cannot charge. Paid unlock (ALL): 3+ verified
 Applied at tranche release. Tier at release determines %. Refunded if dispute upheld or mentor terminates. NOT refunded if mentee terminates (completed sessions) or auto-release.
 
 ### M-15 — Legal Framework & Compliance
-Three documents: (1) Mentorship Marketplace Addendum (once, at signup), (2) Mentor Conduct Agreement (at mentor onboarding), (3) Engagement Contract (per engagement, M-5). Data retention: transcripts 3yr, contracts + payments 7yr. Post-pilot: Aadhaar eSign, DPDP Act 2023 audit.
+Three documents: (1) Mentorship Marketplace Addendum (once, at signup), (2) Mentor Conduct Agreement (at mentor onboarding), (3) Engagement Contract (per engagement, M-5). Data retention: transcripts 3yr, contracts + payments 7yr. Post-pilot: DPDP Act 2023 audit. (Aadhaar eSign removed — email OTP is globally applicable and legally sufficient under IT Act 2000.)
 
 ### M-16 — Admin & Ops Layer
 Verification queue (SLA 48hrs, immutable). Dispute queue (rule-based auto-resolved, ops reviews "Other"). Mentor monitoring (Steno rate, dispute rate, tier eligibility). Audit log (all movements immutable). Admin Zero Trust: cannot manually release escrow without trail, cannot delete logs, cannot override rule-based resolutions.
 
 ### M-17 — Mentorship Analytics & Insights
 Platform: engagements, outcome rate, avg time to outcome by transition, dispute rate by tier, revenue, Steno success rate. Mentor own: applications, completion, outcome rate, earnings, tier progress. Mentee own: applications, completed engagements, goals achieved, action items pending.
+
+---
+
+## PLATFORM LEGAL ENTITY
+
+| Field | Value |
+|-------|-------|
+| Legal Name | Coheron Tech Private Limited |
+| Trade Name | Ascend |
+| GSTIN | 29AANCC3402A1Z3 |
+| State Code | 29 (Karnataka) |
+| Registered Address | No. 5, 21st B Cross, Pragathi Layout, Doddanekkundi, Bengaluru, Karnataka – 560037 |
+| GST Type | Regular |
+| GST Rate | 18% flat (SAC 998314) |
+| Financial Year | April 1 – March 31 (Indian FY) |
+| Invoice Format | ASC/YYYY-YY/XXXX (sequential, resets per FY) |
 
 ---
 
@@ -337,13 +415,37 @@ These apply to ALL phases — never violate:
 ## KEY FILES
 - `ASCEND_MENTORSHIP_ROADMAP.md` — Complete Mentorship Track specification (M-1 → M-17)
 - `ASCEND_BUG_TRACKER.md` — All 19 open bugs with fix instructions
-- `ascend-progress-tracker.html` — Interactive phase tracker (55 phases, 26 done)
+- `ascend-progress-tracker.html` — Interactive phase tracker (61 phases, 42 done)
 - `ASCEND_ESLINT_FIX_PROMPT.md` — ✅ Used, build is green
 - `ASCEND_HERO_RESPONSIVE_FIX_PROMPT.md` — Skipped for now, hero kept as-is
 
 ---
 
-## DECISIONS LOG (this session — 2026-03-01)
+## DECISIONS LOG (2026-03-01)
+
+### Session 4 completions:
+- **Phase 17 ✅** — Trust, Safety & Compliance complete. Bug 19 resolved.
+- **Phase 20 renamed** — "Acquisition Readiness & Fundraise" → "Platform Intelligence & Investor Metrics" (same deliverables, acquisition intent not surfaced in build docs)
+- **M-7 architecture decisions** — Whisper + LLM for transcription (multilingual, Hindi/English code-switching); per-participant Daily.co audio tracks (eliminates diarisation problem); 24hr Steno delivery window; GPU on Vultr when scale demands it
+- **Next:** Phase 18B (Internal Job Board & Employee Mobility) → M-8 → M-10 → M-11 → M-16 → M-17 → Phase 19 → Phase 20 → Phase 21 → Phase 22
+
+### Session 3 completions:
+- **M-4 ✅** — Matching Engine complete
+- **Phase 11 ✅** — AI Features complete
+- **Phase 16B ✅** — Recruiter Intelligence & Hiring Analytics complete
+- **M-5 ✅** — Contract Generation & Signing complete
+- **Next:** Phase 18B (Internal Job Board & Employee Mobility) — M-6 skipped (Razorpay escrow external dependency); Phase 18 skipped (ATS/SSO external dependencies)
+
+### Session 2 completions:
+- **Phase 7 ✅** — Reviews & Ratings complete
+- **Phase 8 ✅** — Salary Insights complete
+- **Phase 10B ✅** — Candidate Intelligence Dashboard complete
+- **Phase 16 ✅** — Data & Analytics Platform complete
+- **M-1 ✅** — Mentorship Identity & Verification complete
+- **M-2 ✅** — Mentor Profile & Transition Record complete
+- **M-3 ✅** — Mentee Application Layer complete
+
+### Session 1 decisions:
 
 - **Hero redesign rejected** — stepped ASCEND logotype mockup reviewed, current flat design preferred. Kept as-is.
 - **Hero responsive fix skipped** — deferred, not priority before pilot
@@ -351,19 +453,40 @@ These apply to ALL phases — never violate:
 - **Audit log scope confirmed as Bug 19** — admin-only logging does not meet Zero Trust; Phase 17 is the resolution
 - **Analytics seed data** — confirmed fake, will be cleared before pilot (`DELETE FROM "DailyMetricSnapshot"`)
 - **Phase 9B v1** — confirmed superseded by Mentorship Track; v1 build provides Prisma model foundations only
-- **Mentorship Track** — 100% build (M-1→M-17) before pilot opens. Pilot gate locked.
-- **Parallel build track** — Company Launch phases (7, 8, 10B, 11…) running in parallel with Mentorship Track
-- **Phase 7 complete** — Reviews & Ratings: CompanyReview, InterviewReview, SalarySubmission models + full moderation + vote system
-- **M-1 complete** — Identity & Verification Infrastructure: MentorVerification, VerificationDocument, admin queue
-- **M-2 complete** — Mentor Profile & Transition Record: MentorProfile, 6-step onboarding, mentor dashboard, public profile
-- **Phase 8 in progress** — Salary Insights parsed to Cursor: aggregate service, PremiumGate, /salary hub + detail pages
+- **Mentorship Track** — 100% build (M-1→M-17) before pilot opens. Pilot gate moved: was after M-9, now after M-17.
 
 ---
 
 ## HOW TO RESUME IN A NEW CHAT
 
-> "I'm building Ascend — a full-stack job platform. Here is my context handoff document: [paste this file]. Please confirm you understand the full context and we'll continue."
+> "I'm building Ascend — a full-stack job platform. Here is my context handoff document: [paste this file]. Please confirm you understand the full context and we'll continue from Phase 18 (B2B / Enterprise & API Platform)."
 
 ---
 
-*Last updated: 2026-03-01 | Build green | 19 open bugs | Total: 55 phases, 29 done (53%) | Mentorship Track: M-3 next | Company Launch: Phase 8 in progress, Phase 10B next*
+- ✅ **Phase 19** — Growth, Virality & Network Effects: ReferralCode, Referral, ShareEvent, ProfileEndorsement models. lib/growth/referral.ts (generateReferralCode, trackReferralClick, attributeReferral, convertReferral). Referral attribution via Redis + cookie. /join?ref= landing page. ShareButton on job/company/profile/salary/mentor pages (Web Share API + dropdown fallback). Skill endorsements (1st-degree connections only, 5/week Redis rate limit, in-app notification). Invite Teammates card on recruiter dashboard. Registration wired (generateReferralCode + attributeReferral); career-context completion wired (convertReferral). Admin Growth dashboard (referral funnel, share events by channel, top referrers by conversions, viral coefficient). Reward: 30-day feature flag bypass (no monetary reward yet). 6 outcome events. 3 Resend templates (referral-converted, referral-reward-granted, recruiter-invite). See PHASE_19_BUILD.md.
+- ✅ **Phase 20** — Platform Intelligence & Investor Metrics: InvestorSnapshot (daily cron, idempotent), MetricAlert models. lib/intelligence/platform.ts (computeInvestorSnapshot, getRetentionCohorts, getNorthStarMetric — active mentorship engagements this week, getRevenueWaterfall, checkMetricAlerts). 8 APIs (snapshot, snapshots?days=, retention, revenue, north-star, alerts CRUD). Daily cron (00:30 IST, after daily-snapshot). /dashboard/admin/investor (PLATFORM_ADMIN only, unlisted from nav): north star card, 2×3 key metrics grid, 4 recharts (user growth, MRR trend, revenue waterfall, AI usage), retention cohort heatmap, metric alerts panel, CSV export. Exchange rates static env vars, LTV labelled as estimate. 4 outcome events. See PHASE_20_BUILD.md.
+- ✅ **Phase 21** — English-Only Simplification (multilingual rolled back): next-intl removed; /messages/ directory deleted; RTL support removed; LanguageSwitcher removed from Navbar; SupportedLanguage + ParsedJDTranslation models dropped; User.preferredLanguage + preferredRegion removed; jd-translate BullMQ worker deleted; /dashboard/admin/languages removed; /settings/language simplified to /settings/currency (currency selector only). KEPT: User.preferredCurrency, lib/i18n/currency.ts (formatCurrency, convertFromInr, SUPPORTED_CURRENCIES), salary display in preferredCurrency on job cards, PWA manifest + /offline page (lang hardcoded to en). See PHASE21_ROLLBACK_BUILD.md.
+- ✅ **Phase 22** — Marketplace & Career Services: MarketplaceProvider, ResumeReviewOrder, MockInterviewBooking, CoachingSession, ProviderReview, CourseRecommendation, CourseClick, ProfileBadge models; ProviderStatus, ProviderType, OrderStatus, BadgeStatus enums. lib/marketplace/fees.ts (20% platform fee stored at order creation, never recalculated). Provider onboarding multi-step (/marketplace/become-provider) + admin approval queue (mirrors M-1 pattern). Resume review: discovery, provider detail, booking (Razorpay/Stripe), delivery, dispute. Mock interview: discovery, booking, post-session scorecard (4 dimensions), seeker scorecard view. Career coaching: discovery, booking, post-session notes. Course recommendations wired to Phase 10B skills gap card. /marketplace/courses browse + affiliate click tracking. /settings/badges (manual add, admin revoke). Badge display on /profile/[username] + recruiter pipeline badge filter. /dashboard/provider (orders, earnings, reviews, profile — payout manual monthly). /dashboard/admin/marketplace (5 tabs: providers, orders, revenue, courses, badges; dispute resolution + refund). No automated payouts. No OAuth with assessment providers. 7 Resend templates. 8 outcome events. See PHASE_22_BUILD.md.
+
+- ✅ **M-16** — Admin & Ops Layer: MentorshipAuditLog (append-only, all mentorship lifecycle events), OpsAlert models; MentorshipAuditCategory, OpsAlertType enums; ContractStatus extended with PAUSED. lib/mentorship/audit.ts (logMentorshipAction — wraps MentorshipAuditLog + AuditLog, never throws). Audit wired into: verifyOTPAndSign, createContract, expireUnsignedContracts, submitOutcomeClaim, verifyOutcome, disputeOutcome, opsReviewOutcome, recalculateMentorTier, admin tier override. lib/mentorship/ops-alerts.ts (createOpsAlert — idempotent, resolveOpsAlert, checkAndCreateAlerts — 7 checks: verification SLA, contract unsigned, dispute SLA, outcome unacknowledged, high dispute rate, lapsed reverification, stalled engagement). GET /api/admin/mentorship/overview; GET /api/admin/mentorship/audit-log (paginated, filterable); GET/PATCH alerts; GET/detail engagements; POST intervene (WARN_MENTOR, WARN_MENTEE, PAUSE_ENGAGEMENT — cannot release escrow, override disputes, or delete records); GET/detail mentor monitoring. Daily cron (08:00 IST): checkAndCreateAlerts + ops digest email if critical/high. /dashboard/admin/mentorship unified ops centre (5 tabs: Overview, Engagements, Mentor Monitoring, Audit Log, Alerts); "Mentorship Ops" admin nav with unread alert badge. PAUSED contract: engagement banner shown, capacity unchanged, tier cron skips. Zero Trust enforced on all intervention paths. 4 Resend templates. 5 outcome events. See PHASE_M16_BUILD.md.
+
+- ✅ **M-15** — Legal Framework & Compliance: `LegalDocument`, `LegalDocumentSignature` models; `LegalDocumentType` enum (MENTORSHIP_MARKETPLACE_ADDENDUM, MENTOR_CONDUCT_AGREEMENT). `lib/mentorship/legal/documents.ts` (full legal text for both documents as typed constants). `lib/mentorship/legal/signatures.ts` (hasSignedDocument, getActiveDocument, recordSignature, checkMarketplaceAccess). `scripts/seed-legal-documents.ts` (idempotent). 5 APIs (GET doc + signed status, request-otp, sign, user signatures, admin audit). `/mentorship/legal/sign/[type]` signing page (scroll-to-bottom gate, OTP modal — reuses M-5 ContractOTPModal). Mentorship Hub banner for unsigned Addendum. Server-side 403 gate on `POST /api/mentorship/applications` and `POST /api/mentorship/become-mentor`. Step 0 gate in `/mentorship/become-a-mentor`. Signatures exempt from Phase 17 account deletion anonymisation (7yr retention). `/dashboard/admin/mentorship/legal` 7th tab (active docs, signature stats, publish new version, audit). 3 Resend templates. 4 outcome events. See PHASE_M15_BUILD.md.
+- ✅ **M-17** — Mentorship Analytics & Insights: `MentorshipAnalyticsSnapshot`, `MentorAnalyticsSnapshot` models (daily cron, idempotent upsert). `lib/mentorship/analytics.ts` (7 functions: computePlatformSnapshot, computeMentorSnapshot, computeAllMentorSnapshots — batched 50/100ms, getTransitionOutcomeBreakdown, getDisputeRateByTier, getMentorProgressToNextTier, getMenteeEngagementSummary). 5 platform APIs (PLATFORM_ADMIN), 4 mentor own APIs, 2 mentee own APIs. Daily cron 01:00 IST. "Analytics" 6th tab in `/dashboard/admin/mentorship` (6 metric cards, 4 recharts, transition table, dispute-by-tier table). `/dashboard/mentor/analytics` (performance card, tier progress with blockers, engagements table, conditional trend charts, earnings stub). `/dashboard/mentee/engagements` (5-card strip, engagements list — no PII beyond first name + transition). `/mentorship` hub "My Progress" card. Steno rate and earnings both stubbed (M-7/M-6 pending). 5 outcome events. ⚠️ `seeker_pilot_open = true` NOT YET SET — manual step pending. See PHASE_M17_BUILD.md.
+
+- ✅ **Phase 18** — B2B / Enterprise & API Platform: `ApiKey` (SHA-256 hashed, scoped, `asc_live_`/`asc_test_` prefixed), `ApiUsageLog`, `AtsWebhookEvent`, `CompanyWebhook`, `AtsIntegration`, `SsoConfig`, `CareersPageConfig`, `BulkImportJob` models; `AtsProvider`, `BulkImportType`, `BulkJobStatus` enums. `lib/api/keys.ts` (generateApiKey, validateApiKey, hasScope, revokeApiKey). `lib/api/middleware.ts` (`withApiAuth()` + Redis sliding window rate limit 1,000 req/hr). `lib/api/usage.ts` (getUsageSummary). Public REST API v1: Jobs (CRUD), Applications (read/update), Candidates (read), Outbound webhooks — all company-scoped, Enterprise-gated. Inbound ATS webhooks: `/api/webhooks/ats/greenhouse|lever|workday|generic/[companyId]` — async via BullMQ `ats-webhook-processor`. BullMQ: `bulk-import` + `webhook-delivery` (retry 3x exponential). `PLAN_LIMITS` updated (apiAccess, whiteLabel, ssoEnabled, bulkImport, atsWebhooks). `/careers/[companySlug]` white-label public page + custom domain middleware (Redis-cached). Bulk import (CSV/JSON, max 500 rows) + application export (CSV stream). `/developers` portal (overview, API reference, webhook docs, changelog — public/static). `/dashboard/company/api` (4 tabs: API Keys, Usage, Webhooks, ATS Integration). `/dashboard/company/careers` config UI. `/dashboard/company/sso` config form (collection only — PLATFORM_ADMIN activates). `/dashboard/admin/enterprise` (enterprise companies, SSO activation, ATS events log). 8 outcome events. See PHASE_18_BUILD.md.
+
+- ✅ **GST Invoicing** — Tax-compliant invoicing layer: `Invoice`, `InvoiceLineItem`, `InvoiceSequence`, `BillingProfile` models; `GstType` (CGST_SGST / IGST), `InvoiceStatus`, `InvoicePaymentType` enums. `lib/invoice/config.ts` (PLATFORM_ENTITY — Coheron Tech, GSTIN 29AANCC3402A1Z3, SAC 998314, `getFinancialYear()`). `lib/invoice/generate.ts` (generateInvoiceNumber atomic sequence ASC/YYYY-YY/XXXX, determineGstType, calculateGst, createInvoice, finaliseInvoice, voidInvoice). `lib/invoice/pdf.ts` (generateInvoicePdf via pdf-lib, uploadInvoicePdf to S3). BullMQ `invoice-pdf` worker. Legal pages updated with Coheron Tech address. `/dashboard/billing` Invoices + Billing Details tabs. `/dashboard/admin/invoices` (GST summary cards, CSV export for CA). 2 Resend templates. 5 outcome events. **Deferred:** Subscription invoicing — Razorpay/Stripe webhook lacks reliable userId, to be wired when subscription payment flow resolves user. M-6 mentorship tranche `createInvoice()` — integration pending M-6 escrow models (wired in M-6). See PHASE_GST_INVOICING_BUILD.md.
+
+- ✅ **M-12** — Mentorship Circles (Group Cohorts): 4–6 mentees, one mentor, same transition goal. Mentor creates circle (focus, max mentees, fixed start, price per mentee). Platform matches eligible mentees. Circle locks when full or at start date. Daily.co group room + Ascend Steno (speaker attribution per member). Individual Goal Documents per mentee. Optional 1:1 slot 15 mins/mentee/session. One contract + individual escrow per mentee. Peer layer: Goal Documents visible to cohort (consent-gated), async peer check-ins via platform messaging. Pricing: mentor sets within band, ceiling = 60% of 1:1 price. Capacity: one circle = 1 mentor slot. See PHASE_M12_BUILD.md.
+
+- ✅ **M-14** — Platform Fee & Revenue Layer: `TrancheFeeRecord` (immutable per-tranche fee audit — tier at release, rate applied, amounts), `MentorshipRevenueSnapshot` (daily cron). `lib/escrow/fees.ts` (getLiveFeeRate — live tier at release not signing snapshot, calculateFeeAmounts, hasTierChanged, formatFeeRate). `lib/escrow/revenue.ts` (computeDailyRevenueSnapshot, getRevenueSummary, getMentorPayoutSummary, getPlatformFeeSummary). `releaseTranche()` updated — recalculates fee at release using live tier, creates `TrancheFeeRecord`, logs tier change if detected. Daily cron 02:00 IST. M-17 earnings stubs resolved — `computeMentorSnapshot()` + `computePlatformSnapshot()` now use real payout data. `/dashboard/mentor/analytics` real figures. `/dashboard/mentor` fee info card (current rate + tier-up nudge). "Revenue" 9th tab in `/dashboard/admin/mentorship` (cards, 3 recharts, tier change log). 4 APIs. 4 outcome events. See PHASE_M14_BUILD.md.
+
+- ✅ **M-7** — Meeting Room, Ascend Steno & Session Evidence: SessionRoom, SessionJoinLog, StenoConsentLog, SessionTranscript, StenoExtraction, SessionRecord, SessionExceptionNote, MessageFlag models. Real-time Deepgram transcription (audio never stored). Pop-up consent gate — decline logs waiver, session proceeds, dispute rights waived per session. 60% slot duration minimum threshold. Exception flow (non-initiating party files note → 48hr acknowledge → remainder carries to next session). lib/storage/ abstraction (local dev, Vultr Object Storage prod — S3-compatible). GPT-4o Mini extraction. 3 BullMQ workers. Daily.co webhook (idempotent). Off-platform keyword detection 3-strike system. 7 APIs. 10 Resend templates. 15 outcome events. See PHASE_M7_BUILD.md.
+
+- ✅ **M-13** — Mentor Monetisation Unlock: MentorMonetisationStatus + MentorSeoBoost models. Unlock criteria (3+ verified outcomes, 90%+ Steno rate, 0 upheld disputes, 6+ months, re-verification current) — automatic weekly check, never manual. canChargeMentees requires both unlock + MENTOR_MARKETPLACE plan. Session fee floor ₹2,000 / ceiling ₹25,000. lib/mentorship/monetisation.ts + lib/mentorship/seo-boost.ts. SEO boost pricing (₹999/14d, ₹1,999/30d, ₹2,999/mo recurring) — 1.3x discovery score multiplier same-tier only. Monthly payout PDF + annual FY summary. 9 Resend templates. 8 outcome events. See PHASE_M13_BUILD.md.
+
+- ✅ **M-12** — Mentorship Circles (Group Cohorts): MentorshipCircle, CircleMember, CircleSession, CircleOneOnOneSlot, CirclePeerCheckIn models. CIRCLE_CONFIG (4–6 mentees, 90-day DEEP, 90-min sessions, 15-min optional 1:1s, 60% price ceiling, 1 mentor slot). lib/mentorship/circles.ts (createCircle, applyToCircle, acceptCircleApplication, lockCircle, initialiseCircleEngagement, createCircleSession). Group Steno: Deepgram diarization → buildCircleSpeakerMap() → GPT-4o Mini multi-mentee extraction (per-mentee commitments, action items, goal progress signals). Individual contracts + escrow per member. Peer layer: Goal Document sharing (opt-in at signing), async peer check-ins (500 chars). Daily cron: lock circles at startDate. /mentorship/circles public listing. /mentorship/circles/[circleId] detail. /mentorship/circles/create. /mentorship/circles/[circleId]/manage. 10 APIs. 10 Resend templates. 8 outcome events. See PHASE_M12_BUILD.md.
+
+- ✅ **M-9** — Dispute Resolution Engine: MentorshipDispute, DisputeEvidence (immutable), DisputeStrike models. 6 dispute categories with deterministic DISPUTE_RULES — platform reads evidence, never adjudicates stories. Auto-resolved: SESSION_DID_NOT_HAPPEN, BELOW_MINIMUM_DURATION, STENO_NOT_GENERATED, OFF_PLATFORM_SOLICITATION. OPS_REVIEW: COMMITMENTS_NOT_MET (partial), OTHER. freezeTranche() on filing, unfreezeTranche() on outcome. recalculateDisputeRate() + runMonetisationUnlockCheck() on upheld. M-13 upheldDisputeCount stub resolved. Strike system enforced. 3 BullMQ workers. 6 APIs. 10 Resend templates. 10 outcome events. See PHASE_M9_BUILD.md.
+
+*Last updated: 2026-03-02 — Session 8 | 🎉 ALL 62 PHASES COMPLETE | Build green | Total: 62/62 done (100%) | ⚠️ ACTION REQUIRED: Set seeker_pilot_open = true → Pilot opens | Entity: Coheron Tech Pvt Ltd | GSTIN: 29AANCC3402A1Z3*

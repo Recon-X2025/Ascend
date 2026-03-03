@@ -27,7 +27,7 @@ export function HeroSection() {
             </p>
             <AscendLogotype />
             <p className="font-display font-normal text-[1.4rem] text-ink-2 mt-8 max-w-[520px] leading-snug">
-              Your career has a direction. We make it inevitable.
+              Direction is yours. Structure is ours.
             </p>
             <p className="font-body text-xs text-ink-3 tracking-[0.1em] mt-4">
               Intelligent matching, Fit score, Resume optimiser
