@@ -93,14 +93,35 @@ export default async function PublicProfilePage({ params }: PageProps) {
     });
     const role = (session.user as { role?: string }).role;
     if (role === "RECRUITER") {
-      const { notifyProfileView } = await import("@/lib/notifications/create");
-      const recruiter = await prisma.recruiterProfile.findUnique({
-        where: { userId: session.user.id },
-        select: { companyName: true },
+      const [{ recordProfileView }, { notifyProfileView }, { canUseFeature }] = await Promise.all([
+        import("@/lib/profile-views"),
+        import("@/lib/notifications/create"),
+        import("@/lib/payments/gate"),
+      ]);
+      const [recruiter, companyEmployee] = await Promise.all([
+        prisma.recruiterProfile.findUnique({
+          where: { userId: session.user.id },
+          select: { companyName: true, designation: true },
+        }),
+        prisma.companyEmployee.findFirst({
+          where: { userId: session.user.id },
+          select: { companyId: true, company: { select: { name: true } } },
+        }),
+      ]);
+      const viewerCompanyId = companyEmployee?.companyId ?? null;
+      const viewerCompanyName = companyEmployee?.company.name ?? recruiter?.companyName ?? null;
+      const viewerRole = recruiter?.designation ?? "Recruiter";
+
+      await recordProfileView({
+        viewerId: session.user.id,
+        profileUserId: profile.userId,
+        viewerCompanyId,
+        viewerCompanyName,
+        viewerRole,
       });
-      if (recruiter?.companyName) {
-        await notifyProfileView(profile.userId, recruiter.companyName);
-      }
+
+      const { allowed: canSeeCompany } = await canUseFeature(profile.userId, "whoViewedProfile");
+      await notifyProfileView(profile.userId, canSeeCompany ? viewerCompanyName : null);
     }
   }
 

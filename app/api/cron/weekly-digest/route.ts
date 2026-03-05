@@ -1,5 +1,6 @@
 /**
- * Phase 10B: Enqueue weekly digest email for all seekers who opted in.
+ * Phase 10B + BL-2: Enqueue weekly digest email for seekers who opted in.
+ * BL-2: Enhanced content (job matches, platform stats). Respects marketingConsent.
  * Run Monday 7am IST.
  */
 import { NextResponse } from "next/server";

@@ -44,12 +44,15 @@ export async function notifyFitScoreImproved(
   });
 }
 
-export async function notifyProfileView(userId: string, recruiterCompany: string) {
+export async function notifyProfileView(userId: string, recruiterCompany?: string | null) {
+  const body = recruiterCompany
+    ? `A recruiter from ${recruiterCompany} viewed your profile.`
+    : "A recruiter viewed your profile.";
   return createNotification({
     userId,
     type: NotificationType.PROFILE_VIEW,
     title: "Your profile was viewed",
-    body: `A recruiter from ${recruiterCompany} viewed your profile.`,
+    body,
     linkUrl: "/dashboard/seeker",
   });
 }

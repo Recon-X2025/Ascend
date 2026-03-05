@@ -55,25 +55,32 @@ export async function withApiAuth(
     return NextResponse.json({ error: "Insufficient scope", required: requiredScope }, { status: 403 });
   }
 
-  // 2. Rate limiting (sliding window via sorted set)
+  // 2. Rate limiting (sliding window via sorted set) — 3s timeout, fail open if Redis unreachable
+  const RATE_LIMIT_TIMEOUT_MS = 3000;
   try {
-    const key = `${RATE_LIMIT_KEY_PREFIX}${apiKey.id}`;
-    const now = Date.now();
-    const windowStart = now - RATE_LIMIT_WINDOW_MS;
-    await redis.zremrangebyscore(key, 0, windowStart);
-    const count = await redis.zcard(key);
-    if (count >= RATE_LIMIT_MAX) {
-      const oldest = await redis.zrange(key, 0, 0, "WITHSCORES");
-      // WITHSCORES returns [member, score, member2, score2, ...]; we want the oldest (first) score
-      const oldestScore = oldest[1] ? parseInt(String(oldest[1]), 10) : 0;
-      const retryAfter = Math.ceil((oldestScore + RATE_LIMIT_WINDOW_MS - now) / 1000);
-      return NextResponse.json(
-        { error: "Rate limit exceeded" },
-        { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } }
-      );
-    }
-    await redis.zadd(key, now, `${now}`);
-    await redis.expire(key, Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) + 60);
+    const rateLimitResult = await Promise.race([
+      (async () => {
+        const key = `${RATE_LIMIT_KEY_PREFIX}${apiKey.id}`;
+        const now = Date.now();
+        const windowStart = now - RATE_LIMIT_WINDOW_MS;
+        await redis.zremrangebyscore(key, 0, windowStart);
+        const count = await redis.zcard(key);
+        if (count >= RATE_LIMIT_MAX) {
+          const oldest = await redis.zrange(key, 0, 0, "WITHSCORES");
+          const oldestScore = oldest[1] ? parseInt(String(oldest[1]), 10) : 0;
+          const retryAfter = Math.ceil((oldestScore + RATE_LIMIT_WINDOW_MS - now) / 1000);
+          return NextResponse.json(
+            { error: "Rate limit exceeded" },
+            { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfter)) } }
+          );
+        }
+        await redis.zadd(key, now, `${now}`);
+        await redis.expire(key, Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) + 60);
+        return null;
+      })(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), RATE_LIMIT_TIMEOUT_MS)),
+    ]);
+    if (rateLimitResult) return rateLimitResult;
   } catch {
     // Redis down — allow request (fail open)
   }

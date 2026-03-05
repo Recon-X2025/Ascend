@@ -4,6 +4,8 @@
 
 **504 on session?** Ensure `NEXTAUTH_SECRET` is set (generate with: `openssl rand -base64 32`). Set `NEXTAUTH_URL` to `https://ascend-chi-nine.vercel.app` (or your production domain).
 
+**API routes hanging (pending forever)?** Typesense and Redis (if Vultr-hosted) may be unreachable from Vercel. Code now has 3s timeouts: Typesense falls back to Prisma for jobs; Redis operations return empty/degraded responses so routes don't hang.
+
 Everything you change is in **websites** (no code editing needed, except one push at the end). Here’s where each update happens.
 
 ---

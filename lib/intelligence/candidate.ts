@@ -72,6 +72,12 @@ export interface HeatmapResult {
   bestPeriod: { day: string; period: string; count: number } | null;
 }
 
+export interface WeeklyDigestJobMatch {
+  title: string;
+  companyName: string;
+  slug: string;
+}
+
 export interface WeeklyDigestData {
   firstName: string;
   marketValue: MarketValueResult | null;
@@ -82,6 +88,10 @@ export interface WeeklyDigestData {
   responseRate: number | null;
   bestTimeLine: string | null;
   dashboardUrl: string;
+  /** BL-2: New job matches from saved search / target role */
+  newJobMatches?: WeeklyDigestJobMatch[];
+  /** BL-2: Platform stats for re-engagement */
+  platformStats?: { newJobsThisWeek: number };
 }
 
 /**
@@ -485,17 +495,32 @@ export async function computeHeatmap(
 
 /**
  * Assemble weekly digest data from snapshot + fresh bits.
+ * BL-2: Adds new job matches (from SavedSearch/JobAlert or target role) and platform stats.
  */
 export async function computeWeeklyDigest(
   userId: string
 ): Promise<WeeklyDigestData | null> {
-  const [user, snapshot] = await Promise.all([
+  const [user, snapshot, firstAlert, careerContext, jobCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { name: true },
     }),
     prisma.candidateInsightSnapshot.findUnique({
       where: { userId },
+    }),
+    prisma.jobAlert.findFirst({
+      where: { userId, active: true },
+      select: { query: true, filters: true },
+    }),
+    prisma.userCareerContext.findUnique({
+      where: { userId },
+      select: { targetRole: true },
+    }),
+    prisma.jobPost.count({
+      where: {
+        status: "ACTIVE",
+        publishedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
     }),
   ]);
   if (!user) return null;
@@ -547,6 +572,34 @@ export async function computeWeeklyDigest(
     bestTimeLine = `Most jobs posted ${dayLabel} ${period}`;
   }
 
+  // BL-2: New job matches from saved search / target role
+  let newJobMatches: WeeklyDigestJobMatch[] | undefined;
+  try {
+    const { searchJobs } = await import("@/lib/search/queries/jobs");
+    const searchQuery = firstAlert?.query ?? careerContext?.targetRole ?? "jobs";
+    const filters = (firstAlert?.filters ?? {}) as Record<string, unknown>;
+    const result = await searchJobs({
+      q: searchQuery,
+      limit: 5,
+      datePosted: "7d",
+      location: typeof filters.location === "string" ? filters.location : undefined,
+    });
+    const ids = result.hits.slice(0, 5).map((h) => parseInt(h.id, 10));
+    const slugs = await prisma.jobPost.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, slug: true },
+    });
+    const slugById = new Map(slugs.map((s) => [s.id, s.slug]));
+    newJobMatches = result.hits.slice(0, 5).map((h) => ({
+      title: h.title,
+      companyName: h.companyName ?? "Company",
+      slug: slugById.get(parseInt(h.id, 10)) ?? h.id,
+    }));
+    if (newJobMatches.length === 0) newJobMatches = undefined;
+  } catch {
+    // Typesense may be unavailable; skip job matches
+  }
+
   return {
     firstName,
     marketValue,
@@ -557,6 +610,8 @@ export async function computeWeeklyDigest(
     responseRate,
     bestTimeLine,
     dashboardUrl,
+    newJobMatches,
+    platformStats: { newJobsThisWeek: jobCount },
   };
 }
 

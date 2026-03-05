@@ -14,7 +14,7 @@ const FEATURE_FLAGS = [
   { key: "notifications_enabled", enabled: true, description: "Enable in-app notification centre" },
   { key: "profile_views_enabled", enabled: true, description: "Track and display profile view counts" },
   { key: "easy_apply_enabled", enabled: true, description: "Enable Easy Apply on job listings" },
-  { key: "seeker_pilot_open", enabled: false, description: "Open seeker pilot to public registrations" },
+  { key: "seeker_pilot_open", enabled: true, description: "Open registration for all roles (job seeker, recruiter, mentor)" },
   { key: "cover_letter_generator", enabled: true, description: "Phase 11: Cover letter generator" },
   { key: "interview_prep", enabled: true, description: "Phase 11: Interview question generator" },
   { key: "profile_optimiser", enabled: true, description: "Phase 11: Profile strength analyser" },
@@ -127,6 +127,25 @@ async function main() {
     });
   }
   console.log(`Created up to 2 ResumeVersions for ${user.email}.`);
+
+  // BL-9: Seed default cohorts
+  try {
+    const cohortData = [
+      { name: "SWE → PM 2025", transitionPath: "SWE → PM", description: "Software engineers transitioning to Product Management." },
+      { name: "IC → Manager 2025", transitionPath: "IC → Manager", description: "Individual contributors stepping into people management." },
+    ];
+    for (const c of cohortData) {
+      const slug = `${c.transitionPath.toLowerCase().replace(/\s*→\s*/g, "-")}-2025`;
+      await prisma.cohort.upsert({
+        where: { slug },
+        update: {},
+        create: { name: c.name, transitionPath: c.transitionPath, slug, description: c.description },
+      });
+    }
+    console.log(`Seeded ${cohortData.length} cohorts.`);
+  } catch (e) {
+    console.warn("Cohort seed skipped (table may not exist):", (e as Error).message);
+  }
 }
 
 main()

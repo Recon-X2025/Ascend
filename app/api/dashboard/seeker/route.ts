@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/nextauth";
 import { prisma } from "@/lib/prisma/client";
+import { getProfileViewInsights } from "@/lib/profile-views";
 
 export async function GET() {
   try {
@@ -103,6 +104,8 @@ export async function GET() {
         .catch(() => [] as { company: { slug: string; name: string } }[]),
     ]);
 
+    const profileViewInsights = await getProfileViewInsights(userId).catch(() => null);
+
   const applicationStats = await prisma.jobApplication.groupBy({
     by: ["status"],
     where: { applicantId: userId },
@@ -198,6 +201,7 @@ export async function GET() {
         headline: profile?.headline,
         completionScore: profile?.completionScore ?? 0,
         profileViews: profile?.profileViews ?? 0,
+        profileViewInsights: profileViewInsights ?? undefined,
       },
       hasMentorMatch,
       applications: {

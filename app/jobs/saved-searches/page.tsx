@@ -15,11 +15,15 @@ export default async function SavedSearchesPage() {
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true, query: true, filters: true, createdAt: true },
   });
+  const savedCount = list.length;
+  const MAX_SAVED_SEARCHES = 10;
 
   return (
     <div className="page-container py-8">
       <h1 className="text-2xl font-semibold text-text-primary">Saved searches</h1>
-      <p className="mt-1 text-muted-foreground">Quickly re-run a saved search or create an alert.</p>
+      <p className="mt-1 text-muted-foreground">
+        Quickly re-run a saved search or create an alert. You have {savedCount}/{MAX_SAVED_SEARCHES} saved searches.
+      </p>
       <div className="mt-6">
         <SavedSearchesList initialList={list} />
       </div>

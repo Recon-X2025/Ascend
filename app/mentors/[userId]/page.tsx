@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { PublicMentorProfile } from "@/components/mentorship/PublicMentorProfile";
 import { ReportButton } from "@/components/common/ReportButton";
 import { ShareButton } from "@/components/growth/ShareButton";
+import { isFollowing, getFollowerCount } from "@/lib/mentorship/follow";
 import {
   MENTOR_COMPANY_TYPE_LABELS,
   M2_FOCUS_AREA_LABELS,
@@ -34,6 +35,11 @@ export default async function PublicMentorPage({
     notFound();
   }
 
+  const [isFollowingMentor, followerCount] = await Promise.all([
+    session?.user?.id ? isFollowing(session.user.id, userId) : false,
+    getFollowerCount(userId),
+  ]);
+
   return (
     <div className="min-h-screen bg-[#F7F6F1] px-4 py-8 relative">
       <div className="absolute top-6 right-4 flex items-center gap-2">
@@ -52,6 +58,10 @@ export default async function PublicMentorPage({
       <div className="max-w-2xl mx-auto">
         <PublicMentorProfile
           profile={profile}
+          mentorUserId={userId}
+          isFollowing={isFollowingMentor}
+          followerCount={followerCount}
+          showFollowButton={!!session?.user?.id && session.user.id !== userId}
           labels={{
             companyType: MENTOR_COMPANY_TYPE_LABELS,
             focusArea: M2_FOCUS_AREA_LABELS,

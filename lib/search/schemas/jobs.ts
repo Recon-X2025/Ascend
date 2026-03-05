@@ -64,17 +64,33 @@ export type TypesenseJobDocument = {
 };
 
 export async function ensureJobsCollection(): Promise<void> {
-  const client = typesenseClient;
-  if (!client) return;
-
   try {
-    const collections = await client.collections().retrieve();
-    const exists = collections.some((c) => c.name === JOBS_COLLECTION);
-    if (!exists) {
-      await client.collections().create(jobsSchema);
+    try {
+      await typesenseClient.collections(JOBS_COLLECTION).retrieve();
+    } catch (err: unknown) {
+      const msg = String((err as Error)?.message ?? "");
+      const status = (err as { httpStatus?: number })?.httpStatus;
+      if (status === 404 || msg.includes("404") || msg.toLowerCase().includes("not found")) {
+        await typesenseClient.collections().create(jobsSchema);
+      } else {
+        throw err;
+      }
     }
   } catch (err) {
     console.error("[Typesense] ensureJobsCollection error:", err);
     throw err;
   }
+}
+
+/** Drop and recreate the jobs collection. Use before full reindex to ensure correct schema. */
+export async function recreateJobsCollection(): Promise<void> {
+  try {
+    await typesenseClient.collections(JOBS_COLLECTION).delete();
+  } catch (err: unknown) {
+    const msg = String((err as Error)?.message ?? "");
+    if (!msg.includes("404") && !msg.toLowerCase().includes("not found")) {
+      console.warn("[Typesense] recreateJobsCollection delete (may not exist):", err);
+    }
+  }
+  await typesenseClient.collections().create(jobsSchema);
 }

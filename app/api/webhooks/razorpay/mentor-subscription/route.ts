@@ -134,7 +134,25 @@ export async function POST(req: NextRequest) {
         data: { canChargeMentees: true },
       });
     }
-    // TODO: createInvoice for mentor subscription
+    // BL-17: Subscription invoicing
+    try {
+      const { createInvoice } = await import("@/lib/invoice/generate");
+      await createInvoice({
+        userId,
+        paymentType: "SUBSCRIPTION",
+        lineItems: [
+          {
+            description: `Mentor Marketplace — ${billingPeriod === "annual" ? "Annual" : "Monthly"} subscription`,
+            unitPricePaise: amountPaid,
+            quantity: 1,
+          },
+        ],
+        paymentId: payment.id,
+        orderId,
+      });
+    } catch (invErr) {
+      console.error("[webhooks/razorpay/mentor-subscription] createInvoice failed:", invErr);
+    }
   } catch (e) {
     console.error("[webhooks/razorpay/mentor-subscription] Failed:", e);
     return NextResponse.json({ success: false, error: "Processing failed" }, { status: 500 });

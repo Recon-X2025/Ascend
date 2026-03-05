@@ -5,6 +5,7 @@
 
 import { createHash } from "crypto";
 import { redis } from "@/lib/redis/client";
+import { withTimeout } from "@/lib/redis/with-timeout";
 
 const SEARCH_PREFIX = "search:jobs:";
 const SUGGESTIONS_PREFIX = "search:suggestions:";
@@ -20,7 +21,7 @@ function hashKey(params: unknown): string {
 
 export async function getCachedSearch(key: string): Promise<unknown | null> {
   try {
-    const raw = await redis.get(`${SEARCH_PREFIX}${key}`);
+    const raw = await withTimeout(redis.get(`${SEARCH_PREFIX}${key}`), null);
     return raw ? (JSON.parse(raw) as unknown) : null;
   } catch {
     return null;
@@ -29,7 +30,10 @@ export async function getCachedSearch(key: string): Promise<unknown | null> {
 
 export async function setCachedSearch(key: string, data: unknown, ttlSeconds: number = SEARCH_TTL): Promise<void> {
   try {
-    await redis.setex(`${SEARCH_PREFIX}${key}`, ttlSeconds, JSON.stringify(data));
+    await withTimeout(
+      redis.setex(`${SEARCH_PREFIX}${key}`, ttlSeconds, JSON.stringify(data)),
+      undefined
+    );
   } catch (err) {
     console.error("[search] setCachedSearch error:", err);
   }
@@ -41,7 +45,7 @@ export function searchCacheKey(params: unknown): string {
 
 export async function getCachedSuggestions(querySlug: string): Promise<unknown | null> {
   try {
-    const raw = await redis.get(`${SUGGESTIONS_PREFIX}${querySlug}`);
+    const raw = await withTimeout(redis.get(`${SUGGESTIONS_PREFIX}${querySlug}`), null);
     return raw ? (JSON.parse(raw) as unknown) : null;
   } catch {
     return null;
@@ -50,7 +54,10 @@ export async function getCachedSuggestions(querySlug: string): Promise<unknown |
 
 export async function setCachedSuggestions(querySlug: string, data: unknown): Promise<void> {
   try {
-    await redis.setex(`${SUGGESTIONS_PREFIX}${querySlug}`, SUGGESTIONS_TTL, JSON.stringify(data));
+    await withTimeout(
+      redis.setex(`${SUGGESTIONS_PREFIX}${querySlug}`, SUGGESTIONS_TTL, JSON.stringify(data)),
+      undefined
+    );
   } catch (err) {
     console.error("[search] setCachedSuggestions error:", err);
   }
@@ -62,7 +69,7 @@ export function suggestionsCacheKey(q: string): string {
 
 export async function getJobFeed(key: string): Promise<unknown | null> {
   try {
-    const raw = await redis.get(`${FEED_PREFIX}${key}`);
+    const raw = await withTimeout(redis.get(`${FEED_PREFIX}${key}`), null);
     return raw ? (JSON.parse(raw) as unknown) : null;
   } catch {
     return null;
@@ -71,7 +78,10 @@ export async function getJobFeed(key: string): Promise<unknown | null> {
 
 export async function cacheJobFeed(key: string, data: unknown, ttlSeconds: number = FEED_TTL): Promise<void> {
   try {
-    await redis.setex(`${FEED_PREFIX}${key}`, ttlSeconds, JSON.stringify(data));
+    await withTimeout(
+      redis.setex(`${FEED_PREFIX}${key}`, ttlSeconds, JSON.stringify(data)),
+      undefined
+    );
   } catch (err) {
     console.error("[search] cacheJobFeed error:", err);
   }

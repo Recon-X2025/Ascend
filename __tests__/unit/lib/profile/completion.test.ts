@@ -268,4 +268,76 @@ describe("calculateCompletionScore", () => {
     const sum = Object.values(result.breakdown).reduce((a, b) => a + b, 0);
     expect(sum).toBe(result.total);
   });
+
+  test("BL-6: returns QUARTER milestone at 25", () => {
+    const profile = makeProfile({
+      headline: "H",
+      summary: "S",
+      experiences: [{} as unknown as Experience],
+    });
+    const result = calculateCompletionScore(profile);
+    expect(result.milestone).toBe("QUARTER");
+  });
+
+  test("BL-6: returns HALF milestone at 50", () => {
+    const profile = makeProfile({
+      headline: "H",
+      summary: "S",
+      city: "M",
+      country: "IN",
+      experiences: [{} as unknown as Experience],
+      educations: [{} as unknown as Education],
+      skills: [{ skill: { name: "A" } }] as unknown as SkillWithName[],
+    });
+    const result = calculateCompletionScore(profile);
+    expect(result.milestone).toBe("HALF");
+  });
+
+  test("BL-6: returns COMPLETE milestone at 100", () => {
+    const fullProfile = makeProfile({
+      headline: "H",
+      summary: "S",
+      city: "M",
+      country: "IN",
+      avatarUrl: "x",
+      experiences: [{} as unknown as Experience],
+      educations: [{} as unknown as Education],
+      skills: [{ skill: { name: "A" } }, { skill: { name: "B" } }, { skill: { name: "C" } }] as unknown as SkillWithName[],
+      resumes: [{} as unknown as Resume],
+      noticePeriod: "IMMEDIATE" as NoticePeriod,
+      workMode: "REMOTE" as WorkMode,
+      currentCTC: 1000,
+      expectedCTC: 2000,
+      certifications: [{}] as unknown as Certification[],
+      projects: [{}] as unknown as Project[],
+      awards: [{}] as unknown as Award[],
+      languages: [{}] as unknown as ProfileLanguage[],
+      volunteerWork: [{}] as unknown as VolunteerWork[],
+    });
+    const result = calculateCompletionScore(fullProfile);
+    expect(result.total).toBe(100);
+    expect(result.milestone).toBe("COMPLETE");
+  });
+
+  test("BL-6: targetRole-aware nudge when skills incomplete and skills is first missing", () => {
+    // Profile complete except skills (headline, summary, location, avatar, experience, education, resume, preferences, extras)
+    const profile = makeProfile({
+      headline: "H",
+      summary: "S",
+      city: "M",
+      country: "IN",
+      avatarUrl: "x",
+      experiences: [{} as unknown as Experience],
+      educations: [{} as unknown as Education],
+      skills: [{ skill: { name: "A" } }] as unknown as SkillWithName[],
+      resumes: [{} as unknown as Resume],
+      noticePeriod: "IMMEDIATE" as NoticePeriod,
+      workMode: "REMOTE" as WorkMode,
+      currentCTC: 1000,
+      expectedCTC: 2000,
+    });
+    const result = calculateCompletionScore(profile, { targetRole: "Product Manager" });
+    expect(result.nextStep).toContain("Product Manager");
+    expect(result.nextStep).toMatch(/Add 2 more skills/);
+  });
 });

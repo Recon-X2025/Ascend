@@ -23,11 +23,16 @@ export interface CompletionBreakdown {
   extras: number;
 }
 
+/** BL-6: Milestone tiers for gamification. */
+export type ProfileStrengthMilestone = "NONE" | "QUARTER" | "HALF" | "THREE_QUARTERS" | "COMPLETE";
+
 export interface CompletionResult {
   total: number;
   breakdown: CompletionBreakdown;
   missing: string[];
   nextStep: string;
+  /** BL-6: Current milestone tier based on 25/50/75/100. */
+  milestone: ProfileStrengthMilestone;
 }
 
 const WEIGHTS = {
@@ -40,7 +45,15 @@ const WEIGHTS = {
   extras: 5,
 } as const;
 
-export function calculateCompletionScore(profile: FullProfile): CompletionResult {
+export interface CompletionOptions {
+  /** BL-6: When set, next-step nudges can reference target role (e.g. "Add 2 more skills for Product Manager"). */
+  targetRole?: string;
+}
+
+export function calculateCompletionScore(
+  profile: FullProfile,
+  options?: CompletionOptions
+): CompletionResult {
   const missing: string[] = [];
   const breakdown: CompletionBreakdown = {
     personalInfo: 0,
@@ -124,17 +137,36 @@ export function calculateCompletionScore(profile: FullProfile): CompletionResult
   breakdown.extras = Math.min(extrasCount, WEIGHTS.extras);
 
   const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
+  const cappedTotal = Math.min(100, total);
+
+  // BL-6: Milestone at 25/50/75/100
+  let milestone: ProfileStrengthMilestone = "NONE";
+  if (cappedTotal >= 100) milestone = "COMPLETE";
+  else if (cappedTotal >= 75) milestone = "THREE_QUARTERS";
+  else if (cappedTotal >= 50) milestone = "HALF";
+  else if (cappedTotal >= 25) milestone = "QUARTER";
 
   // Single most impactful next step: first missing item
-  const nextStep =
+  let nextStep =
     missing.length > 0
       ? missing[0]
       : "Your profile is complete. Keep it updated!";
 
+  // BL-6: Target-role-aware nudge for skills when career intent has targetRole
+  if (
+    options?.targetRole &&
+    nextStep === "Add at least 3 skills" &&
+    profile.skills.length > 0
+  ) {
+    const need = 3 - profile.skills.length;
+    nextStep = `Add ${need} more skill${need !== 1 ? "s" : ""} for your target role (${options.targetRole})`;
+  }
+
   return {
-    total: Math.min(100, total),
+    total: cappedTotal,
     breakdown,
     missing,
     nextStep,
+    milestone,
   };
 }

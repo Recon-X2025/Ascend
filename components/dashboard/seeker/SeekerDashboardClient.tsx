@@ -5,7 +5,7 @@ import useSWR from "swr";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ProfileCompletionCard } from "./ProfileCompletionCard";
+import { ProfileStrengthCard } from "./ProfileStrengthCard";
 import { ApplicationStatsCard } from "./ApplicationStatsCard";
 import { RecentApplicationsList } from "./RecentApplicationsList";
 import { SavedJobsCard } from "./SavedJobsCard";
@@ -13,6 +13,9 @@ import { AlertsCard } from "./AlertsCard";
 import { OptimisedResumesCard } from "./OptimisedResumesCard";
 import { NetworkCard } from "./NetworkCard";
 import { FeedPreview } from "./FeedPreview";
+import { TransitionCommunityWidget } from "./TransitionCommunityWidget";
+import { SuccessStoryPromptCard } from "@/components/mentorship/SuccessStoryPromptCard";
+import { MilestonePromptCard } from "@/components/milestones/MilestonePromptCard";
 import { MentorMatchCard } from "./MentorMatchCard";
 import { MentorshipWidget } from "./MentorshipWidget";
 import { AddReviewPromptCard } from "./AddReviewPromptCard";
@@ -145,10 +148,11 @@ export function SeekerDashboardClient() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ErrorBoundary>
-          <ProfileCompletionCard
-            completionScore={data?.profile?.completionScore ?? 0}
+          <ProfileStrengthCard
+            initialCompletionScore={data?.profile?.completionScore ?? 0}
             profileViews={data?.profile?.profileViews ?? 0}
             headline={data?.profile?.headline}
+            profileViewInsights={data?.profile?.profileViewInsights}
           />
         </ErrorBoundary>
         <div className="md:col-span-2">
@@ -177,6 +181,15 @@ export function SeekerDashboardClient() {
               <AddReviewPromptCard companies={data.companiesForReviewPrompt} />
             </ErrorBoundary>
           ) : null}
+          <ErrorBoundary>
+            <TransitionCommunityWidget />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <SuccessStoryPromptCard />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <MilestonePromptCard />
+          </ErrorBoundary>
           <ErrorBoundary>
             <MentorshipWidget />
           </ErrorBoundary>

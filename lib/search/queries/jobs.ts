@@ -57,7 +57,7 @@ function buildFilterBy(params: JobSearchParams): string {
   if (params.experienceMax != null) parts.push(`experienceMin:<=${params.experienceMax}`);
   if (params.salaryMin != null) parts.push(`salaryMax:>=${params.salaryMin}`);
   if (params.salaryMax != null) parts.push(`salaryMin:<=${params.salaryMax}`);
-  if (params.includeNotDisclosed !== true) parts.push("salaryVisible:=true");
+  if (params.includeNotDisclosed !== true && (params.salaryMin != null || params.salaryMax != null)) parts.push("salaryVisible:=true");
   if (params.easyApplyOnly) parts.push("easyApply:=true");
   if (params.companySlug) parts.push(`companySlug:=${params.companySlug}`);
   if (params.minRating != null) parts.push(`companyRating:>=${params.minRating}`);
@@ -78,16 +78,14 @@ function buildSortBy(sort?: "recent" | "salary" | "relevance"): string {
 
 export async function searchJobs(params: JobSearchParams): Promise<JobSearchResult> {
   const client = typesenseClient;
-  if (!client) {
-    return { hits: [], found: 0, facets: {}, page: 1, totalPages: 0 };
-  }
   const page = Math.max(1, params.page ?? 1);
   const limit = Math.min(50, Math.max(1, params.limit ?? 20));
   const filterBy = buildFilterBy(params);
   const sortBy = buildSortBy(params.sort);
+  const q = params.q && params.q.trim().length > 0 ? params.q.trim() : "*";
   const searchParams = {
-    q: (params.q?.trim() || "*") as string,
-    query_by: "title,description,companyName,skills",
+    q,
+    query_by: "title,description,companyName,skills,tags",
     filter_by: filterBy,
     sort_by: sortBy,
     facet_by: "companyName,location,workMode,jobType,skills,educationLevel,tags,status,easyApply,companyVerified",

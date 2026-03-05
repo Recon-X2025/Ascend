@@ -157,22 +157,36 @@ export function JobsListing() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetch("/api/jobs?" + buildParams(filters, sort, page).toString())
-      .then((r) => r.json())
+    const params = buildParams(filters, sort, page);
+    fetch(`/api/jobs?${params.toString()}`)
+      .then((res) => res.json())
       .then((j) => {
-        if (j.success) {
-          setJobs(j.data ?? []);
-          setFound(j.found ?? 0);
-          setTotalPages(j.totalPages ?? 0);
-          setFacets(j.facets ?? null);
-          if (filters.search.trim()) {
-            fetch("/api/search/history", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ query: filters.search.trim(), filters }),
-            }).catch(() => {});
-          }
-        } else setError(true);
+        /* Map Typesense hits → job documents (also handles API's data array) */
+        const jobs = Array.isArray(j.hits)
+          ? j.hits.map((hit: { document?: unknown }) => hit.document).filter(Boolean)
+          : Array.isArray(j.data)
+            ? j.data
+            : [];
+
+        /* Total results from Typesense */
+        const found = j.found ?? jobs.length;
+
+        /* Fast pagination calculation - avoid ?? + || conflict */
+        const totalPages = j.totalPages ?? Math.max(1, Math.ceil(found / 20));
+
+        setJobs(jobs);
+        setFound(found);
+        setTotalPages(totalPages);
+        setFacets(j.facets ?? null);
+
+        if (j.success && filters.search.trim()) {
+          fetch("/api/search/history", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: filters.search.trim(), filters }),
+          }).catch(() => {});
+        }
+        if (j.success === false) setError(true);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));

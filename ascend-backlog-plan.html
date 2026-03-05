@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ascend — Post-Pilot Backlog Build Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #F7F6F1;
+    --green: #16A34A;
+    --green-light: #DCFCE7;
+    --green-mid: #86EFAC;
+    --ink: #0F1A0F;
+    --ink-60: rgba(15,26,15,0.6);
+    --ink-20: rgba(15,26,15,0.12);
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --blue: #1D4ED8;
+    --blue-light: #DBEAFE;
+    --rose: #BE123C;
+    --rose-light: #FFE4E6;
+    --slate: #64748B;
+    --white: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 48px 60px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: var(--green);
+    opacity: 0.12;
+  }
+  .header-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .header h1 span { color: var(--green-mid); }
+  .header-sub {
+    font-size: 15px;
+    color: rgba(247,246,241,0.65);
+    font-weight: 300;
+    margin-bottom: 32px;
+  }
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--parchment);
+  }
+  .stat-num span { color: var(--green-mid); }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(247,246,241,0.5);
+  }
+
+  /* ─── MAIN ─── */
+  .main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 48px 60px;
+  }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    margin-top: 48px;
+  }
+  .section-header:first-of-type { margin-top: 0; }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--green-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .section-desc {
+    color: var(--ink-60);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  /* ─── TIER BADGE ─── */
+  .tier-block {
+    border: 1.5px solid var(--ink-20);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 36px;
+    background: var(--white);
+  }
+  .tier-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1.5px solid var(--ink-20);
+  }
+  .tier-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+  .tier-badge.t1 { background: var(--ink); color: var(--green-mid); }
+  .tier-badge.t2 { background: var(--green); color: #fff; }
+  .tier-badge.t3 { background: var(--amber); color: #fff; }
+  .tier-badge.t4 { background: var(--blue); color: #fff; }
+  .tier-badge.t5 { background: var(--slate); color: #fff; }
+
+  .tier-header-meta {
+    flex: 1;
+  }
+  .tier-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .tier-meta {
+    font-size: 12px;
+    color: var(--ink-60);
+    margin-top: 1px;
+  }
+  .tier-count {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink-60);
+  }
+
+  /* ─── ITEM CARD ─── */
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0;
+  }
+  .item-card {
+    padding: 20px 24px;
+    border-right: 1.5px solid var(--ink-20);
+    border-bottom: 1.5px solid var(--ink-20);
+    transition: background 0.15s;
+  }
+  .item-card:hover { background: #FAFAF7; }
+  .item-card:last-child, .item-card:nth-last-child(-n+3):nth-child(3n+1) {
+    /* handled via JS if needed */
+  }
+  .item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .item-id {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--slate);
+    background: var(--parchment);
+    border: 1px solid var(--ink-20);
+    padding: 2px 7px;
+    border-radius: 100px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .item-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .item-desc {
+    font-size: 12.5px;
+    color: var(--ink-60);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+  }
+  .tag.model { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+  .tag.infra { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+  .tag.ui { background: #FFF7ED; color: #C2410C; border: 1px solid #FED7AA; }
+  .tag.cron { background: #FDF4FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+  .tag.email { background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; }
+  .tag.new { background: var(--ink); color: var(--green-mid); border: 1px solid transparent; }
+  .tag.quick { background: var(--green-light); color: #166534; border: 1px solid var(--green-mid); }
+  .tag.premium { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+
+  .item-infra {
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: var(--slate);
+    line-height: 1.5;
+    padding-top: 8px;
+    border-top: 1px dashed var(--ink-20);
+  }
+  .item-infra strong { color: var(--ink); font-weight: 500; }
+
+  /* ─── PREREQS TABLE ─── */
+  .dep-section { margin-top: 12px; }
+  .dep-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--slate);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .dep-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .dep-pill {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    background: var(--parchment);
+    border: 1px solid var(--ink-20);
+    border-radius: 100px;
+    color: var(--ink-60);
+  }
+
+  /* ─── PRE-WORK CALLOUT ─── */
+  .callout {
+    background: #FFF7ED;
+    border: 1.5px solid #FED7AA;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .callout-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #C2410C;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .callout ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .callout ul li {
+    font-size: 13px;
+    color: #7C2D12;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .callout ul li::before {
+    content: '→';
+    font-weight: 600;
+    flex-shrink: 0;
+    color: #C2410C;
+  }
+
+  /* ─── DEPENDENCY GRAPH ─── */
+  .dep-graph {
+    background: var(--ink);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 48px;
+    color: var(--parchment);
+  }
+  .dep-graph h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green-mid);
+    margin-bottom: 20px;
+  }
+  .dep-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dep-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+  }
+  .dep-from {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .dep-arrow {
+    color: var(--green-mid);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .dep-to {
+    color: rgba(247,246,241,0.65);
+    font-size: 12px;
+  }
+  .dep-done {
+    color: var(--green-mid);
+    font-size: 11px;
+    padding: 2px 8px;
+    border: 1px solid rgba(134,239,172,0.3);
+    border-radius: 100px;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  /* ─── NEW ITEMS ─── */
+  .new-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .new-card {
+    background: var(--white);
+    border: 1.5px solid var(--ink-20);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .new-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .new-card-id {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--ink);
+    color: var(--green-mid);
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+  .new-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .new-card-desc {
+    font-size: 12.5px;
+    color: var(--ink-60);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .priority-chip {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+  }
+  .priority-chip.high { background: #FFE4E6; color: #BE123C; }
+  .priority-chip.medium { background: var(--amber-light); color: #92400E; }
+  .priority-chip.low { background: #F1F5F9; color: var(--slate); }
+
+  /* ─── SUMMARY TABLE ─── */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 48px;
+    font-size: 13px;
+  }
+  .summary-table th {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+  }
+  .summary-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ink-20);
+    vertical-align: top;
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:nth-child(even) td { background: #FAFAF7; }
+  .tbl-id { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; white-space: nowrap; }
+  .tbl-name { font-weight: 500; }
+  .tbl-effort {
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--slate);
+  }
+  .tbl-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .status-done { background: var(--green-light); color: #166534; }
+  .status-partial { background: var(--amber-light); color: #92400E; }
+  .status-build { background: #DBEAFE; color: #1D4ED8; }
+  .status-new { background: var(--ink); color: var(--green-mid); }
+
+  .footer {
+    background: var(--ink);
+    color: rgba(247,246,241,0.45);
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .footer span { color: var(--green-mid); }
+
+  @media print {
+    body { font-size: 11px; }
+    .header { padding: 32px 40px 28px; }
+    .main { padding: 32px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<div class="header">
+  <div class="header-label">Coheron Technologies · Ascend Platform</div>
+  <h1>Post-Pilot Backlog<br><span>Build Plan</span></h1>
+  <div class="header-sub">62 phases complete · Structured sequencing for 23 backlog items + 7 proposed additions · March 2026</div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-num"><span>23</span></div>
+      <div class="stat-label">Backlog Items</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span>7</span></div>
+      <div class="stat-label">New Proposed (BL-25–31)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span>5</span></div>
+      <div class="stat-label">Build Tiers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num"><span>3</span></div>
+      <div class="stat-label">Pre-Work Blockers</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ─── PRE-WORK CALLOUT ─── -->
+  <div class="callout">
+    <div class="callout-title">⚠️ Resolve Before Starting Any Tier 1 Work</div>
+    <ul>
+      <li>Fix build-blocking ESLint errors (4 open) — deployment is blocked until this is cleared</li>
+      <li>Resume Builder AI step stuck — affects BL-6 and BL-22 indirectly; fix in parallel</li>
+      <li>Fit Score 404 — broken core UX; fix before starting BL-1 / BL-6</li>
+      <li>Complete BL-24 board-by-board feasibility study (API docs, pricing, terms per board) before any syndication sprint begins</li>
+    </ul>
+  </div>
+
+  <!-- ─── DEPENDENCY OVERVIEW ─── -->
+  <div class="dep-graph">
+    <h3>Key Dependencies at a Glance</h3>
+    <div class="dep-rows">
+      <div class="dep-row">
+        <div class="dep-from">BL-1</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Needs new <code>ProfileViewEvent</code> model first (no per-viewer storage exists today — count only)</div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-2</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Pulls from BL-5 (alerts) <span class="dep-done">✅ done</span> + BL-4 (transition counts) + mentor tier data</div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-3</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Requires M-10 verified outcomes <span class="dep-done">✅ done</span></div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-8</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Distribution requires BL-7 (Follow Mentors) first</div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-9</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Discovery requires BL-4 (transition counts); patterns from M-12 <span class="dep-done">✅ done</span></div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-13</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Extends BL-8 (Mentor Posts) — build BL-8 first</div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-24</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Requires per-board feasibility study as pre-work; infra from Phase 18 <span class="dep-done">✅ done</span></div>
+      </div>
+      <div class="dep-row">
+        <div class="dep-from">BL-17</div>
+        <div class="dep-arrow">→</div>
+        <div class="dep-to">Invoice model exists; gap is subscriptionId → userId webhook resolution</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TIER 1 — QUICK WINS
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">⚡</div>
+    <div>
+      <div class="section-title">Tier 1 — Quick Wins</div>
+      <div class="section-desc">Infrastructure largely exists · Ship within 1–2 weeks each · High engagement ROI for minimal effort</div>
+    </div>
+  </div>
+
+  <div class="tier-block">
+    <div class="tier-header">
+      <div class="tier-badge t1">Tier 1</div>
+      <div class="tier-header-meta">
+        <div class="tier-name">Quick Wins — Start Immediately</div>
+        <div class="tier-meta">3 items · 1–2 weeks each · No new models required</div>
+      </div>
+      <div class="tier-count">3</div>
+    </div>
+    <div class="item-grid">
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-5</div>
+          <div class="item-title">Saved Search Alerts</div>
+        </div>
+        <div class="item-desc">Verify the full pipeline is working correctly end-to-end. SavedSearch, JobAlert, processAlerts, and cron are all built — this is a polish and QA sprint.</div>
+        <div class="item-tags">
+          <span class="tag quick">✅ Already Built</span>
+          <span class="tag infra">Cron Verify</span>
+          <span class="tag email">Email Polish</span>
+        </div>
+        <div class="item-infra">
+          <strong>Action items:</strong> Verify <code>datePosted</code> filter in processAlerts uses <code>lastSentAt</code> correctly · Improve subject lines ("5 new jobs matching…") · Add saved-search limit notice in UI · QA immediate/daily/weekly cadence
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-12</div>
+          <div class="item-title">Company Culture Ratings — Prominent</div>
+        </div>
+        <div class="item-desc">Review data and culture ratings exist in the database. This sprint lifts them into high-visibility surfaces: company hero, job cards, search filters.</div>
+        <div class="item-tags">
+          <span class="tag quick">Data Exists</span>
+          <span class="tag ui">UI Lift</span>
+          <span class="tag infra">SEO Schema</span>
+        </div>
+        <div class="item-infra">
+          <strong>Action items:</strong> Hero placement on company profile · Culture score badge on job cards · Add "4+ culture rating" filter to search · Add aggregateRating structured data for rich snippets
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-6</div>
+          <div class="item-title">Profile Strength Gamification</div>
+        </div>
+        <div class="item-desc">Extend existing completion % into a full Profile Strength system with section weights, contextual nudges, badges/levels, and optional streaks.</div>
+        <div class="item-tags">
+          <span class="tag quick">Extends Existing</span>
+          <span class="tag ui">Gamification</span>
+          <span class="tag infra">Scoring Logic</span>
+        </div>
+        <div class="item-infra">
+          <strong>Action items:</strong> Section-level weights (experience, skills, education, career intent, resume) · Next-step nudges ("Add 2 skills for your target role") · Milestones at 25/50/75/100% · Optional streak for weekly updates · Tie to FitScore correlation display
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TIER 2 — HIGH IMPACT, MEDIUM EFFORT
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">🚀</div>
+    <div>
+      <div class="section-title">Tier 2 — High Impact, Medium Effort</div>
+      <div class="section-desc">New models required · 2–4 weeks each · Strong acquisition + conversion drivers</div>
+    </div>
+  </div>
+
+  <div class="tier-block">
+    <div class="tier-header">
+      <div class="tier-badge t2">Tier 2</div>
+      <div class="tier-header-meta">
+        <div class="tier-name">Core Growth Levers</div>
+        <div class="tier-meta">5 items · 2–4 weeks each · Requires new Prisma models</div>
+      </div>
+      <div class="tier-count">5</div>
+    </div>
+    <div class="item-grid">
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-1</div>
+          <div class="item-title">Richer Profile View Notifications</div>
+        </div>
+        <div class="item-desc">"3 recruiters from Flipkart viewed your profile this week." Strong freemium → premium conversion lever.</div>
+        <div class="item-tags">
+          <span class="tag model">New: ProfileViewEvent</span>
+          <span class="tag premium">Premium Gate</span>
+          <span class="tag email">Digest Email</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>ProfileViewEvent(viewerId, viewerCompanyId, profileUserId, viewedAt)</code><br>
+          <strong>Logic:</strong> Aggregate by company + time window · Premium-only: show company names + anonymised role · Free: count only<br>
+          <strong>Surfaces:</strong> In-app notification · Weekly digest email (BL-2 dependency)
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Blocks</div>
+          <div class="dep-pills"><div class="dep-pill">BL-2 (digest content)</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-4</div>
+          <div class="item-title">"People In Your Transition" Signal</div>
+        </div>
+        <div class="item-desc">"142 people are on the same SWE → PM path as you." Community belonging driver. Feeds cohorts and digest.</div>
+        <div class="item-tags">
+          <span class="tag infra">Aggregation Query</span>
+          <span class="tag ui">Dashboard Widget</span>
+          <span class="tag cron">Daily Batch</span>
+        </div>
+        <div class="item-infra">
+          <strong>Source:</strong> <code>UserCareerContext</code> + <code>MentorshipOutcome</code><br>
+          <strong>Logic:</strong> Aggregate from/to role, industry · Privacy: aggregate counts only, no individual names · Round numbers to avoid false precision<br>
+          <strong>Surfaces:</strong> Dashboard widget · Mentor/cohort discovery pages
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Blocks</div>
+          <div class="dep-pills"><div class="dep-pill">BL-2</div><div class="dep-pill">BL-9</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-2</div>
+          <div class="item-title">Weekly Career Digest Email</div>
+        </div>
+        <div class="item-desc">Dormant user re-engagement. Curated weekly email: job matches, mentor tier changes, transition-path updates.</div>
+        <div class="item-tags">
+          <span class="tag email">Resend Template</span>
+          <span class="tag cron">Weekly Cron</span>
+          <span class="tag infra">A/B Subject Lines</span>
+        </div>
+        <div class="item-infra">
+          <strong>Content blocks:</strong> New jobs (from SavedSearch/target role) · Mentor tier upgrades in path · Platform stats<br>
+          <strong>Logic:</strong> Dormancy threshold (14+ days no login) · Use <code>UserCareerContext</code>, engagement history<br>
+          <strong>Compliance:</strong> Respect <code>marketingConsent</code> + per-channel preferences
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">BL-5 ✅</div><div class="dep-pill">BL-4</div><div class="dep-pill">BL-1 (optional)</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-7</div>
+          <div class="item-title">Follow Mentors</div>
+        </div>
+        <div class="item-desc">Seekers follow mentors without starting an application. Lowers friction before formal commitment. Feeds the BL-8 content flywheel.</div>
+        <div class="item-tags">
+          <span class="tag model">New: MentorFollow</span>
+          <span class="tag ui">Follow Button</span>
+          <span class="tag infra">Feed / List</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>MentorFollow(userId, mentorUserId, followedAt)</code><br>
+          <strong>Surfaces:</strong> Mentor profile follow button · Seeker "Following" list/page · Follower count on mentor profile · Discovery ranking signal<br>
+          <strong>Privacy:</strong> Mentor sees count; individual list opt-in only
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Blocks</div>
+          <div class="dep-pills"><div class="dep-pill">BL-8 (posts)</div><div class="dep-pill">BL-13 (creator)</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-3</div>
+          <div class="item-title">Transition Success Stories</div>
+        </div>
+        <div class="item-desc">Turn verified M-10 outcomes into consent-gated, shareable "SWE → PM in 87 days" narratives. Organic acquisition driver.</div>
+        <div class="item-tags">
+          <span class="tag model">Story Generator</span>
+          <span class="tag ui">Shareable Card</span>
+          <span class="tag email">Consent Flow</span>
+        </div>
+        <div class="item-infra">
+          <strong>Source:</strong> <code>MentorshipOutcome</code> (M-10 ✅)<br>
+          <strong>Flow:</strong> Verified outcome → consent prompt → auto-generate story card → share (in-app, URL, image export)<br>
+          <strong>Safety:</strong> No PII; no employer unless consented; UTM tracking for acquisition attribution
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">M-10 ✅</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TIER 3 — NETWORK & CONTENT LAYER
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">🌐</div>
+    <div>
+      <div class="section-title">Tier 3 — Network & Content Layer</div>
+      <div class="section-desc">3–6 weeks each · Organic flywheel + social proof · Builds on Tier 1 & 2</div>
+    </div>
+  </div>
+
+  <div class="tier-block">
+    <div class="tier-header">
+      <div class="tier-badge t3">Tier 3</div>
+      <div class="tier-header-meta">
+        <div class="tier-name">Community, Content & Social Proof</div>
+        <div class="tier-meta">7 items · 3–6 weeks each · High long-term engagement value</div>
+      </div>
+      <div class="tier-count">7</div>
+    </div>
+    <div class="item-grid">
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-8</div>
+          <div class="item-title">Mentor Posts / Insights</div>
+        </div>
+        <div class="item-desc">Mentors publish short posts — transition tips, advice, industry notes. Followers see them in feed. Content flywheel that drives discovery and applications.</div>
+        <div class="item-tags">
+          <span class="tag model">New: MentorPost</span>
+          <span class="tag ui">Feed</span>
+          <span class="tag infra">Moderation</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>MentorPost(mentorUserId, content, createdAt)</code><br>
+          <strong>V1 scope:</strong> Text + optional image · No video · Character limits<br>
+          <strong>Distribution:</strong> Follower feed (BL-7) · Topic/transition-tagged feeds · SEO-indexed pages
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">BL-7</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-9</div>
+          <div class="item-title">Cohort Communities</div>
+        </div>
+        <div class="item-desc">"SWE → PM 2025 cohort" group. Lighter than formal M-12 Circles — open community groups by transition path, with discussion threads and resource sharing.</div>
+        <div class="item-tags">
+          <span class="tag model">New: Cohort</span>
+          <span class="tag ui">Discussion Threads</span>
+          <span class="tag infra">Moderation</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>Cohort(name, transitionPath, memberIds)</code> + discussion threads<br>
+          <strong>Discovery:</strong> Surfaced via BL-4 "people in your transition" · Cohort landing pages<br>
+          <strong>Pattern:</strong> Extend M-12 MentorshipCircle; lighter membership, no formal engagement required
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">BL-4</div><div class="dep-pill">M-12 ✅ patterns</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-10</div>
+          <div class="item-title">Career Milestones (Shareable)</div>
+        </div>
+        <div class="item-desc">"I just completed a mentorship with an ELITE mentor on Ascend." System events → branded cards → consent → external share.</div>
+        <div class="item-tags">
+          <span class="tag ui">Card Generator</span>
+          <span class="tag infra">Event Triggers</span>
+          <span class="tag email">Consent Flow</span>
+        </div>
+        <div class="item-infra">
+          <strong>Triggers:</strong> Contract completed · Outcome verified · Tier achieved · First job in new role<br>
+          <strong>Output:</strong> Image card + shareable URL · Platform branding + UTM tracking<br>
+          <strong>Channels:</strong> In-app share · Copy link · Export image for external networks
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-11</div>
+          <div class="item-title">Skills Endorsement Polish</div>
+        </div>
+        <div class="item-desc">ProfileEndorsement exists. Polish 1st-degree gate enforcement, add rate limits, and optionally introduce skill assessment quizzes for verified badges.</div>
+        <div class="item-tags">
+          <span class="tag quick">Extends Existing</span>
+          <span class="tag infra">1st-Degree Gate</span>
+          <span class="tag model">Assessment (opt)</span>
+        </div>
+        <div class="item-infra">
+          <strong>Gaps:</strong> Verify 1st-degree gate is enforced in API (not just UI) · Add endorsement rate limits to prevent spam<br>
+          <strong>Optional:</strong> Short quiz/assessment → verified skill badge on profile
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-13</div>
+          <div class="item-title">Creator Mode for Mentors</div>
+        </div>
+        <div class="item-desc">Long-form articles and newsletters. Extends BL-8 short posts into a creator publishing layer. Subscriber emails via Resend.</div>
+        <div class="item-tags">
+          <span class="tag model">MentorArticle + Newsletter</span>
+          <span class="tag email">Resend Delivery</span>
+          <span class="tag infra">Subscribers</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>MentorArticle</code>, <code>MentorNewsletter</code>, subscriber list<br>
+          <strong>Delivery:</strong> Resend for newsletter sends · Public article pages (SEO-indexable)<br>
+          <strong>Scope:</strong> Text-focused in v1; no video
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">BL-7</div><div class="dep-pill">BL-8</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-14</div>
+          <div class="item-title">Verified Career Certificates</div>
+        </div>
+        <div class="item-desc">Issue verifiable certificates on mentorship completion. PDF with verification URL. Mentee can share as credential proof.</div>
+        <div class="item-tags">
+          <span class="tag model">MentorCertificate</span>
+          <span class="tag ui">PDF Template</span>
+          <span class="tag infra">Verification Page</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>MentorCertificate(engagementId, menteeId, issuedAt, verificationCode)</code><br>
+          <strong>Output:</strong> PDF template with Ascend branding · Public <code>/verify/[code]</code> page<br>
+          <strong>Trigger:</strong> Contract completed + outcome verified
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">M-10 ✅</div><div class="dep-pill">M-5 ✅</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-15</div>
+          <div class="item-title">Alumni Networks</div>
+        </div>
+        <div class="item-desc">"10 people from your company are on Ascend." Enterprise acquisition lever. Surfaces company alumni counts without exposing individual identities.</div>
+        <div class="item-tags">
+          <span class="tag infra">Name Normalisation</span>
+          <span class="tag ui">Company Page</span>
+          <span class="tag infra">Privacy-First</span>
+        </div>
+        <div class="item-infra">
+          <strong>Source:</strong> <code>User.experience</code> (current/past employers)<br>
+          <strong>Challenge:</strong> Company name normalisation ("Flipkart" vs "Flipkart India") — needs canonical mapping<br>
+          <strong>Privacy:</strong> Aggregate counts only; no individual list without mutual connection/consent<br>
+          <strong>Surfaces:</strong> Company page · Job detail · Seeker dashboard
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TIER 4 — RECRUITER & PLATFORM
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">🏢</div>
+    <div>
+      <div class="section-title">Tier 4 — Recruiter & Platform Infrastructure</div>
+      <div class="section-desc">High value for recruiters + enterprise · Requires external integrations · Pre-work needed before BL-24</div>
+    </div>
+  </div>
+
+  <div class="tier-block">
+    <div class="tier-header">
+      <div class="tier-badge t4">Tier 4</div>
+      <div class="tier-header-meta">
+        <div class="tier-name">Recruiter Reach + Revenue Infrastructure</div>
+        <div class="tier-meta">4 items · 3–8 weeks each · External API dependencies</div>
+      </div>
+      <div class="tier-count">4</div>
+    </div>
+    <div class="item-grid">
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-24</div>
+          <div class="item-title">Multi-Board Job Syndication</div>
+        </div>
+        <div class="item-desc">Post once on Ascend → syndicate to major job boards in one click. Centralised tracking, attribution by board, cost-per-hire analytics.</div>
+        <div class="item-tags">
+          <span class="tag model">JobBoardSyndication</span>
+          <span class="tag infra">Board APIs</span>
+          <span class="tag cron">Status Sync</span>
+        </div>
+        <div class="item-infra">
+          <strong>Schema:</strong> <code>JobBoardSyndication(jobPostId, board, status, postedAt, expiresAt, costPaid, trackingUrl)</code> + <code>JobBoardApplicantSource(applicationId, board, clickedAt)</code><br>
+          <strong>Pre-work required:</strong> API feasibility per board (docs, pricing, terms) before any code<br>
+          <strong>Features:</strong> One-click pause/takedown · Attribution per board · Best-performing board insights
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Pre-work</div>
+          <div class="dep-pills"><div class="dep-pill">Board feasibility study</div><div class="dep-pill">Phase 18 infra ✅</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-17</div>
+          <div class="item-title">Subscription Invoicing</div>
+        </div>
+        <div class="item-desc">Wire createInvoice() into Razorpay/Stripe subscription webhooks. Invoice + InvoiceLineItem models exist; the gap is reliable userId resolution at webhook receipt.</div>
+        <div class="item-tags">
+          <span class="tag quick">Extends Existing</span>
+          <span class="tag infra">Webhook Handlers</span>
+          <span class="tag cron">Missed Events</span>
+        </div>
+        <div class="item-infra">
+          <strong>Gap:</strong> Deterministic subscriptionId → userId mapping<br>
+          <strong>Flow:</strong> subscription renewed/cancelled → webhook → resolve user → <code>createInvoice()</code> → store + email<br>
+          <strong>Edge cases:</strong> Plan changes, proration, failed payments, refunds · Cron for missed webhook events
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-20</div>
+          <div class="item-title">Live SAML SSO</div>
+        </div>
+        <div class="item-desc">Phase 18 collected SSO config. This phase implements the full SAML 2.0 handshake — SP-initiated flow, attribute mapping, JIT provisioning.</div>
+        <div class="item-tags">
+          <span class="tag quick">Config Done (Ph18)</span>
+          <span class="tag infra">SAML 2.0 Flow</span>
+          <span class="tag model">JIT Provisioning</span>
+        </div>
+        <div class="item-infra">
+          <strong>Flow:</strong> Company domain → SsoConfig lookup → redirect to IdP → handle response → create/link user → session<br>
+          <strong>Edge cases:</strong> IdP-initiated vs SP-initiated · SLO · Multiple IdPs per tenant<br>
+          <strong>Test:</strong> Sandbox IdP (Keycloak/SAMLtest.id) before production keys
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-21</div>
+          <div class="item-title">ATS Live API Keys</div>
+        </div>
+        <div class="item-desc">Phase 18 built ATS integration infrastructure. This phase obtains live Greenhouse/Lever/Workday keys and runs end-to-end sync and webhook tests.</div>
+        <div class="item-tags">
+          <span class="tag quick">Infra Done (Ph18)</span>
+          <span class="tag infra">Live Keys + Sync</span>
+          <span class="tag cron">Webhook Idempotency</span>
+        </div>
+        <div class="item-infra">
+          <strong>Flow:</strong> Job sync (create/update/close) · Application sync · Candidate push/pull<br>
+          <strong>Process:</strong> Sandbox first → per-ATS docs (scopes, rate limits, error handling) → production<br>
+          <strong>Output:</strong> Per-ATS integration guide
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TIER 5 — COMPLIANCE & LOCALISATION
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">🔒</div>
+    <div>
+      <div class="section-title">Tier 5 — Compliance & Localisation</div>
+      <div class="section-desc">Legal / regulatory · Localisation prep · Schedule during quieter sprints</div>
+    </div>
+  </div>
+
+  <div class="tier-block">
+    <div class="tier-header">
+      <div class="tier-badge t5">Tier 5</div>
+      <div class="tier-header-meta">
+        <div class="tier-name">Compliance, Legal & Localisation</div>
+        <div class="tier-meta">4 items · Variable effort · Some require external consultation</div>
+      </div>
+      <div class="tier-count">4</div>
+    </div>
+    <div class="item-grid">
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-19</div>
+          <div class="item-title">DPDP Act 2023 Compliance Audit</div>
+        </div>
+        <div class="item-desc">Full audit of data handling against India's Digital Personal Data Protection Act 2023. Maps all data flows, consent mechanisms, rights, and third-party processors.</div>
+        <div class="item-tags">
+          <span class="tag quick">Ph17 Base ✅</span>
+          <span class="tag infra">Data Inventory</span>
+          <span class="tag email">DPO Consideration</span>
+        </div>
+        <div class="item-infra">
+          <strong>Deliverables:</strong> Data inventory + retention schedule · Consent audit · Processor DPAs · Updated privacy policy + terms<br>
+          <strong>Check:</strong> Phase 17 audit log, DataRequest, soft-delete, PII anonymisation already implemented<br>
+          <strong>Gap:</strong> No formal audit doc; no DPO appointed
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-18</div>
+          <div class="item-title">Aadhaar eSign</div>
+        </div>
+        <div class="item-desc">Upgrade mentorship contract signing from email OTP to Aadhaar-based eSign (legally recognised under IT Act 2000). Retain OTP as fallback.</div>
+        <div class="item-tags">
+          <span class="tag model">eSign Provider</span>
+          <span class="tag infra">Redirect Flow</span>
+          <span class="tag infra">OTP Fallback</span>
+        </div>
+        <div class="item-infra">
+          <strong>Provider:</strong> CCA/DSC or equivalent Aadhaar-based eSign service<br>
+          <strong>Flow:</strong> User chooses eSign → redirect to provider → Aadhaar auth → callback → store signed evidence<br>
+          <strong>Legal:</strong> Validate acceptability for mentorship contracts under Indian law before build
+        </div>
+        <div class="dep-section">
+          <div class="dep-label">Depends on</div>
+          <div class="dep-pills"><div class="dep-pill">M-5 ✅ (OTP signing base)</div></div>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-22</div>
+          <div class="item-title">Resume Builder Multilingual + RTL</div>
+        </div>
+        <div class="item-desc">Add Devanagari (Hindi + Indic scripts) and RTL layout (Arabic) support to the Phase 2A resume builder. 6 templates extended with variants.</div>
+        <div class="item-tags">
+          <span class="tag quick">Extends Ph2A</span>
+          <span class="tag infra">Font Shaping</span>
+          <span class="tag ui">RTL Layout</span>
+        </div>
+        <div class="item-infra">
+          <strong>Devanagari:</strong> Noto Sans Devanagari font · Proper shaping/rendering in pdf-lib<br>
+          <strong>RTL:</strong> Arabic layout mirroring · Right-to-left section alignment<br>
+          <strong>UI:</strong> Unicode input fields · Optional language selector per section<br>
+          <strong>Note:</strong> Full i18n (Phase 21) remains separate scope
+        </div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-top">
+          <div class="item-id">BL-23</div>
+          <div class="item-title">hreflang / Sitemaps</div>
+        </div>
+        <div class="item-desc">SEO infrastructure for future multi-locale expansion. Extend existing sitemap with language/region variants and add hreflang alternates.</div>
+        <div class="item-tags">
+          <span class="tag quick">Extends Ph14</span>
+          <span class="tag infra">hreflang</span>
+          <span class="tag infra">Sitemap alternates</span>
+        </div>
+        <div class="item-infra">
+          <strong>Scope:</strong> Prep only if single locale — minimal changes to structure for multi-locale when Phase 21 activates<br>
+          <strong>Coverage:</strong> Jobs · Companies · Salary pages · Mentors · Static pages<br>
+          <strong>Ensure:</strong> Canonical URLs; no conflicting signals
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       NEW ITEMS FROM FEATURE COMPARISON
+  ════════════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-icon">✨</div>
+    <div>
+      <div class="section-title">Proposed New Items (BL-25 to BL-31)</div>
+      <div class="section-desc">Identified via competitor feature analysis · Recommend adding to backlog with owner sign-off</div>
+    </div>
+  </div>
+
+  <div class="new-items-grid">
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-25</div>
+        <div class="new-card-title">Follow Recruiters</div>
+      </div>
+      <div class="new-card-desc">Job seekers follow specific recruiters. Recruiter job posts and updates surface in seeker feed. Parallel to BL-7 mentor follow. Addresses gap vs Naukri recruiter follow.</div>
+      <div class="item-tags">
+        <span class="tag model">RecruiterFollower model</span>
+        <span class="priority-chip high">High</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-26</div>
+        <div class="new-card-title">Application Viewed Notification</div>
+      </div>
+      <div class="new-card-desc">When a recruiter opens an application, the job seeker is notified. Transparency signal that increases engagement and sets expectations. Addresses a gap vs Indeed.</div>
+      <div class="item-tags">
+        <span class="tag infra">Application open event</span>
+        <span class="priority-chip high">High</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-27</div>
+        <div class="new-card-title">Bulk Recruiter Outreach</div>
+      </div>
+      <div class="new-card-desc">Recruiter selects a candidate list (from search or pipeline) and sends a batch message or job. Rate limits (e.g. 500/day), consent handling, and opt-out required.</div>
+      <div class="item-tags">
+        <span class="tag infra">Rate limits + consent</span>
+        <span class="priority-chip medium">Medium</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-28</div>
+        <div class="new-card-title">Anonymous Community / Q&A</div>
+      </div>
+      <div class="new-card-desc">Glassdoor-style anonymous workplace discussions or Q&A. Extends CompanyQA into a broader community layer. Privacy-first with moderation.</div>
+      <div class="item-tags">
+        <span class="tag model">Discussion model</span>
+        <span class="priority-chip medium">Medium</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-29</div>
+        <div class="new-card-title">Institute / Education Badge</div>
+      </div>
+      <div class="new-card-desc">Premium-style trust badge for verified top-tier institution alumni. Optional signal for profiles. Similar to Naukri Premium institute badge.</div>
+      <div class="item-tags">
+        <span class="tag premium">Premium feature</span>
+        <span class="priority-chip low">Low</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-30</div>
+        <div class="new-card-title">Employer of Choice / Best Places</div>
+      </div>
+      <div class="new-card-desc">Annual "Best Places to Work" style awards. Company badge and leaderboard. Marketing + trust signal for employers. Deferred — significant ops overhead.</div>
+      <div class="item-tags">
+        <span class="tag ui">Badge + leaderboard</span>
+        <span class="priority-chip low">Low</span>
+      </div>
+    </div>
+
+    <div class="new-card">
+      <div class="new-card-top">
+        <div class="new-card-id">BL-31</div>
+        <div class="new-card-title">Interview Scheduler</div>
+      </div>
+      <div class="new-card-desc">Calendar integration for recruiter–candidate scheduling. Calendly-style flow, Google Calendar integration. Reduces back-and-forth after shortlisting.</div>
+      <div class="item-tags">
+        <span class="tag infra">Calendar integration</span>
+        <span class="priority-chip medium">Medium</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── MASTER SUMMARY TABLE ─── -->
+  <div class="section-header">
+    <div class="section-icon">📋</div>
+    <div>
+      <div class="section-title">Master Sequencing Table</div>
+      <div class="section-desc">Recommended order across all tiers · Use as sprint planning input</div>
+    </div>
+  </div>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>ID</th>
+        <th>Feature</th>
+        <th>Tier</th>
+        <th>Effort</th>
+        <th>Infra Status</th>
+        <th>Key Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="tbl-id">BL-5</td>
+        <td class="tbl-name">Saved Search Alerts</td>
+        <td>T1</td>
+        <td class="tbl-effort">1 week</td>
+        <td><span class="tbl-status status-done">Built — QA only</span></td>
+        <td>Verify cron, polish subjects</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="tbl-id">BL-12</td>
+        <td class="tbl-name">Culture Ratings Prominent</td>
+        <td>T1</td>
+        <td class="tbl-effort">1 week</td>
+        <td><span class="tbl-status status-done">Data exists — UI lift</span></td>
+        <td>Hero, job cards, filters, SEO schema</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="tbl-id">BL-6</td>
+        <td class="tbl-name">Profile Strength Gamification</td>
+        <td>T1</td>
+        <td class="tbl-effort">1–2 weeks</td>
+        <td><span class="tbl-status status-partial">Extends completion %</span></td>
+        <td>Section weights, nudges, badges</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="tbl-id">BL-1</td>
+        <td class="tbl-name">Richer Profile View Notifications</td>
+        <td>T2</td>
+        <td class="tbl-effort">2–3 weeks</td>
+        <td><span class="tbl-status status-build">New model needed</span></td>
+        <td>ProfileViewEvent, premium gate</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="tbl-id">BL-4</td>
+        <td class="tbl-name">People In Your Transition</td>
+        <td>T2</td>
+        <td class="tbl-effort">2 weeks</td>
+        <td><span class="tbl-status status-build">Aggregation query needed</span></td>
+        <td>Dashboard widget, feeds BL-2, BL-9</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td class="tbl-id">BL-2</td>
+        <td class="tbl-name">Weekly Career Digest Email</td>
+        <td>T2</td>
+        <td class="tbl-effort">2–3 weeks</td>
+        <td><span class="tbl-status status-build">New cron + template</span></td>
+        <td>Dormant re-engagement</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td class="tbl-id">BL-7</td>
+        <td class="tbl-name">Follow Mentors</td>
+        <td>T2</td>
+        <td class="tbl-effort">2 weeks</td>
+        <td><span class="tbl-status status-build">New: MentorFollow</span></td>
+        <td>Follow button, following list</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td class="tbl-id">BL-3</td>
+        <td class="tbl-name">Transition Success Stories</td>
+        <td>T2</td>
+        <td class="tbl-effort">2–3 weeks</td>
+        <td><span class="tbl-status status-done">M-10 ✅ — new generator</span></td>
+        <td>Consent flow, shareable cards</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td class="tbl-id">BL-8</td>
+        <td class="tbl-name">Mentor Posts / Insights</td>
+        <td>T3</td>
+        <td class="tbl-effort">3 weeks</td>
+        <td><span class="tbl-status status-build">New: MentorPost</span></td>
+        <td>Feed, SEO-indexed posts</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td class="tbl-id">BL-9</td>
+        <td class="tbl-name">Cohort Communities</td>
+        <td>T3</td>
+        <td class="tbl-effort">4 weeks</td>
+        <td><span class="tbl-status status-build">New: Cohort model</span></td>
+        <td>Discussion threads, discovery</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td class="tbl-id">BL-10</td>
+        <td class="tbl-name">Career Milestones (Shareable)</td>
+        <td>T3</td>
+        <td class="tbl-effort">2 weeks</td>
+        <td><span class="tbl-status status-build">Event triggers + card gen</span></td>
+        <td>Branded share cards, UTM tracking</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td class="tbl-id">BL-11</td>
+        <td class="tbl-name">Skills Endorsement Polish</td>
+        <td>T3</td>
+        <td class="tbl-effort">1–2 weeks</td>
+        <td><span class="tbl-status status-partial">Extends endorsement</span></td>
+        <td>1st-degree gate, rate limits</td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td class="tbl-id">BL-13</td>
+        <td class="tbl-name">Creator Mode for Mentors</td>
+        <td>T3</td>
+        <td class="tbl-effort">4–5 weeks</td>
+        <td><span class="tbl-status status-build">New: Article + Newsletter</span></td>
+        <td>Long-form articles, subscriber emails</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td class="tbl-id">BL-14</td>
+        <td class="tbl-name">Verified Career Certificates</td>
+        <td>T3</td>
+        <td class="tbl-effort">2 weeks</td>
+        <td><span class="tbl-status status-build">New: MentorCertificate</span></td>
+        <td>PDF cert, verification page</td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td class="tbl-id">BL-15</td>
+        <td class="tbl-name">Alumni Networks</td>
+        <td>T3</td>
+        <td class="tbl-effort">3–4 weeks</td>
+        <td><span class="tbl-status status-build">Name normalisation needed</span></td>
+        <td>Alumni counts on company pages</td>
+      </tr>
+      <tr>
+        <td>16</td>
+        <td class="tbl-id">BL-24</td>
+        <td class="tbl-name">Multi-Board Syndication</td>
+        <td>T4</td>
+        <td class="tbl-effort">6–8 weeks</td>
+        <td><span class="tbl-status status-build">New models + board APIs</span></td>
+        <td>Post once, track everywhere</td>
+      </tr>
+      <tr>
+        <td>17</td>
+        <td class="tbl-id">BL-17</td>
+        <td class="tbl-name">Subscription Invoicing</td>
+        <td>T4</td>
+        <td class="tbl-effort">2–3 weeks</td>
+        <td><span class="tbl-status status-partial">Invoice model exists</span></td>
+        <td>Webhook wiring, userId resolution</td>
+      </tr>
+      <tr>
+        <td>18</td>
+        <td class="tbl-id">BL-20</td>
+        <td class="tbl-name">Live SAML SSO</td>
+        <td>T4</td>
+        <td class="tbl-effort">3–4 weeks</td>
+        <td><span class="tbl-status status-partial">Config done (Ph18)</span></td>
+        <td>Full SAML flow, JIT provisioning</td>
+      </tr>
+      <tr>
+        <td>19</td>
+        <td class="tbl-id">BL-21</td>
+        <td class="tbl-name">ATS Live API Keys</td>
+        <td>T4</td>
+        <td class="tbl-effort">2–3 weeks</td>
+        <td><span class="tbl-status status-partial">Infra done (Ph18)</span></td>
+        <td>Greenhouse/Lever/Workday live</td>
+      </tr>
+      <tr>
+        <td>20</td>
+        <td class="tbl-id">BL-19</td>
+        <td class="tbl-name">DPDP Compliance Audit</td>
+        <td>T5</td>
+        <td class="tbl-effort">3–4 weeks</td>
+        <td><span class="tbl-status status-partial">Ph17 base ✅</span></td>
+        <td>Data inventory, DPO, policy update</td>
+      </tr>
+      <tr>
+        <td>21</td>
+        <td class="tbl-id">BL-18</td>
+        <td class="tbl-name">Aadhaar eSign</td>
+        <td>T5</td>
+        <td class="tbl-effort">3–4 weeks</td>
+        <td><span class="tbl-status status-partial">M-5 OTP base ✅</span></td>
+        <td>Legal-grade contract signing</td>
+      </tr>
+      <tr>
+        <td>22</td>
+        <td class="tbl-id">BL-22</td>
+        <td class="tbl-name">Resume Builder Multilingual</td>
+        <td>T5</td>
+        <td class="tbl-effort">3–4 weeks</td>
+        <td><span class="tbl-status status-partial">Extends Ph2A</span></td>
+        <td>Devanagari + RTL PDF output</td>
+      </tr>
+      <tr>
+        <td>23</td>
+        <td class="tbl-id">BL-23</td>
+        <td class="tbl-name">hreflang / Sitemaps</td>
+        <td>T5</td>
+        <td class="tbl-effort">1 week</td>
+        <td><span class="tbl-status status-partial">Extends Ph14</span></td>
+        <td>Multi-locale SEO prep</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<div class="footer">
+  Ascend · Post-Pilot Backlog Build Plan · Coheron Technologies · <span>March 2026</span><br>
+  62 phases complete · Next: Tier 1 quick wins after ESLint + FitScore fixes
+</div>
+
+</body>
+</html>

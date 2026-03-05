@@ -10,8 +10,52 @@ import { logAudit } from "@/lib/audit/log";
 import { getRequestContext } from "@/lib/audit/context";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { searchJobs } from "@/lib/search/queries/jobs";
+import type { TypesenseJobDocument } from "@/lib/search/schemas/jobs";
 import { getCachedSearch, setCachedSearch, searchCacheKey } from "@/lib/search/cache";
 import { indexJob } from "@/lib/search/sync/jobs";
+
+/** Hash string id to numeric id for ParsedJD (Typesense) documents. JobCard expects number. */
+function hashIdToNumber(id: string): number {
+  let h = 0;
+  for (let i = 0; i < Math.min(id.length, 12); i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return Math.abs(h) || 1;
+}
+
+/** Map Typesense document (ParsedJD) to API response format. */
+function serializeTypesenseJob(doc: TypesenseJobDocument) {
+  const id = hashIdToNumber(doc.id);
+  const publishedAt = doc.publishedAt ? new Date(doc.publishedAt * 1000).toISOString() : null;
+  return {
+    id,
+    slug: doc.id,
+    title: doc.title,
+    type: doc.jobType,
+    workMode: doc.workMode,
+    locations: Array.isArray(doc.location) ? doc.location : doc.location ? [doc.location] : [],
+    salaryMin: doc.salaryMin ?? null,
+    salaryMax: doc.salaryMax ?? null,
+    salaryCurrency: "INR",
+    salaryVisible: doc.salaryVisible ?? false,
+    experienceMin: doc.experienceMin ?? null,
+    experienceMax: doc.experienceMax ?? null,
+    educationLevel: doc.educationLevel ?? "ANY",
+    openings: 1,
+    deadline: null,
+    easyApply: doc.easyApply ?? true,
+    applicationUrl: null,
+    tags: doc.tags ?? [],
+    status: doc.status,
+    viewCount: doc.viewCount ?? 0,
+    applicationCount: doc.applicationCount ?? 0,
+    companyId: null,
+    companyName: doc.companyName ?? null,
+    publishedAt,
+    createdAt: publishedAt ?? new Date().toISOString(),
+    company: null,
+    recruiter: null,
+    skills: (doc.skills ?? []).map((name) => ({ skillId: "", name, required: true })),
+  };
+}
 
 function serializeJob(
   row: {
@@ -138,30 +182,40 @@ export async function GET(req: Request) {
     }
   }
 
+  const SEARCH_TIMEOUT_MS = 3000;
+  const searchPromise = searchJobs({
+    q: search ?? undefined,
+    page,
+    limit,
+    location: location ?? undefined,
+    jobType: jobType?.length ? jobType : undefined,
+    workMode: workMode?.length ? workMode : undefined,
+    skills: skills?.length ? skills : undefined,
+    experienceMin,
+    experienceMax,
+    salaryMin,
+    salaryMax,
+    includeNotDisclosed,
+    datePosted,
+    easyApplyOnly,
+    companySlug: companySlug ?? undefined,
+    minRating,
+    sort,
+    verifiedOnly,
+  });
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Typesense timeout")), SEARCH_TIMEOUT_MS)
+  );
+
   try {
-    const result = await searchJobs({
-      q: search ?? undefined,
-      page,
-      limit,
-      location: location ?? undefined,
-      jobType: jobType?.length ? jobType : undefined,
-      workMode: workMode?.length ? workMode : undefined,
-      skills: skills?.length ? skills : undefined,
-      experienceMin,
-      experienceMax,
-      salaryMin,
-      salaryMax,
-      includeNotDisclosed,
-      datePosted,
-      easyApplyOnly,
-      companySlug: companySlug ?? undefined,
-      minRating,
-      sort,
-      verifiedOnly,
-    });
+    const result = await Promise.race([searchPromise, timeoutPromise]);
     const ids = result.hits.map((h) => parseInt(h.id, 10));
-    const jobs = ids.length > 0 ? await getJobsByIdsOrdered(ids) : [];
-    const data = jobs.map((j) => serializeJob(j as Parameters<typeof serializeJob>[0]));
+    const numericIds = ids.filter((n) => !Number.isNaN(n));
+    const jobsFromDb = numericIds.length > 0 ? await getJobsByIdsOrdered(numericIds) : [];
+    const data =
+      jobsFromDb.length > 0
+        ? jobsFromDb.map((j) => serializeJob(j as Parameters<typeof serializeJob>[0]))
+        : result.hits.map((h) => serializeTypesenseJob(h));
     const response = { success: true, data, found: result.found, facets: result.facets, page: result.page, totalPages: result.totalPages };
     if (!isAuthenticated) {
       const cacheKey = searchCacheKey(searchParamsForCache);

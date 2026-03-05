@@ -60,6 +60,7 @@ Rough monthly costs to run Ascend in production. Prices as of early 2025; check 
 
 | Setup | Base Cost (approx) |
 |-------|-------------------|
+| **Managed** (no VPS: Neon + Upstash + Typesense Cloud + R2) | **~$7–35/mo** |
 | **Lean** (Hobby + single VPS + R2) | **~$25–35/mo** |
 | Hybrid (Vercel + Vultr, no workers) | **$75–85/mo** |
 | Hybrid + workers | **$85–97/mo** |

@@ -67,6 +67,8 @@ export async function processAlerts(frequency: AlertFrequency): Promise<{ sent: 
   for (const alert of alerts) {
     try {
       const filters = (alert.filters ?? {}) as Record<string, unknown>;
+      // When lastSentAt exists, narrow search to jobs since then (optimizes Typesense query)
+      const datePosted = inferDatePostedFromLastSent(alert.lastSentAt);
       const params = {
         q: alert.query || undefined,
         limit: MAX_JOBS_PER_EMAIL + 5,
@@ -74,7 +76,7 @@ export async function processAlerts(frequency: AlertFrequency): Promise<{ sent: 
         jobType: Array.isArray(filters.jobType) ? (filters.jobType as string[]) : undefined,
         workMode: Array.isArray(filters.workMode) ? (filters.workMode as string[]) : undefined,
         skills: Array.isArray(filters.skills) ? (filters.skills as string[]) : undefined,
-        datePosted: undefined,
+        datePosted,
       };
       const result = await searchJobs(params);
       const since = alert.lastSentAt ? Math.floor(alert.lastSentAt.getTime() / 1000) : 0;
@@ -96,7 +98,7 @@ export async function processAlerts(frequency: AlertFrequency): Promise<{ sent: 
       const { error } = await resend.emails.send({
         from: FROM,
         to: [alert.user.email],
-        subject: `New jobs matching "${alert.name}"`,
+        subject: `${newHits.length} new job${newHits.length === 1 ? "" : "s"} matching "${alert.name}"`,
         html,
       });
       if (error) {
@@ -115,6 +117,15 @@ export async function processAlerts(frequency: AlertFrequency): Promise<{ sent: 
     }
   }
   return { sent, errors };
+}
+
+/** Infer datePosted filter from lastSentAt for search optimization. Exported for tests. */
+export function inferDatePostedFromLastSent(lastSentAt: Date | null): "24h" | "7d" | "30d" | undefined {
+  if (!lastSentAt) return undefined;
+  const daysSince = (Date.now() - lastSentAt.getTime()) / 86400000;
+  if (daysSince <= 1) return "24h";
+  if (daysSince <= 7) return "7d";
+  return "30d";
 }
 
 function buildQueryString(filters: Record<string, unknown>, query: string): string {

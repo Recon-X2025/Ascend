@@ -200,6 +200,8 @@ model User {
   apiKeys          APIKey[]
   careerIntents    CareerIntent[]
   resumeVersions   ResumeVersion[]
+  profileViewEventsAsViewer  ProfileViewEvent[] @relation("ProfileViewsAsViewer")
+  profileViewEventsAsProfile ProfileViewEvent[] @relation("ProfileViewsAsProfile")
   jobApplications  JobApplication[]
   companyAdmins       CompanyAdmin[]
   companyBenefitRatings CompanyBenefitRating[]
@@ -244,11 +246,22 @@ model User {
   paymentModeAcknowledgements PaymentModeAcknowledgement[]
   mentorOutcomes        MentorshipOutcome[]   @relation("MentorOutcomes")
   menteeOutcomes        MentorshipOutcome[]   @relation("MenteeOutcomes")
+  mentorCertificates    MentorCertificate[]   @relation("MentorCertificates")  // BL-14 (as mentee)
   mentorTierHistory    MentorTierHistory[]   @relation("MentorTierHistory")
   contractSignatures    ContractSignature[]   @relation("ContractSignatures")
   menteeReadiness       MenteeReadinessCheck?
   circleMembers         CircleMember[]        @relation("CircleMembers")  // M-12
   mentorCircles         MentorshipCircle[]    @relation("MentorCircles")    // M-12
+  mentorFollowsAsFollower MentorFollow[]     @relation("MentorFollowsAsFollower")  // BL-7
+  mentorFollowsAsMentor   MentorFollow[]     @relation("MentorFollowsAsMentor")    // BL-7
+  mentorPosts             MentorPost[]       @relation("MentorPosts")            // BL-8
+  mentorArticles          MentorArticle[]    @relation("MentorArticles")        // BL-13
+  mentorNewsletters       MentorNewsletter[] @relation("MentorNewsletters")     // BL-13
+  mentorNewsletterSubscribers MentorNewsletterSubscriber[] @relation("MentorNewsletterSubscribers")  // BL-13
+  newsletterSubscriptions MentorNewsletterSubscriber[] @relation("NewsletterSubscriptions")       // BL-13
+  careerMilestones        CareerMilestone[]  @relation("CareerMilestones")      // BL-10
+  cohortMemberships       CohortMember[]     @relation("CohortMembers")          // BL-9
+  cohortThreads           CohortThread[]     @relation("CohortThreads")         // BL-9
   verificationAuditLogsAdmin VerificationAuditLog[]
   candidateInsightSnapshot    CandidateInsightSnapshot?
   coverLetters                CoverLetter[]
@@ -523,6 +536,24 @@ model JobSeekerProfile {
   careerIntents    CareerIntent[]
 }
 
+// ─── BL-1: Profile View Events (per-viewer storage for notifications) ───────
+
+model ProfileViewEvent {
+  id             String   @id @default(cuid())
+  viewerId       String
+  viewerCompanyId String?
+  viewerCompanyName String?
+  viewerRole     String?  // anonymised role e.g. "Recruiter" for premium
+  profileUserId  String
+  viewedAt       DateTime @default(now())
+
+  viewer      User @relation("ProfileViewsAsViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  profileUser User @relation("ProfileViewsAsProfile", fields: [profileUserId], references: [id], onDelete: Cascade)
+
+  @@index([profileUserId, viewedAt])
+  @@index([viewerId, viewedAt])
+}
+
 // ─── Resume Builder (Phase 2A) ─────────────────────────────────────────────
 
 enum TargetLevel {
@@ -693,6 +724,7 @@ model JobPost {
   hiringAnalyticsSnapshots HiringAnalyticsSnapshot[]
   interviewScorecards  InterviewScorecard[]
   diMetricsSnapshots   DIMetricsSnapshot[]
+  boardSyndications   JobBoardSyndication[]  // BL-24
 
   @@index([slug])
   @@index([recruiterId])
@@ -2051,11 +2083,52 @@ model JobApplication {
 
   interviewReviews InterviewReview[]
   interviewScorecards InterviewScorecard[]
+  boardSource        JobBoardApplicantSource?  // BL-24: source attribution
 
   @@unique([jobPostId, applicantId])
   @@index([jobPostId, status])
   @@index([applicantId, submittedAt])
   @@index([status])
+}
+
+// BL-24: Multi-Board Job Syndication
+enum JobBoardSyndicationStatus {
+  PENDING
+  LIVE
+  FAILED
+  EXPIRED
+  PAUSED
+}
+
+model JobBoardSyndication {
+  id           String                    @id @default(cuid())
+  jobPostId    Int
+  jobPost      JobPost                   @relation(fields: [jobPostId], references: [id], onDelete: Cascade)
+  board        String                    // NAUKRI | LINKEDIN | INDEED | FOUNDIT | etc
+  status       JobBoardSyndicationStatus @default(PENDING)
+  postedAt     DateTime?
+  expiresAt   DateTime?
+  costPaidPaise Int?
+  trackingUrl  String?
+  applicantCount Int                     @default(0)
+  viewCount    Int                       @default(0)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  @@unique([jobPostId, board])
+  @@index([jobPostId])
+  @@index([board])
+  @@index([status])
+}
+
+model JobBoardApplicantSource {
+  id             String         @id @default(cuid())
+  applicationId  String         @unique
+  application    JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  board          String
+  clickedAt      DateTime       @default(now())
+
+  @@index([board])
 }
 
 // Phase 18B: Employee referral for a job
@@ -2594,6 +2667,82 @@ model MentorProfile {
   updatedAt             DateTime              @updatedAt
 }
 
+// BL-7: Mentor Follow — seekers follow mentors without starting an application
+model MentorFollow {
+  id           String   @id @default(cuid())
+  userId       String   // follower (seeker)
+  mentorUserId String   // mentor being followed
+  followedAt   DateTime @default(now())
+
+  user       User @relation("MentorFollowsAsFollower", fields: [userId], references: [id], onDelete: Cascade)
+  mentorUser User @relation("MentorFollowsAsMentor", fields: [mentorUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mentorUserId])
+  @@index([mentorUserId])
+  @@index([userId])
+}
+
+// BL-8: Mentor Posts — mentors publish short insights; followers see in feed
+model MentorPost {
+  id           String   @id @default(cuid())
+  mentorUserId String
+  content      String   @db.Text
+  imageUrl     String?  // optional image URL (storage or external)
+  createdAt    DateTime @default(now())
+
+  mentorUser User @relation("MentorPosts", fields: [mentorUserId], references: [id], onDelete: Cascade)
+
+  @@index([mentorUserId])
+  @@index([createdAt])
+}
+
+// BL-13: Creator Mode — long-form articles and newsletters
+model MentorArticle {
+  id           String    @id @default(cuid())
+  mentorUserId String
+  title        String
+  slug         String
+  content      String    @db.Text
+  excerpt      String?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  mentorUser User @relation("MentorArticles", fields: [mentorUserId], references: [id], onDelete: Cascade)
+
+  @@unique([mentorUserId, slug])
+  @@index([mentorUserId])
+  @@index([publishedAt])
+}
+
+model MentorNewsletter {
+  id           String    @id @default(cuid())
+  mentorUserId String
+  subject      String
+  content      String    @db.Text
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  mentorUser User @relation("MentorNewsletters", fields: [mentorUserId], references: [id], onDelete: Cascade)
+
+  @@index([mentorUserId])
+  @@index([sentAt])
+}
+
+model MentorNewsletterSubscriber {
+  id           String   @id @default(cuid())
+  mentorUserId String
+  email        String
+  userId       String?
+  subscribedAt DateTime @default(now())
+
+  mentorUser User  @relation("MentorNewsletterSubscribers", fields: [mentorUserId], references: [id], onDelete: Cascade)
+  user       User? @relation("NewsletterSubscriptions", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([mentorUserId, email])
+  @@index([mentorUserId])
+}
+
 // M-13: Mentor Monetisation Unlock
 enum SeoBoostType {
   MONTHLY_RECURRING
@@ -2768,6 +2917,7 @@ model MentorshipContract {
 
   // M-10: One outcome per engagement
   outcome              MentorshipOutcome?
+  certificate          MentorCertificate?  // BL-14
 
   // M-6: Agreed fee (nullable for backward compat)
   agreedFeePaise       Int?
@@ -3109,10 +3259,106 @@ model MentorshipOutcome {
   submittedAt           DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
 
+  successStory           TransitionSuccessStory? // BL-3
+  certificate            MentorCertificate?     // BL-14
+
   @@index([mentorId])
   @@index([menteeId])
   @@index([status])
   @@index([acknowledgementDeadline])
+}
+
+// BL-14: Verified Career Certificates — Ascend-issued completion badges
+model MentorCertificate {
+  id               String   @id @default(cuid())
+  contractId       String   @unique
+  contract         MentorshipContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  outcomeId        String   @unique
+  outcome          MentorshipOutcome  @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+  menteeId         String
+  mentee           User     @relation("MentorCertificates", fields: [menteeId], references: [id], onDelete: Cascade)
+  verificationCode String   @unique
+  issuedAt         DateTime @default(now())
+
+  @@index([verificationCode])
+  @@index([menteeId])
+}
+
+// BL-3: Transition Success Stories — consent-gated shareable cards from verified outcomes
+model TransitionSuccessStory {
+  id              String   @id @default(cuid())
+  outcomeId       String   @unique
+  outcome         MentorshipOutcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+  slug            String   @unique  // short URL slug e.g. "x7k9m2"
+  includeEmployer Boolean  @default(false)
+  consentGivenAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([slug])
+}
+
+// BL-10: Career Milestones — shareable cards for contract completed, tier achieved, etc.
+enum CareerMilestoneType {
+  CONTRACT_COMPLETED  // mentee completed mentorship
+  TIER_ACHIEVED      // mentor reached new tier
+}
+
+model CareerMilestone {
+  id             String             @id @default(cuid())
+  type           CareerMilestoneType
+  userId         String             // who achieved it
+  user           User               @relation("CareerMilestones", fields: [userId], references: [id], onDelete: Cascade)
+  entityId       String             // contractId or tierHistoryId
+  slug           String             @unique
+  metadata       Json               // { mentorName?, tier?, transitionType?, menteeName? }
+  consentGivenAt DateTime           @default(now())
+  createdAt      DateTime           @default(now())
+
+  @@index([userId])
+  @@index([slug])
+}
+
+// BL-9: Cohort Communities — open groups by transition path, lighter than M-12 Circles
+model Cohort {
+  id              String   @id @default(cuid())
+  name            String   // e.g. "SWE → PM 2025"
+  transitionPath  String   // e.g. "SWE → PM"
+  slug            String   @unique
+  description     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  members CohortMember[]
+  threads CohortThread[]
+
+  @@index([transitionPath])
+  @@index([slug])
+}
+
+model CohortMember {
+  id        String   @id @default(cuid())
+  cohortId  String
+  cohort    Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("CohortMembers", fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([cohortId, userId])
+  @@index([cohortId])
+  @@index([userId])
+}
+
+model CohortThread {
+  id        String   @id @default(cuid())
+  cohortId  String
+  cohort    Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("CohortThreads", fields: [authorId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([cohortId])
+  @@index([authorId])
 }
 
 // M-7: Session Room, Steno & Evidence enums

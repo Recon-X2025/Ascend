@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis/client";
+import { withTimeout } from "@/lib/redis/with-timeout";
 
 const DENYLIST_PREFIX = "jwt:denied:";
 const DENYLIST_USER_PREFIX = "jwt:denied:user:";
@@ -10,23 +11,26 @@ export async function denyToken(
 ): Promise<void> {
   const ttl = expiresAt - Math.floor(Date.now() / 1000);
   if (ttl > 0) {
-    await redis.set(`${DENYLIST_PREFIX}${jti}`, "1", "EX", ttl);
+    await withTimeout(redis.set(`${DENYLIST_PREFIX}${jti}`, "1", "EX", ttl), undefined);
   }
 }
 
 /** Deny ALL tokens for a user (sign out all devices) */
 export async function denyAllUserTokens(userId: string): Promise<void> {
-  await redis.set(
-    `${DENYLIST_USER_PREFIX}${userId}`,
-    Math.floor(Date.now() / 1000).toString(),
-    "EX",
-    60 * 60 * 24 * 31 // 31 days
+  await withTimeout(
+    redis.set(
+      `${DENYLIST_USER_PREFIX}${userId}`,
+      Math.floor(Date.now() / 1000).toString(),
+      "EX",
+      60 * 60 * 24 * 31 // 31 days
+    ),
+    undefined
   );
 }
 
 /** Check if a specific token is denied */
 export async function isTokenDenied(jti: string): Promise<boolean> {
-  const result = await redis.get(`${DENYLIST_PREFIX}${jti}`);
+  const result = await withTimeout(redis.get(`${DENYLIST_PREFIX}${jti}`), null);
   return result !== null;
 }
 
@@ -35,12 +39,12 @@ export async function isTokenIssuedBeforeDenyAll(
   userId: string,
   issuedAt: number
 ): Promise<boolean> {
-  const denyTime = await redis.get(`${DENYLIST_USER_PREFIX}${userId}`);
+  const denyTime = await withTimeout(redis.get(`${DENYLIST_USER_PREFIX}${userId}`), null);
   if (!denyTime) return false;
   return issuedAt < parseInt(denyTime, 10);
 }
 
 /** Clear deny-all for a user (called on new sign-in) */
 export async function clearUserDenyAll(userId: string): Promise<void> {
-  await redis.del(`${DENYLIST_USER_PREFIX}${userId}`);
+  await withTimeout(redis.del(`${DENYLIST_USER_PREFIX}${userId}`), undefined);
 }

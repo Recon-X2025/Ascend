@@ -214,6 +214,17 @@ export function MentorshipHubClient() {
             </Link>
           </div>
         )}
+        <div className="flex gap-4 text-sm mb-6">
+          <Link href="/mentorship/feed" className="text-green font-medium hover:underline">
+            Feed →
+          </Link>
+          <Link href="/mentorship/following" className="text-muted-foreground hover:underline">
+            Following
+          </Link>
+          <Link href="/mentorship/applications" className="text-muted-foreground hover:underline">
+            Applications
+          </Link>
+        </div>
         <h1 className="text-2xl font-bold text-[#0F1A0F]">Your mentor matches</h1>
         <p className="text-muted-foreground mt-1 mb-8">
           Based on your profile and target transition, we&apos;ve identified mentors who&apos;ve made

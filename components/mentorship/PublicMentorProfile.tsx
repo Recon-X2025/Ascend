@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import type { MentorProfile, User, AvailabilityWindow } from "@prisma/client";
+import { FollowMentorButton } from "./FollowMentorButton";
+import { MentorPostsSection } from "./MentorPostsSection";
 
 type Profile = MentorProfile & {
   user: Pick<User, "id" | "name" | "image"> | null;
@@ -10,6 +12,10 @@ type Profile = MentorProfile & {
 
 interface PublicMentorProfileProps {
   profile: Profile;
+  mentorUserId?: string;
+  isFollowing?: boolean;
+  followerCount?: number;
+  showFollowButton?: boolean;
   labels: {
     companyType: Record<string, string>;
     focusArea: Record<string, string>;
@@ -20,7 +26,14 @@ interface PublicMentorProfileProps {
   };
 }
 
-export function PublicMentorProfile({ profile, labels }: PublicMentorProfileProps) {
+export function PublicMentorProfile({
+  profile,
+  mentorUserId,
+  isFollowing = false,
+  followerCount = 0,
+  showFollowButton = false,
+  labels,
+}: PublicMentorProfileProps) {
   const fromBlock =
     profile.fromRole &&
     `${profile.fromRole} · ${profile.fromCompanyType ? labels.companyType[profile.fromCompanyType] : ""} · ${profile.fromIndustry ?? ""} · ${profile.fromCity ?? ""}`;
@@ -37,23 +50,31 @@ export function PublicMentorProfile({ profile, labels }: PublicMentorProfileProp
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center gap-4">
-        {profile.user?.image && (
-          <Image
-            src={profile.user.image}
-            alt=""
-            width={64}
-            height={64}
-            className="h-16 w-16 rounded-full object-cover"
-            unoptimized
-          />
-        )}
-        <div>
-          <h1 className="text-2xl font-bold text-[#0F1A0F]">{profile.user?.name ?? "Mentor"}</h1>
-          <span className="inline-flex items-center gap-1 rounded border border-green/30 bg-green/10 px-2 py-0.5 text-xs font-medium text-green">
-            ✓ Verified
-          </span>
+      <header className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-4">
+          {profile.user?.image && (
+            <Image
+              src={profile.user.image}
+              alt=""
+              width={64}
+              height={64}
+              className="h-16 w-16 rounded-full object-cover"
+              unoptimized
+            />
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F1A0F]">{profile.user?.name ?? "Mentor"}</h1>
+            <span className="inline-flex items-center gap-1 rounded border border-green/30 bg-green/10 px-2 py-0.5 text-xs font-medium text-green">
+              ✓ Verified
+            </span>
+            {followerCount > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">{followerCount} follower{followerCount !== 1 ? "s" : ""}</p>
+            )}
+          </div>
         </div>
+        {showFollowButton && mentorUserId && (
+          <FollowMentorButton mentorUserId={mentorUserId} initialFollowing={isFollowing} />
+        )}
       </header>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
@@ -128,6 +149,12 @@ export function PublicMentorProfile({ profile, labels }: PublicMentorProfileProp
           </div>
         )}
       </section>
+
+      {mentorUserId && (
+        <div className="mt-8">
+          <MentorPostsSection mentorUserId={mentorUserId} />
+        </div>
+      )}
 
       {focusPills.length > 0 && (
         <section>

@@ -12,6 +12,10 @@ const BRAND_GREEN = "#16A34A";
 const INK = "#0F1A0F";
 const MUTED = "#666";
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function formatLakhs(n: number): string {
   if (n >= 100000) return `₹${(n / 100000).toFixed(1)} L`;
   if (n >= 1000) return `₹${(n / 1000).toFixed(0)}K`;
@@ -59,6 +63,23 @@ function buildHtml(data: WeeklyDigestData): string {
   <p style="margin-top:16px;"><strong>Application stats</strong><br/>
   Applied: ${data.appliedThisPeriod} · Response rate: ${data.responseRate != null ? `${Math.round(data.responseRate)}%` : "—"}</p>
   `);
+
+  if (data.newJobMatches && data.newJobMatches.length > 0) {
+    const jobsUrl = `${(process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "")}/jobs`;
+    sections.push(`
+    <p style="margin-top:16px;"><strong>New jobs matching your interests</strong></p>
+    <ul style="margin:8px 0;padding-left:20px;">
+    ${data.newJobMatches.map((j) => `<li><a href="${jobsUrl}/${j.slug}" style="color:${BRAND_GREEN};">${escapeHtml(j.title)} at ${escapeHtml(j.companyName)}</a></li>`).join("")}
+    </ul>
+    `);
+  }
+
+  if (data.platformStats && data.platformStats.newJobsThisWeek > 0) {
+    sections.push(`
+    <p style="margin-top:16px;"><strong>This week on Ascend</strong><br/>
+    ${data.platformStats.newJobsThisWeek} new job${data.platformStats.newJobsThisWeek === 1 ? "" : "s"} posted</p>
+    `);
+  }
 
   if (data.bestTimeLine) {
     sections.push(`

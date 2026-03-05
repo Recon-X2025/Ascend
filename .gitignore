@@ -39,3 +39,11 @@ next-env.d.ts
 
 # local uploads (dev storage fallback)
 /data/uploads/
+
+# embedded repo
+Ascend/
+
+# backlog content — exclude until ready to push
+PHASE_BL_BUILD.md
+PHASE_BL_DISCOVERY.md
+PHASE_BL_FEATURE_COMPARISON.md
