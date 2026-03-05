@@ -38,16 +38,17 @@ const DISCOVER_ITEMS = [
 ];
 
 const MY_CAREER_ITEMS_BASE = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/resume", label: "Resume Optimiser" },
-  { href: "/features/fit-score", label: "Fit Score" },
-  { href: "/profile/edit", label: "My Profile" },
+  { href: "/my-career/dashboard", label: "Dashboard" },
+  { href: "/my-career/resume-optimiser", label: "Resume Optimiser" },
+  { href: "/my-career/fit-score", label: "Fit Score" },
+  { href: "/my-career/profile", label: "My Profile" },
+  { href: "/my-career/saved", label: "Saved" },
 ];
 
 const NETWORK_ITEMS = [
-  { href: "/network", label: "Connections" },
-  { href: "/messages", label: "Messages" },
-  { href: "/feed", label: "Career Updates" },
+  { href: "/network/connections", label: "Connections" },
+  { href: "/network/messages", label: "Messages" },
+  { href: "/network/updates", label: "Career Updates" },
 ];
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
