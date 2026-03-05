@@ -36,10 +36,14 @@ export async function GET(req: Request) {
       data: { visibility: "PUBLIC", internalFirstDays: null },
     });
     const companyRating = job.companyId ? await getCompanyRatingAggregate(job.companyId) : null;
-    indexJob(
-      { ...job, visibility: "PUBLIC", internalFirstDays: null, companyRef: job.companyRef ?? undefined, skills: job.skills },
-      companyRating?.overallAvg ?? null
-    );
+    const jobForIndex = {
+      ...job,
+      visibility: "PUBLIC",
+      internalFirstDays: null,
+      companyRef: job.companyRef ?? undefined,
+      skills: job.skills,
+    };
+    indexJob(jobForIndex as Parameters<typeof indexJob>[0], companyRating?.overallAvg ?? null);
     logAudit({
       category: "SYSTEM",
       action: "JOB_VISIBILITY_AUTO_SWITCHED",

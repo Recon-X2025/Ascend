@@ -56,7 +56,7 @@ function parseSkillsJson(skills: unknown): string[] {
   const obj = skills as { mustHave?: string[]; niceToHave?: string[] };
   const mustHave = Array.isArray(obj.mustHave) ? obj.mustHave : [];
   const niceToHave = Array.isArray(obj.niceToHave) ? obj.niceToHave : [];
-  return [...new Set([...mustHave, ...niceToHave])];
+  return Array.from(new Set([...mustHave, ...niceToHave]));
 }
 
 function parsedJdToTypesenseDoc(job: ParsedJDRecord): TypesenseJobDocument {

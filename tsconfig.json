@@ -22,7 +22,7 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "__tests__"],
+  "exclude": ["node_modules", "__tests__", "Ascend"],
   "ts-node": {
     "esm": false,
     "transpileOnly": true
