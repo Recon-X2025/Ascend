@@ -33,12 +33,24 @@ export function CompaniesDiscovery() {
     if (search) params.set("search", search);
     setLoading(true);
     fetch(`/api/companies?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        const text = await r.text();
+        if (!text.trim()) return { success: false };
+        try {
+          return JSON.parse(text) as { success?: boolean; data?: CompanyItem[]; meta?: { total?: number } };
+        } catch {
+          return { success: false };
+        }
+      })
       .then((j) => {
         if (j.success) {
           setCompanies(j.data ?? []);
           setTotal(j.meta?.total ?? 0);
         }
+      })
+      .catch(() => {
+        setCompanies([]);
+        setTotal(0);
       })
       .finally(() => setLoading(false));
   }, [page, search]);
